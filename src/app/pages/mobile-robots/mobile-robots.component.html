@@ -1,0 +1,110 @@
+<!-- Sync Result Banner -->
+<div class="sync-result"
+     *ngIf="lastSyncResult">
+  <mat-card class="sync-result-card" [style.background]="'linear-gradient(135deg, #2196f3, #1976d2)'" [style.color]="'white'">
+    <div class="sync-result-content">
+      <mat-icon class="sync-icon">smart_toy</mat-icon>
+      <div class="sync-details">
+        <h3>Sync Completed Successfully</h3>
+        <p>
+          {{ lastSyncResult.total }} total mobile robots:
+          {{ lastSyncResult.inserted }} new,
+          {{ lastSyncResult.updated }} updated
+        </p>
+      </div>
+      <button mat-icon-button
+              (click)="clearSyncResult()"
+              matTooltip="Dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Generic Table Component -->
+<app-generic-table class="mobile-robot-table"
+  [data]="mobileRobots"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="mobileRobots.length === 0"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>
+
+<!-- Custom Robot ID Cell Template -->
+<ng-template #robotIdCell let-data let-column="column">
+  <span class="robot-id" [matTooltip]="data.robotId">
+    {{ data.robotId }}
+  </span>
+</ng-template>
+
+<!-- Custom Status Cell Template -->
+<ng-template #statusCell let-data let-column="column">
+  <span class="status-badge"
+        [ngClass]="getStatusClass(data.status)"
+        [matTooltip]="'Status: ' + data.statusText">
+    {{ data.statusText }}
+  </span>
+</ng-template>
+
+<!-- Custom Battery Level Cell Template -->
+<ng-template #batteryCell let-data let-column="column">
+  <span class="battery-indicator"
+        [ngClass]="getBatteryClass(data.batteryLevel)"
+        [matTooltip]="'Battery: ' + data.batteryLevel + '%'">
+    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 80">battery_full</mat-icon>
+    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 50 && data.batteryLevel < 80">battery_6_bar</mat-icon>
+    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 20 && data.batteryLevel < 50">battery_3_bar</mat-icon>
+    <mat-icon class="battery-icon" *ngIf="data.batteryLevel < 20">battery_1_bar</mat-icon>
+    {{ data.batteryLevel }}%
+  </span>
+</ng-template>
+
+<!-- Custom Map Code Cell Template -->
+<ng-template #mapCodeCell let-data let-column="column">
+  <span class="map-code" [matTooltip]="getCellValue(data, column)">
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Floor Cell Template -->
+<ng-template #floorCell let-data let-column="column">
+  <span class="floor-badge"
+        [ngClass]="getFloorClass(data.floorNumber)"
+        [matTooltip]="'Floor: ' + data.floorNumber">
+    {{ data.floorDisplay }}
+  </span>
+</ng-template>
+
+<!-- Custom Coordinates Cell Template -->
+<ng-template #coordinatesCell let-data let-column="column">
+  <span class="coordinates" [matTooltip]="'Position: X=' + data.xCoordinate + ', Y=' + data.yCoordinate">
+    {{ data.coordinatesText }}
+  </span>
+</ng-template>
+
+<!-- Custom Orientation Cell Template -->
+<ng-template #orientationCell let-data let-column="column">
+  <span class="orientation" [matTooltip]="'Robot orientation: ' + data.robotOrientation + ' degrees'">
+    <mat-icon class="orientation-icon">navigation</mat-icon>
+    {{ data.orientationText }}
+  </span>
+</ng-template>
+
+<!-- Custom Node Number Cell Template -->
+<ng-template #nodeCell let-data let-column="column">
+  <span class="node-number" [matTooltip]="'Current node: ' + data.lastNodeNumber">
+    {{ data.nodeDisplay }}
+  </span>
+</ng-template>
+
+<!-- Custom Reliability Cell Template -->
+<ng-template #reliabilityCell let-data let-column="column">
+  <span class="reliability-badge"
+        [ngClass]="getReliabilityClass(data.reliability)"
+        [matTooltip]="'Reliability: ' + data.reliabilityText + ' (' + data.reliability + '%)'">
+    {{ data.reliabilityText }}
+  </span>
+</ng-template>

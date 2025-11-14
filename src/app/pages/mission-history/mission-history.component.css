@@ -1,0 +1,821 @@
+@use '@angular/material' as mat;
+
+/* High specificity overrides for mission history table - restore original design */
+app-generic-table.mission-history-table {
+  .mat-mdc-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-card-header {
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  .mat-mdc-table {
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-header-row {
+    background-color: var(--mat-sys-surface-container) !important;
+  }
+
+  .mat-mdc-header-cell {
+    font-weight: 500 !important;
+    color: var(--mat-sys-on-surface) !important;
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 2px solid var(--mat-sys-primary) !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--mat-sys-surface-container-highest) !important;
+  }
+
+  .mat-mdc-cell {
+    color: var(--mat-sys-on-surface) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+}
+
+/* Storage Usage Warning Banner */
+.storage-usage {
+  margin-bottom: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+
+  .storage-warning-card {
+    background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3) !important;
+    border: none !important;
+  }
+}
+
+/* Even higher specificity for Material card override */
+app-mission-history .storage-usage .mat-mdc-card {
+  background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+  color: white !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3) !important;
+  border: none !important;
+}
+
+/* Maximum specificity override for Material Design theme */
+app-mission-history .storage-usage .mat-mdc-card,
+app-mission-history .storage-usage .mat-mdc-card .mdc-card__actions,
+app-mission-history .storage-usage .mat-mdc-card .mdc-card__content {
+  background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+  color: white !important;
+}
+
+/* Additional override for Material components inside storage usage */
+app-mission-history .storage-usage .mat-mdc-card * {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+app-mission-history .storage-usage .mat-mdc-card .storage-icon,
+app-mission-history .storage-usage .mat-mdc-card .storage-details,
+app-mission-history .storage-usage .mat-mdc-card .storage-details h3,
+app-mission-history .storage-usage .mat-mdc-card .storage-details p {
+  color: white !important;
+}
+
+.storage-usage .storage-content {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 16px;
+
+  .storage-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  .storage-details {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 4px 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    p {
+      margin: 0 0 12px 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .storage-progress {
+      margin-top: 8px;
+    }
+  }
+
+  button {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .mat-icon {
+      color: white !important;
+    }
+  }
+}
+
+/* Main container */
+.mission-history-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+/* Header toolbar */
+.mission-history-header {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .header-icon {
+    margin-right: 12px;
+    font-size: 24px;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .button-text {
+      margin-left: 8px;
+    }
+  }
+}
+
+/* Main mission history card */
+.mission-history-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .card-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+      }
+
+      .mission-count {
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+
+    .filter-section {
+      .search-field {
+        width: 300px;
+
+        @media (max-width: 768px) {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+/* Loading container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+
+  .loading-text {
+    margin-top: 16px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 16px;
+  }
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--mat-sys-on-surface-variant);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: var(--mat-sys-on-surface);
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 14px;
+    max-width: 400px;
+  }
+}
+
+/* Table container */
+.table-container {
+  overflow: hidden;
+}
+
+/* Mission history table */
+.mission-history-table {
+  width: 100%;
+
+  /* Table cells */
+  .mat-mdc-cell {
+    padding: 16px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+    &.mission-code-cell {
+      .mission-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        color: var(--mat-sys-primary);
+
+        .mission-type-icon {
+          font-size: 18px;
+          color: var(--mat-sys-primary);
+        }
+      }
+    }
+
+    &.request-id-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+
+      .request-id {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background-color: var(--mat-sys-surface-container-highest);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--mat-sys-outline);
+
+        .request-icon {
+          font-size: 16px;
+          color: var(--mat-sys-on-surface-variant);
+        }
+      }
+    }
+
+    &.workflow-cell {
+      .workflow-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: capitalize;
+
+        .workflow-icon {
+          font-size: 16px;
+        }
+
+        &.workflow-primary {
+          background-color: #e3f2fd;
+          color: #1976d2;
+          border: 1px solid #bbdefb;
+        }
+
+        &.workflow-secondary {
+          background-color: #f3e5f5;
+          color: #7b1fa2;
+          border: 1px solid #e1bee7;
+        }
+
+        &.workflow-tertiary {
+          background-color: #e8f5e8;
+          color: #2e7d32;
+          border: 1px solid #c8e6c9;
+        }
+
+        &.workflow-quaternary {
+          background-color: #fff3e0;
+          color: #ef6c00;
+          border: 1px solid #ffcc02;
+        }
+
+        &.workflow-quinary {
+          background-color: #fce4ec;
+          color: #c2185b;
+          border: 1px solid #f8bbd9;
+        }
+
+        &.workflow-senary {
+          background-color: #e0f2f1;
+          color: #00695c;
+          border: 1px solid #b2dfdb;
+        }
+      }
+    }
+
+    &.status-cell {
+      .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: capitalize;
+
+        .status-icon {
+          font-size: 16px;
+        }
+
+        &.status-completed {
+          background-color: #e8f5e8;
+          color: #2e7d32;
+          border: 1px solid #4caf50;
+        }
+
+        &.status-failed {
+          background-color: #ffebee;
+          color: #c62828;
+          border: 1px solid #f44336;
+        }
+
+        &.status-in-progress {
+          background-color: #e3f2fd;
+          color: #1565c0;
+          border: 1px solid #2196f3;
+        }
+
+        &.status-pending {
+          background-color: #fff8e1;
+          color: #f57c00;
+          border: 1px solid #ffc107;
+        }
+
+        &.status-cancelled {
+          background-color: #fafafa;
+          color: #757575;
+          border: 1px solid #e0e0e0;
+        }
+
+        &.status-unknown {
+          background-color: #f3e5f5;
+          color: #7b1fa2;
+          border: 1px solid #e1bee7;
+        }
+      }
+    }
+
+    &.created-date-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      color: var(--mat-sys-on-surface-variant);
+
+      .created-date {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .date-icon {
+          font-size: 16px;
+          color: var(--mat-sys-on-surface-variant);
+        }
+      }
+    }
+
+    &.time-ago-cell {
+      .time-ago {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--mat-sys-on-surface-variant);
+
+        .time-icon {
+          font-size: 16px;
+          color: var(--mat-sys-on-surface-variant);
+        }
+      }
+    }
+
+    &.actions-cell {
+      width: 120px;
+      text-align: right;
+
+      button {
+        margin-left: 4px;
+      }
+    }
+  }
+
+  /* Table header */
+  .mat-mdc-header-cell {
+    padding: 16px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    background-color: var(--mat-sys-surface-container);
+    border-bottom: 2px solid var(--mat-sys-primary);
+
+    &:hover {
+      background-color: var(--mat-surface-variant);
+    }
+  }
+
+  /* Table rows */
+  .table-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+
+  /* No results message */
+  .no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 16px;
+
+    mat-icon {
+      font-size: 24px;
+    }
+  }
+}
+
+/* Paginator styling */
+.mat-mdc-paginator {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+/* Menu styling */
+.mat-mdc-menu-content {
+  .danger-action {
+    color: #d32f2f;
+
+    mat-icon {
+      color: #d32f2f;
+    }
+
+    &:hover {
+      background-color: #ffebee;
+    }
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .mission-history-container {
+    padding: 16px;
+  }
+
+  .displayedColumns {
+    .request-id-cell,
+    .time-ago-cell {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .mission-history-container {
+    padding: 12px;
+  }
+
+  .mission-history-header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .filter-section {
+      width: 100%;
+
+      .search-field {
+        width: 100%;
+      }
+    }
+  }
+
+  .mission-history-table {
+    .displayedColumns {
+      .workflow-cell,
+      .created-date-cell,
+      .actions-cell {
+        display: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .mission-history-header {
+    .header-title {
+      font-size: 20px;
+    }
+
+    .header-actions {
+      .button-text {
+        display: none;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 32px 16px;
+
+    .empty-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+
+    h3 {
+      font-size: 1rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+    }
+  }
+
+  .mission-history-table {
+    .mat-mdc-cell {
+      padding: 12px 8px;
+
+      &.mission-code-cell {
+        .mission-code {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* Generic table KUKA branding overrides for mission history */
+app-generic-table.mission-history-table {
+  /* Remove any hardcoded colors that might override Material Design theme */
+  .generic-table-container {
+    border: 1px solid var(--mat-sys-outline-variant) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  /* Table styling ensure Material Design variables are used */
+  .table-container {
+    .generic-table-element {
+      .mat-mdc-cell,
+      .mat-mdc-header-cell {
+        padding: 16px !important;
+        border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-header-cell {
+        font-weight: 500 !important;
+        color: var(--mat-sys-on-surface) !important;
+        background-color: var(--mat-sys-surface-container) !important;
+        border-bottom: 2px solid var(--mat-sys-primary) !important;
+      }
+
+      .mat-mdc-cell {
+        color: var(--mat-sys-on-surface) !important;
+        font-size: 0.875rem !important;
+
+        /* Mission Code column */
+        &.mission-code-cell {
+          .mission-code {
+            font-weight: 500 !important;
+            color: #1976d2 !important;
+
+            .mission-type-icon {
+              color: #ff6600 !important;
+            }
+          }
+        }
+
+        /* Request ID column */
+        &.request-id-cell {
+          .request-id {
+            font-family: 'Roboto Mono', 'Courier New', monospace !important;
+            background-color: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            color: #495057 !important;
+          }
+        }
+
+        /* Workflow column */
+        &.workflow-cell {
+          .workflow-badge {
+            font-weight: 500 !important;
+            text-transform: capitalize !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+          }
+        }
+
+        /* Status column */
+        &.status-cell {
+          .status-badge {
+            font-weight: 600 !important;
+            text-transform: capitalize !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+
+            &.status-completed {
+              background-color: #e8f5e8 !important;
+              color: #2e7d32 !important;
+              border: 1px solid #4caf50 !important;
+            }
+
+            &.status-failed {
+              background-color: #ffebee !important;
+              color: #c62828 !important;
+              border: 1px solid #f44336 !important;
+            }
+
+            &.status-in-progress {
+              background-color: #e3f2fd !important;
+              color: #1565c0 !important;
+              border: 1px solid #2196f3 !important;
+            }
+
+            &.status-pending {
+              background-color: #fff8e1 !important;
+              color: #f57c00 !important;
+              border: 1px solid #ffc107 !important;
+            }
+          }
+        }
+
+        /* Date columns */
+        &.created-date-cell {
+          font-family: 'Roboto Mono', 'Courier New', monospace !important;
+          color: #666666 !important;
+          font-size: 0.875rem !important;
+        }
+
+        &.time-ago-cell {
+          .time-ago {
+            .time-icon {
+              color: #ff6600 !important;
+            }
+          }
+        }
+      }
+
+      /* Table rows with hover effect */
+      .table-row {
+        transition: background-color 0.2s ease !important;
+
+        &:hover {
+          background-color: #f8f9fa !important;
+        }
+      }
+    }
+  }
+
+  /* Action buttons with KUKA styling */
+  .action-buttons {
+    button {
+      margin-left: 4px !important;
+
+      &.mat-icon-button {
+        color: #666666 !important;
+
+        &:hover {
+          background-color: #f0f0f0 !important;
+          color: #ff6600 !important;
+        }
+      }
+    }
+  }
+
+  /* Pagination with KUKA theme */
+  .mat-mdc-paginator {
+    border-top: 1px solid #e0e0e0 !important;
+    background-color: #fafafa !important;
+
+    .mat-mdc-paginator-container {
+      color: #333333 !important;
+    }
+  }
+}
+
+/* Additional overrides to ensure correct background colors for search input */
+app-generic-table.mission-history-table {
+  .filter-section {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-flex {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-input-element {
+        background-color: var(--mat-sys-surface-container) !important;
+        color: var(--mat-sys-on-surface) !important;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-outline {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-end,
+      .mat-mdc-form-field-outline-gap {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+    }
+  }
+}

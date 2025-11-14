@@ -1,0 +1,80 @@
+<!-- Sync Result Banner -->
+<div class="sync-result"
+     *ngIf="lastSyncResult">
+  <mat-card class="sync-result-card" [style.background]="'linear-gradient(135deg, #4caf50, #45a049)'" [style.color]="'white'">
+    <div class="sync-result-content">
+      <mat-icon class="sync-icon">qr_code_2</mat-icon>
+      <div class="sync-details">
+        <h3>Sync Completed Successfully</h3>
+        <p>
+          {{ lastSyncResult.total }} total QR codes:
+          {{ lastSyncResult.inserted }} new,
+          {{ lastSyncResult.updated }} updated
+        </p>
+      </div>
+      <button mat-icon-button
+              (click)="clearSyncResult()"
+              matTooltip="Dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Generic Table Component -->
+<app-generic-table class="qr-code-table"
+  [data]="qrCodes"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="qrCodes.length === 0"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>
+
+<!-- Custom Reliability Cell Template -->
+<ng-template #reliabilityCell let-data let-column="column">
+  <span class="reliability-badge"
+        [ngClass]="getReliabilityClass(data.reliability)"
+        [matTooltip]="'Reliability: ' + data.reliabilityText + ' (' + data.reliability + '%)'">
+    {{ data.reliabilityText }}
+  </span>
+</ng-template>
+
+<!-- Custom Node Label Cell Template -->
+<ng-template #nodeLabelCell let-data let-column="column">
+  <span class="node-label" [matTooltip]="data.nodeLabel">
+    {{ data.nodeLabel }}
+  </span>
+</ng-template>
+
+<!-- Custom Map Code Cell Template -->
+<ng-template #mapCodeCell let-data let-column="column">
+  <span class="map-code" [matTooltip]="getCellValue(data, column)">
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Floor Cell Template -->
+<ng-template #floorCell let-data let-column="column">
+  <span class="floor-badge"
+        [ngClass]="getFloorClass(data.floorNumber)"
+        [matTooltip]="'Floor: ' + data.floorNumber">
+    {{ data.floorDisplay }}
+  </span>
+</ng-template>
+
+<!-- Custom Node Number Cell Template -->
+<ng-template #nodeNumberCell let-data let-column="column">
+  <span class="node-number" [matTooltip]="'Node number: ' + data.nodeNumber">
+    {{ data.nodeDisplay }}
+  </span>
+</ng-template>
+
+<!-- Custom Report Times Cell Template -->
+<ng-template #reportTimesCell let-data let-column="column">
+  <span class="report-times" [matTooltip]="'Reported ' + data.reportTimes + ' times'">
+    {{ data.reportTimes.toLocaleString() }}
+  </span>
+</ng-template>

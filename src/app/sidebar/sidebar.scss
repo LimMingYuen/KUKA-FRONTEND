@@ -1,0 +1,465 @@
+@use '@angular/material' as mat;
+
+// Main container
+.sidebar-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// Sidebar Navigation
+.sidebar {
+  width: 280px;
+  background-color: var(--mat-sys-surface-container);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+
+  // When collapsed (via [opened]="false"), Material Sidenav will hide it
+  // But we still want proper styling for any edge cases
+  &.sidebar--collapsed {
+    width: 0;
+    transform: translateX(-100%);
+    overflow: hidden;
+  }
+
+  &.sidebar--expanded {
+    width: 280px;
+    transform: translateX(0);
+  }
+}
+
+// Sidebar Header
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-bright);
+  min-height: 64px;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    overflow: hidden;
+
+    .kuka-logo {
+      font-size: 32px;
+      color: var(--mat-sys-primary);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface);
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+  }
+
+  .toggle-btn {
+    flex-shrink: 0;
+    color: var(--mat-sys-on-surface-variant);
+
+    &:hover {
+      background-color: var(--mat-sys-surface-variant);
+    }
+  }
+}
+
+// Sidebar Content
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+.sidebar-nav {
+  padding: 0 12px;
+}
+
+// Navigation Sections
+.nav-section {
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-header {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.7;
+  }
+}
+
+// Navigation Items
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item-wrapper {
+  position: relative;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--mat-sys-on-surface);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  gap: 12px;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-variant);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &:focus {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+
+  &.nav-item--active {
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+    font-weight: 500;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background-color: var(--mat-sys-primary);
+      border-radius: 0 2px 2px 0;
+    }
+  }
+
+  &.nav-item--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.nav-item__icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.nav-item__content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nav-item__label {
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.nav-item__badge {
+  flex-shrink: 0;
+}
+
+.nav-item__expand-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+  color: var(--mat-sys-on-surface-variant);
+
+  &--expanded {
+    transform: rotate(180deg);
+  }
+}
+
+// Children Items
+.nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 20px;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--mat-sys-outline-variant);
+}
+
+.nav-child-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--mat-sys-on-surface-variant);
+  transition: all 0.2s ease;
+  font-size: 13px;
+  gap: 8px;
+  min-height: 40px;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-variant-highest);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &.nav-child-item--active {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+    font-weight: 500;
+  }
+}
+
+.nav-child-item__icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.nav-child-item__label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-child-item__badge {
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+// Sidebar Footer
+.sidebar-footer {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  padding: 16px;
+  background-color: var(--mat-sys-surface-bright);
+
+  .footer-item {
+    display: flex;
+    justify-content: center;
+
+    .footer-btn {
+      color: var(--mat-sys-on-surface-variant);
+
+      &:hover {
+        background-color: var(--mat-sys-surface-variant);
+      }
+    }
+  }
+}
+
+// Main Content Area
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// Main Toolbar
+.main-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .menu-toggle {
+    margin-right: 16px;
+    display: flex; // Always show the toolbar menu toggle for better UX
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+  }
+}
+
+// User Menu
+.user-info {
+  padding: 16px;
+
+  .user-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .user-avatar {
+      font-size: 32px;
+      width: 40px;
+      height: 40px;
+      color: var(--mat-sys-primary);
+    }
+
+    .user-text {
+      .user-name {
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+      }
+
+      .user-role {
+        font-size: 12px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+    }
+  }
+}
+
+// Page Content
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+// Collapsed State Styles
+.sidebar--collapsed {
+  .sidebar-header {
+    justify-content: center;
+    padding: 16px 8px;
+
+    .logo-container .logo-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    .toggle-btn {
+      display: none;
+    }
+  }
+
+  .section-header {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 12px 8px;
+    min-width: 48px;
+
+    .nav-item__content,
+    .nav-item__expand-icon {
+      display: none;
+    }
+  }
+
+  .nav-children {
+    display: none;
+  }
+
+  .sidebar-footer .footer-item {
+    .footer-btn .mat-icon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  // On mobile, Material Sidenav should handle the overlay behavior automatically
+  // We just ensure the menu toggle is always visible and accessible
+  .main-toolbar {
+    .menu-toggle {
+      display: flex !important;
+    }
+  }
+
+  // Ensure proper mobile behavior for the sidebar
+  .sidebar {
+    // Material Sidenav will handle the positioning and transitions
+    // We just ensure good mobile UX
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Note: Sidebar toggle is now controlled by [opened] binding and *ngIf in HTML
+// No need for additional CSS hiding rules
+
+// Animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nav-item,
+.nav-child-item {
+  animation: slideIn 0.3s ease-out;
+}
+
+// Focus and Accessibility
+.nav-item:focus-visible,
+.nav-child-item:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .sidebar {
+    border-right-width: 2px;
+  }
+
+  .nav-item--active::before {
+    width: 4px;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: var(--mat-sys-surface-container-low);
+  }
+
+  .sidebar-header {
+    background-color: var(--mat-sys-surface-container);
+  }
+
+  .sidebar-footer {
+    background-color: var(--mat-sys-surface-container);
+  }
+}

@@ -1,0 +1,684 @@
+@use '@angular/material' as mat;
+
+// High specificity overrides for workflow table - restore original design
+app-generic-table.workflow-table {
+  .mat-mdc-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-card-header {
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  .mat-mdc-table {
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-header-row {
+    background-color: var(--mat-sys-surface-container) !important;
+  }
+
+  .mat-mdc-header-cell {
+    font-weight: 500 !important;
+    color: var(--mat-sys-on-surface) !important;
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 2px solid var(--mat-sys-primary) !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--mat-sys-surface-container-highest) !important;
+  }
+
+  .mat-mdc-cell {
+    color: var(--mat-sys-on-surface) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+}
+
+// Main container
+.workflows-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+// Header toolbar
+.workflows-header {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .header-icon {
+    margin-right: 12px;
+    font-size: 24px;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .button-text {
+      margin-left: 8px;
+    }
+  }
+}
+
+// Sync result banner
+.sync-result {
+  margin-bottom: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+
+  .sync-result-card {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: white;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .sync-result-content {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    gap: 16px;
+
+    .sync-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+
+    .sync-details {
+      flex: 1;
+
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Main workflows card
+.workflows-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .card-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+      }
+
+      .workflow-count {
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+
+    .filter-section {
+      .search-field {
+        width: 300px;
+
+        @media (max-width: 768px) {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Loading container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+
+  .loading-text {
+    margin-top: 16px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 16px;
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--mat-sys-on-surface-variant);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: var(--mat-sys-on-surface);
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 14px;
+    max-width: 400px;
+  }
+}
+
+// Table container
+.table-container {
+  overflow: hidden;
+}
+
+// Workflows table
+.workflows-table {
+  width: 100%;
+
+  // Table cells
+  .mat-mdc-cell {
+    padding: 16px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+    &.id-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 14px;
+      color: var(--mat-sys-on-surface-variant);
+      width: 80px;
+    }
+
+    &.name-cell {
+      .workflow-name {
+        font-weight: 500;
+        display: block;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    &.code-cell,
+    &.external-code-cell,
+    &.layout-code-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+
+      .workflow-code,
+      .workflow-external-code,
+      .layout-code {
+        display: block;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background-color: var(--mat-sys-surface-container-highest);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--mat-sys-outline);
+      }
+    }
+
+    &.status-cell {
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.status-active {
+          background-color: #e8f5e8;
+          color: #2e7d32;
+          border: 1px solid #4caf50;
+        }
+
+        &.status-inactive {
+          background-color: #fafafa;
+          color: #616161;
+          border: 1px solid #9e9e9e;
+        }
+
+        &.status-pending {
+          background-color: #fff3e0;
+          color: #e65100;
+          border: 1px solid #ff9800;
+        }
+
+        &.status-completed {
+          background-color: #e3f2fd;
+          color: #1565c0;
+          border: 1px solid #2196f3;
+        }
+
+        &.status-failed {
+          background-color: #ffebee;
+          color: #c62828;
+          border: 1px solid #f44336;
+        }
+
+        &.status-suspended {
+          background-color: #f3e5f5;
+          color: #7b1fa2;
+          border: 1px solid #9c27b0;
+        }
+
+        &.status-unknown {
+          background-color: #f5f5f5;
+          color: #616161;
+          border: 1px solid #9e9e9e;
+        }
+      }
+    }
+
+    &.status-text-cell {
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 14px;
+    }
+
+    &.actions-cell {
+      width: 120px;
+      text-align: right;
+
+      button {
+        margin-left: 4px;
+      }
+    }
+  }
+
+  // Table header
+  .mat-mdc-header-cell {
+    padding: 16px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    background-color: var(--mat-sys-surface-container);
+    border-bottom: 2px solid var(--mat-sys-primary);
+
+    &:hover {
+      background-color: var(--mat-surface-variant);
+    }
+  }
+
+  // Table rows
+  .table-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+
+  // No results message
+  .no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 16px;
+
+    mat-icon {
+      font-size: 24px;
+    }
+  }
+}
+
+// Paginator styling
+.mat-mdc-paginator {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+// Menu styling
+.mat-mdc-menu-content {
+  .danger-action {
+    color: #d32f2f;
+
+    mat-icon {
+      color: #d32f2f;
+    }
+
+    &:hover {
+      background-color: #ffebee;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+  .workflows-container {
+    padding: 16px;
+  }
+
+  .displayedColumns {
+    .external-code-cell,
+    .status-text-cell {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .workflows-container {
+    padding: 12px;
+  }
+
+  .workflows-header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .filter-section {
+      width: 100%;
+
+      .search-field {
+        width: 100%;
+      }
+    }
+  }
+
+  .workflows-table {
+    .displayedColumns {
+      .id-cell,
+      .layout-code-cell,
+      .actions-cell {
+        display: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .workflows-header {
+    .header-title {
+      font-size: 20px;
+    }
+
+    .header-actions {
+      .button-text {
+        display: none;
+      }
+    }
+  }
+
+  .workflows-table {
+    .mat-mdc-cell {
+      padding: 12px 8px;
+
+      &.name-cell {
+        .workflow-name {
+          max-width: 150px;
+        }
+      }
+    }
+  }
+}
+
+
+// Generic table KUKA branding overrides - Cleaned up to avoid conflicts
+app-generic-table.workflow-table {
+  // Remove any hardcoded colors that might override Material Design theme
+  .generic-table-container {
+    border: 1px solid var(--mat-sys-outline-variant) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  // Table styling ensure Material Design variables are used
+  .table-container {
+    .generic-table-element {
+      .mat-mdc-cell,
+      .mat-mdc-header-cell {
+        padding: 16px !important;
+        border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-header-cell {
+        font-weight: 500 !important;
+        color: var(--mat-sys-on-surface) !important;
+        background-color: var(--mat-sys-surface-container) !important;
+        border-bottom: 2px solid var(--mat-sys-primary) !important;
+      }
+
+      .mat-mdc-cell {
+        color: var(--mat-sys-on-surface) !important;
+        font-size: 0.875rem !important;
+
+        // Workflow ID column
+        &.id-cell {
+          font-family: 'Roboto Mono', 'Courier New', monospace !important;
+          font-weight: 500 !important;
+          color: #666666 !important;
+        }
+
+        // Name column
+        &.name-cell {
+          .workflow-name {
+            font-weight: 500 !important;
+            color: #1976d2 !important;
+          }
+        }
+
+        // Code columns
+        &.code-cell,
+        &.external-code-cell,
+        &.layout-code-cell {
+          font-family: 'Roboto Mono', 'Courier New', monospace !important;
+          font-size: 0.875rem !important;
+
+          .workflow-code,
+          .workflow-external-code,
+          .layout-code {
+            background-color: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            color: #495057 !important;
+          }
+        }
+
+        // Status column
+        &.status-cell {
+          .status-badge {
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            padding: 6px 12px !important;
+            border-radius: 16px !important;
+            font-size: 0.75rem !important;
+
+            &.status-active {
+              background-color: #e8f5e8 !important;
+              color: #2e7d32 !important;
+              border: 1px solid #4caf50 !important;
+            }
+
+            &.status-inactive {
+              background-color: #f5f5f5 !important;
+              color: #757575 !important;
+              border: 1px solid #9e9e9e !important;
+            }
+
+            &.status-pending {
+              background-color: #fff3e0 !important;
+              color: #f57c00 !important;
+              border: 1px solid #ff9800 !important;
+            }
+
+            &.status-completed {
+              background-color: #e3f2fd !important;
+              color: #1976d2 !important;
+              border: 1px solid #2196f3 !important;
+            }
+
+            &.status-failed {
+              background-color: #ffebee !important;
+              color: #d32f2f !important;
+              border: 1px solid #f44336 !important;
+            }
+
+            &.status-suspended {
+              background-color: #f3e5f5 !important;
+              color: #7b1fa2 !important;
+              border: 1px solid #9c27b0 !important;
+            }
+
+            &.status-unknown {
+              background-color: #fafafa !important;
+              color: #616161 !important;
+              border: 1px solid #9e9e9e !important;
+            }
+          }
+        }
+
+        // Status text column
+        &.status-text-cell {
+          color: #666666 !important;
+          font-size: 0.875rem !important;
+        }
+      }
+
+      // Table rows with hover effect
+      .table-row {
+        transition: background-color 0.2s ease !important;
+
+        &:hover {
+          background-color: #f8f9fa !important;
+        }
+      }
+    }
+  }
+
+  // Action buttons with KUKA styling
+  .action-buttons {
+    button {
+      margin-left: 4px !important;
+
+      &.mat-icon-button {
+        color: #666666 !important;
+
+        &:hover {
+          background-color: #f0f0f0 !important;
+          color: #ff6600 !important;
+        }
+      }
+    }
+  }
+
+  // Pagination with KUKA theme
+  .mat-mdc-paginator {
+    border-top: 1px solid #e0e0e0 !important;
+    background-color: #fafafa !important;
+
+    .mat-mdc-paginator-container {
+      color: #333333 !important;
+    }
+  }
+}
+
+// Additional overrides to ensure correct background colors for search input
+app-generic-table.workflow-table {
+  .filter-section {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-flex {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-input-element {
+        background-color: var(--mat-sys-surface-container) !important;
+        color: var(--mat-sys-on-surface) !important;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-outline {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-end,
+      .mat-mdc-form-field-outline-gap {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+    }
+  }
+}

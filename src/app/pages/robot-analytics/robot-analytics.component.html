@@ -1,0 +1,176 @@
+<div class="robot-analytics-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon class="header-icon">analytics</mat-icon>
+        <h1>Robot Analytics</h1>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button
+                color="primary"
+                (click)="refreshData()"
+                [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+        <button mat-stroked-button
+                (click)="exportData()"
+                [disabled]="isLoading || !utilizationData">
+          <mat-icon>download</mat-icon>
+          Export CSV
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filters-card">
+    <div class="filters-content">
+      <div class="filters-row">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Robot</mat-label>
+          <mat-select [(value)]="selectedRobotId" (selectionChange)="onFiltersChange()">
+            <mat-option *ngFor="let robot of availableRobots" [value]="robot.id">
+              {{ robot.name }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matSuffix>smart_toy</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onFiltersChange()">
+          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onFiltersChange()">
+          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        <div class="filter-field small">
+          <mat-button-toggle-group [(ngModel)]="groupBy" (change)="onFiltersChange()" class="grouping-toggle">
+            <mat-button-toggle value="day">Day</mat-button-toggle>
+            <mat-button-toggle value="hour">Hour</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
+    <p class="loading-text">Loading analytics data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Error Loading Data</h3>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="refreshData()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!utilizationData && !isLoading && !error">
+    <mat-icon>analytics</mat-icon>
+    <h3>No Data Available</h3>
+    <p>Select a robot and date range to view analytics</p>
+    <button mat-raised-button color="primary" (click)="loadDefaultData()">
+      Load Last 7 Days
+    </button>
+  </div>
+
+  <!-- Analytics Content -->
+  <div *ngIf="utilizationData && !isLoading && !error">
+    <!-- KPI Cards -->
+    <div class="kpi-container">
+      <mat-card class="kpi-card">
+        <div class="kpi-content">
+          <div class="kpi-icon utilization">
+            <mat-icon>speed</mat-icon>
+          </div>
+          <div class="kpi-value large">{{ utilizationData?.summary?.averageUtilization ?? 0 | number:'1.1-1' }}%</div>
+          <div class="kpi-label">Avg Utilization</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-content">
+          <div class="kpi-icon working">
+            <mat-icon>work</mat-icon>
+          </div>
+          <div class="kpi-value">{{ formatMinutes(utilizationData?.summary?.totalWorkingTime ?? 0) }}</div>
+          <div class="kpi-label">Total Working</div>
+          <div class="kpi-sublabel">{{ utilizationData?.summary?.totalWorkingTime ?? 0 }} minutes</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-content">
+          <div class="kpi-icon charging">
+            <mat-icon>battery_charging_full</mat-icon>
+          </div>
+          <div class="kpi-value">{{ formatMinutes(utilizationData?.summary?.totalChargingTime ?? 0) }}</div>
+          <div class="kpi-label">Total Charging</div>
+          <div class="kpi-sublabel">{{ utilizationData?.summary?.totalChargingTime ?? 0 }} minutes</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-content">
+          <div class="kpi-icon idle">
+            <mat-icon>pause_circle</mat-icon>
+          </div>
+          <div class="kpi-value">{{ formatMinutes(utilizationData?.summary?.totalIdleTime ?? 0) }}</div>
+          <div class="kpi-label">Total Idle</div>
+          <div class="kpi-sublabel">{{ utilizationData?.summary?.totalIdleTime ?? 0 }} minutes</div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Charts Container -->
+    <div class="charts-container">
+      <!-- Utilization Trend Line Chart -->
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Utilization Rate Trend</h3>
+          <p class="chart-subtitle">Track robot utilization percentage over time</p>
+        </div>
+        <div class="chart-content">
+          <div class="chart-wrapper tall">
+            <canvas baseChart
+                    [data]="utilizationChartData"
+                    [options]="utilizationChartOptions"
+                    [type]="'line'">
+            </canvas>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Time Distribution Stacked Area Chart -->
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Time Distribution</h3>
+          <p class="chart-subtitle">Breakdown of working, charging, and idle time</p>
+        </div>
+        <div class="chart-content">
+          <div class="chart-wrapper tall">
+            <canvas baseChart
+                    [data]="timeDistributionChartData"
+                    [options]="timeDistributionChartOptions"
+                    [type]="'line'">
+            </canvas>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>

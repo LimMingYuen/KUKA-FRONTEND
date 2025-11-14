@@ -1,0 +1,254 @@
+<mat-card class="generic-table-container" [ngClass]="getTableClasses()">
+  <!-- Card Header with Title and Actions -->
+  <div class="card-header">
+    <div class="header-left">
+      <h2 class="card-title">{{ config.title }}</h2>
+      <span class="item-count"
+            *ngIf="!loading && !isTableEmpty && totalItems > 0">
+        {{ totalItems }} {{ totalItems === 1 ? 'item' : 'items' }}
+      </span>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions" *ngIf="config.headerActions && config.headerActions.length > 0">
+      <ng-container *ngFor="let action of config.headerActions">
+        <!-- Icon button -->
+        <button mat-icon-button
+                [color]="action.color || 'primary'"
+                [disabled]="action.loading"
+                (click)="onHeaderActionClick(action)"
+                [matTooltip]="action.tooltip"
+                [matTooltipPosition]="'below'"
+                [class]="action.cssClass"
+                *ngIf="action.type === 'icon'">
+          <mat-progress-spinner *ngIf="action.loading"
+                               mode="indeterminate"
+                               diameter="20"
+                               [color]="action.color || 'primary'">
+          </mat-progress-spinner>
+          <mat-icon *ngIf="!action.loading && action.icon">{{ action.icon }}</mat-icon>
+        </button>
+
+        <!-- Raised button -->
+        <button mat-raised-button
+                [color]="action.color || 'primary'"
+                [disabled]="action.loading"
+                (click)="onHeaderActionClick(action)"
+                [matTooltip]="action.tooltip"
+                [matTooltipPosition]="'below'"
+                [class]="action.cssClass"
+                *ngIf="action.type === 'raised'">
+          <mat-progress-spinner *ngIf="action.loading"
+                               mode="indeterminate"
+                               diameter="20"
+                               [color]="action.color || 'primary'">
+          </mat-progress-spinner>
+          <mat-icon *ngIf="!action.loading && action.icon">{{ action.icon }}</mat-icon>
+          <span *ngIf="!action.loading">{{ action.label }}</span>
+        </button>
+
+        <!-- Regular button -->
+        <button mat-button
+                [color]="action.color || 'primary'"
+                [disabled]="action.loading"
+                (click)="onHeaderActionClick(action)"
+                [matTooltip]="action.tooltip"
+                [matTooltipPosition]="'below'"
+                [class]="action.cssClass"
+                *ngIf="action.type === 'button' || !action.type">
+          <mat-progress-spinner *ngIf="action.loading"
+                               mode="indeterminate"
+                               diameter="20"
+                               [color]="action.color || 'primary'">
+          </mat-progress-spinner>
+          <mat-icon *ngIf="!action.loading && action.icon">{{ action.icon }}</mat-icon>
+          <span *ngIf="!action.loading">{{ action.label }}</span>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section" *ngIf="config.filter?.enabled">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>{{ config.filter?.placeholder }}</mat-label>
+      <input matInput
+             [(ngModel)]="filterValue"
+             (keyup)="applyFilter($event)"
+             placeholder="{{ config.filter?.placeholder }}">
+      <mat-icon matSuffix>search</mat-icon>
+      <button mat-icon-button
+              matSuffix
+              (click)="clearFilter()"
+              *ngIf="filterValue"
+              matTooltip="Clear search">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="50">
+    </mat-progress-spinner>
+    <p class="loading-text">Loading data...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="shouldShowEmptyState">
+    <mat-icon class="empty-icon">{{ config.empty?.icon || 'inbox' }}</mat-icon>
+    <h3>{{ config.empty?.message || 'No data available' }}</h3>
+    <button mat-raised-button
+            color="primary"
+            (click)="onEmptyActionClick()"
+            *ngIf="config.empty?.actionText">
+      <mat-icon *ngIf="config.empty?.actionText && config.empty?.actionText?.includes('Add')">add</mat-icon>
+      {{ config.empty?.actionText }}
+    </button>
+  </div>
+
+  <!-- No Results State (when filter is applied) -->
+  <div class="empty-state" *ngIf="shouldShowNoResults">
+    <mat-icon class="empty-icon">search_off</mat-icon>
+    <h3>No results found</h3>
+    <p>No items match your search criteria.</p>
+    <button mat-stroked-button
+            color="primary"
+            (click)="clearFilter()">
+      Clear search
+    </button>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-container" *ngIf="!loading && !isTableEmpty">
+    <table mat-table
+           [dataSource]="dataSource"
+           matSort
+           #sort="matSort"
+           (matSortChange)="onSortChange($event)"
+           class="generic-table-element">
+
+      <!-- Dynamic Columns -->
+      <ng-container *ngFor="let column of config.columns" [matColumnDef]="getColumnKey(column)">
+        <!-- Header -->
+        <th mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            [disabled]="!column.sortable"
+            [class]="column.headerClass"
+            [style.width]="column.width || ''">
+          {{ column.header }}
+        </th>
+
+        <!-- Cell -->
+        <td mat-cell
+            *matCellDef="let row"
+            [class]="column.cellClass"
+            [style.width]="column.width || ''">
+
+          <!-- Use custom template if provided -->
+          <ng-container *ngIf="column.template">
+            <ng-container *ngTemplateOutlet="column.template; context: { $implicit: row, column: column }"></ng-container>
+          </ng-container>
+
+          <!-- Default cell rendering -->
+          <ng-container *ngIf="!column.template">
+            <!-- Render as HTML if allowHtml is true -->
+            <span *ngIf="column.allowHtml"
+                  class="cell-content"
+                  [innerHTML]="getCellValue(row, column)">
+            </span>
+            <!-- Render as text (default) -->
+            <span *ngIf="!column.allowHtml"
+                  class="cell-content"
+                  [matTooltip]="getCellValue(row, column)">
+              {{ getCellValue(row, column) }}
+            </span>
+          </ng-container>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions" *ngIf="config.actions && config.actions.length > 0">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let row; let i = index">
+          <div class="action-buttons">
+            <!-- Primary Actions -->
+            <ng-container *ngFor="let action of config.actions">
+              <button mat-icon-button
+                      *ngIf="isActionVisible(action, row) && action.type === 'icon'"
+                      (click)="onActionClick(action, row, i)"
+                      [disabled]="isActionDisabled(action, row)"
+                      [matTooltip]="action.tooltip"
+                      [class]="action.cssClass">
+                <mat-icon>{{ action.icon }}</mat-icon>
+              </button>
+
+              <button mat-button
+                      *ngIf="isActionVisible(action, row) && (action.type === 'button' || !action.type)"
+                      (click)="onActionClick(action, row, i)"
+                      [disabled]="isActionDisabled(action, row)"
+                      [color]="action.color || 'primary'"
+                      [class]="action.cssClass">
+                <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
+                {{ action.label }}
+              </button>
+            </ng-container>
+
+            <!-- Overflow Menu for additional actions -->
+            <button mat-icon-button
+                    [matMenuTriggerFor]="actionMenu"
+                    matTooltip="More actions"
+                    *ngIf="config.actions && config.actions.length > 2">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #actionMenu="matMenu" xPosition="before">
+              <ng-container *ngFor="let action of config.actions">
+                <button mat-menu-item
+                        *ngIf="isActionVisible(action, row) && action.type === 'menu-item'"
+                        (click)="onActionClick(action, row, i)"
+                        [disabled]="isActionDisabled(action, row)"
+                        [class]="action.cssClass">
+                  <mat-icon>{{ action.icon }}</mat-icon>
+                  <span>{{ action.label }}</span>
+                </button>
+              </ng-container>
+            </mat-menu>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Header Row -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+      <!-- Data Rows -->
+      <tr mat-row
+          *matRowDef="let row; columns: displayedColumns; let i = index;"
+          [ngClass]="getRowClasses(i)"
+          class="table-row"></tr>
+
+      <!-- No results row when filtering -->
+      <tr class="mat-row" *ngIf="shouldShowNoResults">
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <div class="no-results">
+            <mat-icon>search_off</mat-icon>
+            <span>No items match your search criteria.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Pagination -->
+    <mat-paginator #paginator
+                   [ngClass]="{'paginator--hidden': !config.pagination?.enabled}"
+                   [pageSizeOptions]="config.pagination?.pageSizeOptions || [5, 10, 25, 100]"
+                   [pageSize]="config.pagination?.pageSize || 10"
+                   [showFirstLastButtons]="config.pagination?.showFirstLastButtons"
+                   (page)="onPageChange($event)"
+                   aria-label="Select page">
+    </mat-paginator>
+  </div>
+</mat-card>

@@ -1,0 +1,54 @@
+<!-- Sync Result Banner -->
+<div class="sync-result"
+     *ngIf="lastSyncResult">
+  <mat-card class="sync-result-card">
+    <div class="sync-result-content">
+      <mat-icon class="sync-icon">cloud_done</mat-icon>
+      <div class="sync-details">
+        <h3>Sync Completed Successfully</h3>
+        <p>
+          {{ lastSyncResult.total }} total workflows:
+          {{ lastSyncResult.inserted }} new,
+          {{ lastSyncResult.updated }} updated
+        </p>
+      </div>
+      <button mat-icon-button
+              (click)="clearSyncResult()"
+              matTooltip="Dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Generic Table Component -->
+<app-generic-table class="workflow-table"
+  [data]="workflows"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="workflows.length === 0"
+  (action)="onTableAction($event)">
+</app-generic-table>
+
+<!-- Custom Status Cell Template -->
+<ng-template #statusCell let-data let-column="column">
+  <span class="status-badge"
+        [ngClass]="getStatusClass(data.status)"
+        [matTooltip]="'Status: ' + data.statusText">
+    {{ data.statusText }}
+  </span>
+</ng-template>
+
+<!-- Custom Workflow Name Cell Template -->
+<ng-template #nameCell let-data let-column="column">
+  <span class="workflow-name" [matTooltip]="data.name">
+    {{ data.name }}
+  </span>
+</ng-template>
+
+<!-- Custom Code Cell Template -->
+<ng-template #codeCell let-data let-column="column">
+  <span class="workflow-code" [matTooltip]="getCellValue(data, column)">
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>

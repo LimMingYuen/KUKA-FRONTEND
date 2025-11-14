@@ -1,0 +1,73 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header class="login-header">
+      <mat-card-title class="login-title">
+        <mat-icon class="kuka-icon">precision_manufacturing</mat-icon>
+        KUKA Login
+      </mat-card-title>
+      <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Username Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput
+                 formControlName="username"
+                 placeholder="Enter your username"
+                 [attr.aria-invalid]="usernameControl?.invalid && usernameControl?.touched ? 'true' : null">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="usernameControl?.touched && usernameControl?.invalid">
+            {{ getErrorMessage(usernameControl) }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput
+                 [type]="hidePassword ? 'password' : 'text'"
+                 formControlName="password"
+                 placeholder="Enter your password"
+                 [attr.aria-invalid]="passwordControl?.invalid && passwordControl?.touched ? 'true' : null">
+          <button mat-icon-button
+                  matSuffix
+                  (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="'Hide password'"
+                  [attr.aria-pressed]="hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="passwordControl?.touched && passwordControl?.invalid">
+            {{ getErrorMessage(passwordControl) }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Submit Button -->
+        <button mat-raised-button
+                type="submit"
+                class="login-button"
+                [disabled]="loginForm.invalid || authService.isLoading()"
+                color="primary">
+          <span *ngIf="!authService.isLoading()">Sign In</span>
+          <mat-spinner *ngIf="authService.isLoading()"
+                       diameter="20"
+                       class="button-spinner">
+          </mat-spinner>
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions class="login-actions">
+      <div class="action-links">
+        <!-- Add additional links here if needed -->
+        <!-- <a mat-stroked-button href="#" class="forgot-password">Forgot Password?</a> -->
+      </div>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" *ngIf="authService.isLoading()">
+  <mat-spinner diameter="50"></mat-spinner>
+</div>

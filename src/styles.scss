@@ -1,1 +1,136 @@
+
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$orange-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+}
 /* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Global table overrides for generic table component - restore original Material Design */
+app-generic-table {
+  .mat-mdc-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-card-header {
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  .mat-mdc-table {
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-header-row {
+    background-color: var(--mat-sys-surface-container) !important;
+  }
+
+  .mat-mdc-header-cell {
+    font-weight: 500 !important;
+    color: var(--mat-sys-on-surface) !important;
+    border-bottom: 2px solid var(--mat-sys-primary) !important;
+    background-color: var(--mat-sys-surface-container) !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--mat-sys-surface-container-highest) !important;
+  }
+
+  .mat-mdc-cell {
+    color: var(--mat-sys-on-surface) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  // Search input styling
+  .filter-section {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-outline {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-end,
+      .mat-mdc-form-field-outline-gap {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+
+      &.mdc-text-field--focused .mat-mdc-form-field-outline {
+        border-color: var(--mat-sys-primary) !important;
+      }
+
+      &.mdc-text-field--focused .mat-mdc-form-field-outline-start,
+      &.mdc-text-field--focused .mat-mdc-form-field-outline-end,
+      &.mdc-text-field--focused .mat-mdc-form-field-outline-gap {
+        border-color: var(--mat-sys-primary) !important;
+      }
+
+      .mat-mdc-input-element {
+        color: var(--mat-sys-on-surface) !important;
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-icon-button {
+        color: var(--mat-sys-on-surface-variant) !important;
+        background-color: transparent !important;
+      }
+
+      .mat-mdc-icon-button:hover {
+        background-color: var(--mat-sys-surface-container-highest) !important;
+      }
+    }
+  }
+
+  // Force light theme for form fields to prevent black backgrounds
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--mat-sys-surface-container) !important;
+    }
+
+    .mat-mdc-form-field-flex {
+      background-color: var(--mat-sys-surface-container) !important;
+    }
+
+    .mat-mdc-input-element {
+      background-color: var(--mat-sys-surface-container) !important;
+      color: var(--mat-sys-on-surface) !important;
+    }
+  }
+}

@@ -1,0 +1,64 @@
+/* Global styles for KUKA GUI Application */
+
+:host {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Global snackbar styles */
+::ng-deep .mat-mdc-snack-bar-container {
+  border-radius: 8px;
+  margin: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+::ng-deep .mat-mdc-snackbar-surface {
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+/* Global scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mat-sys-surface-variant);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mat-sys-primary);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mat-sys-tertiary);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+.mat-mdc-focused .mat-mdc-form-field-focus-overlay {
+  background-color: var(--mat-sys-primary);
+}
+
+/* Ensure consistent box-sizing */
+* {
+  box-sizing: border-box;
+}
+
+/* Remove default margins and paddings */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--mat-sys-body-large-font);
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}

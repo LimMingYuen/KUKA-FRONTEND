@@ -1,0 +1,381 @@
+import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+import { ResumeStrategiesService } from '../../services/resume-strategies.service';
+import {
+  ResumeStrategyDisplayData,
+  ResumeStrategyCreateRequest,
+  ResumeStrategyUpdateRequest,
+  getStatusClass,
+  isValidDisplayName,
+  isValidActualValue,
+  isValidDescription
+} from '../../models/resume-strategies.models';
+import { Subject, takeUntil } from 'rxjs';
+import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
+import { RESUME_STRATEGIES_TABLE_CONFIG } from './resume-strategies-table.config';
+import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+
+@Component({
+  selector: 'app-resume-strategies',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatSnackBarModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatSelectModule,
+    MatDividerModule,
+    ReactiveFormsModule,
+    GenericTableComponent
+  ],
+  templateUrl: './resume-strategies.component.html',
+  styleUrl: './resume-strategies.component.css'
+})
+export class ResumeStrategiesComponent implements OnInit, OnDestroy {
+  // Table data
+  public resumeStrategies: ResumeStrategyDisplayData[] = [];
+
+  // Table configuration
+  public tableConfig = RESUME_STRATEGIES_TABLE_CONFIG;
+
+  // UI state
+  public isLoading = false;
+  public isCreating = false;
+  public isUpdating = false;
+  public isDeleting = false;
+
+  // Cleanup subject
+  private destroy$ = new Subject<void>();
+
+  // Form for create/edit
+  public resumeStrategyForm!: FormGroup;
+
+  constructor(
+    public resumeStrategiesService: ResumeStrategiesService,
+    private dialog: MatDialog,
+    private fb: FormBuilder
+  ) {
+    // Initialize form
+    this.initializeForm();
+
+    // Configure empty state action
+    if (this.tableConfig.empty) {
+      this.tableConfig.empty.action = () => this.openCreateDialog();
+    }
+
+    // Set up reactive effects for service state changes
+    effect(() => {
+      this.isLoading = this.resumeStrategiesService.isLoading();
+    });
+
+    effect(() => {
+      this.isCreating = this.resumeStrategiesService.isCreating();
+    });
+
+    effect(() => {
+      this.isUpdating = this.resumeStrategiesService.isUpdating();
+    });
+
+    effect(() => {
+      this.isDeleting = this.resumeStrategiesService.isDeleting();
+    });
+
+    effect(() => {
+      this.resumeStrategies = this.resumeStrategiesService.resumeStrategies();
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadResumeStrategies();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Initialize the form
+   */
+  private initializeForm(): void {
+    this.resumeStrategyForm = this.fb.group({
+      displayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      actualValue: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
+      description: ['', [Validators.maxLength(500)]],
+      isActive: [true]
+    });
+  }
+
+  /**
+   * Load resume strategies from the service
+   */
+  private loadResumeStrategies(): void {
+    this.resumeStrategiesService.getResumeStrategies()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error loading resume strategies:', error);
+        }
+      });
+  }
+
+  /**
+   * Handle table actions
+   */
+  onTableAction(event: ActionEvent): void {
+    switch (event.action) {
+      case 'view':
+        this.viewResumeStrategy(event.row);
+        break;
+      case 'edit':
+        this.editResumeStrategy(event.row);
+        break;
+      case 'toggle-status':
+        this.toggleResumeStrategyStatus(event.row);
+        break;
+      case 'delete':
+        this.deleteResumeStrategy(event.row);
+        break;
+      case 'refresh':
+        this.refreshResumeStrategies();
+        break;
+      case 'create-resume-strategy':
+        this.openCreateDialog();
+        break;
+      case 'export':
+        this.exportResumeStrategies();
+        break;
+      default:
+        // Unknown action - ignore silently
+    }
+  }
+
+  /**
+   * Handle table sort events
+   */
+  onSortChange(event: SortEvent): void {
+    // Sorting is handled by the generic table component
+  }
+
+  /**
+   * Handle table page events
+   */
+  onPageChange(event: PageEvent): void {
+    // Pagination is handled by the generic table component
+  }
+
+  /**
+   * Handle table filter events
+   */
+  onFilterChange(event: FilterEvent): void {
+    // Filtering is handled by the generic table component
+  }
+
+  /**
+   * View resume strategy details
+   */
+  private viewResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
+    // TODO: Implement view dialog
+    console.log('View resume strategy:', resumeStrategy);
+  }
+
+  /**
+   * Edit resume strategy
+   */
+  private editResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
+    // TODO: Implement edit dialog
+    console.log('Edit resume strategy:', resumeStrategy);
+  }
+
+  /**
+   * Toggle resume strategy status
+   */
+  private toggleResumeStrategyStatus(resumeStrategy: ResumeStrategyDisplayData): void {
+    this.resumeStrategiesService.toggleResumeStrategyStatus(resumeStrategy.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error toggling resume strategy status:', error);
+        }
+      });
+  }
+
+  /**
+   * Delete resume strategy with confirmation
+   */
+  private deleteResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
+    if (confirm(`Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`)) {
+      this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (error) => {
+            console.error('Error deleting resume strategy:', error);
+          }
+        });
+    }
+  }
+
+  /**
+   * Refresh resume strategies
+   */
+  public refreshResumeStrategies(): void {
+    this.loadResumeStrategies();
+  }
+
+  /**
+   * Open create dialog
+   */
+  public openCreateDialog(): void {
+    this.resetForm();
+    // TODO: Implement create dialog
+    console.log('Open create dialog');
+  }
+
+  /**
+   * Export resume strategies data
+   */
+  public exportResumeStrategies(): void {
+    this.resumeStrategiesService.exportResumeStrategies()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, 'resume-strategies-export.csv');
+        },
+        error: (error) => {
+          console.error('Error exporting resume strategies:', error);
+        }
+      });
+  }
+
+  /**
+   * Create new resume strategy
+   */
+  createResumeStrategy(): void {
+    if (this.resumeStrategyForm.invalid) {
+      this.markFormGroupTouched(this.resumeStrategyForm);
+      return;
+    }
+
+    const formValue = this.resumeStrategyForm.value;
+
+    if (!this.validateResumeStrategyData(formValue.displayName, formValue.actualValue, formValue.description)) {
+      return;
+    }
+
+    const request: ResumeStrategyCreateRequest = {
+      displayName: formValue.displayName.trim(),
+      actualValue: formValue.actualValue.trim(),
+      description: formValue.description?.trim() || '',
+      isActive: formValue.isActive
+    };
+
+    this.resumeStrategiesService.createResumeStrategy(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.resetForm();
+        },
+        error: (error) => {
+          console.error('Error creating resume strategy:', error);
+        }
+      });
+  }
+
+  /**
+   * Validate resume strategy data
+   */
+  private validateResumeStrategyData(displayName: string, actualValue: string, description: string): boolean {
+    if (!isValidDisplayName(displayName)) {
+      this.showErrorMessage('Display name must be between 3 and 100 characters');
+      return false;
+    }
+
+    if (!isValidActualValue(actualValue)) {
+      this.showErrorMessage('Actual value must be between 1 and 50 characters');
+      return false;
+    }
+
+    if (!isValidDescription(description)) {
+      this.showErrorMessage('Description must be less than 500 characters');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Reset form
+   */
+  resetForm(): void {
+    this.resumeStrategyForm.reset({
+      displayName: '',
+      actualValue: '',
+      description: '',
+      isActive: true
+    });
+  }
+
+  /**
+   * Mark all form controls as touched
+   */
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      formGroup.get(key)?.markAsTouched();
+    });
+  }
+
+  /**
+   * Download file from blob
+   */
+  private downloadFile(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Show error message (temporary, service handles this)
+   */
+  private showErrorMessage(message: string): void {
+    // This is handled by the service, keeping as fallback
+    console.error(message);
+  }
+
+  /**
+   * Get CSS class for status badge
+   */
+  getStatusClass(isActive: boolean): string {
+    return getStatusClass(isActive);
+  }
+
+  /**
+   * Get resume strategies count
+   */
+  getResumeStrategiesCount(): { active: number; inactive: number; total: number } {
+    return this.resumeStrategiesService.getResumeStrategiesCount();
+  }
+}

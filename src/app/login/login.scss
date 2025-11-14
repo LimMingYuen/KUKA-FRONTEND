@@ -1,0 +1,231 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  padding: 20px;
+  position: relative;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.login-header {
+  text-align: center;
+  padding-bottom: 8px;
+  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-tertiary) 100%);
+  color: white;
+  margin: -16px -16px 20px -16px;
+  padding: 24px 16px 20px 16px;
+
+  .login-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+
+    .kuka-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  mat-card-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .full-width {
+    width: 100%;
+  }
+
+  mat-form-field {
+    .mat-mdc-form-field-focus-overlay {
+      background-color: var(--mat-sys-primary);
+    }
+  }
+}
+
+.login-button {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .button-spinner {
+    margin: 0;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.login-actions {
+  padding: 16px 0 0 0;
+  justify-content: center;
+
+  .action-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+
+    .forgot-password {
+      width: 100%;
+      text-align: center;
+      border-radius: 8px;
+    }
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+
+  mat-spinner {
+    color: var(--mat-sys-primary);
+  }
+}
+
+// Material theme customizations
+.mat-mdc-card {
+  border-radius: 12px;
+}
+
+.mat-mdc-form-field {
+  .mat-mdc-form-field-flex {
+    border-radius: 8px;
+  }
+
+  &.mat-focused {
+    .mat-mdc-form-field-focus-overlay {
+      opacity: 0.12;
+    }
+  }
+}
+
+.mat-mdc-raised-button {
+  &.mat-primary {
+    background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-tertiary) 100%);
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 480px) {
+  .login-container {
+    padding: 12px;
+  }
+
+  .login-card {
+    max-width: 100%;
+    margin: 0 8px;
+  }
+
+  .login-header {
+    margin: -16px -16px 16px -16px;
+    padding: 20px 16px 16px 16px;
+
+    .login-title {
+      font-size: 20px;
+
+      .kuka-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .login-form {
+    gap: 16px;
+  }
+
+  .login-button {
+    height: 44px;
+    font-size: 14px;
+  }
+}
+
+// Animation for form entrance
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: slideUp 0.6s ease-out;
+}
+
+// Error states
+.mat-mdc-form-field {
+  &.mat-invalid {
+    .mat-mdc-form-field-focus-overlay {
+      background-color: var(--mat-sys-error);
+    }
+  }
+}
+
+// Success snack bar customization
+::ng-deep .success-snackbar {
+  background: var(--mat-sys-primary) !important;
+  color: white !important;
+}
+
+::ng-deep .error-snackbar {
+  background: var(--mat-sys-error) !important;
+  color: white !important;
+}
+
+::ng-deep .info-snackbar {
+  background: var(--mat-sys-tertiary) !important;
+  color: white !important;
+}

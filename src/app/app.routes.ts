@@ -1,3 +1,74 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './login/login';
+import { authGuard } from './guards/auth.guard';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: 'login',
+    component: LoginComponent,
+    title: 'Login - KUKA GUI'
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent),
+    canActivate: [authGuard],
+    title: 'Dashboard - KUKA GUI'
+  },
+  {
+    path: 'workflows',
+    loadComponent: () => import('./workflows/workflows').then(m => m.WorkflowsComponent),
+    canActivate: [authGuard],
+    title: 'Workflows - KUKA GUI'
+  },
+  {
+    path: 'warehouse-management',
+    loadComponent: () => import('./pages/warehouse-management/warehouse-management.component').then(m => m.WarehouseManagementComponent),
+    canActivate: [authGuard],
+    title: 'Warehouse Management - KUKA GUI'
+  },
+  {
+    path: 'map-zones',
+    loadComponent: () => import('./pages/map-zones/map-zones.component').then(m => m.MapZonesComponent),
+    canActivate: [authGuard],
+    title: 'Map Zones - KUKA GUI'
+  },
+  {
+    path: 'qr-codes',
+    loadComponent: () => import('./pages/qr-codes/qr-codes.component').then(m => m.QrCodesComponent),
+    canActivate: [authGuard],
+    title: 'QR Codes - KUKA GUI'
+  },
+  {
+    path: 'mobile-robots',
+    loadComponent: () => import('./pages/mobile-robots/mobile-robots.component').then(m => m.MobileRobotsComponent),
+    canActivate: [authGuard],
+    title: 'Mobile Robots - KUKA GUI'
+  },
+    {
+    path: 'mission-history',
+    loadComponent: () => import('./pages/mission-history/mission-history.component').then(m => m.MissionHistoryComponent),
+    canActivate: [authGuard],
+    title: 'Mission History - KUKA GUI'
+  },
+  {
+    path: 'saved-custom-missions',
+    loadComponent: () => import('./pages/saved-custom-missions/saved-custom-missions.component').then(m => m.SavedCustomMissionsComponent),
+    canActivate: [authGuard],
+    title: 'Saved Custom Missions - KUKA GUI'
+  },
+  {
+    path: 'robot-analytics',
+    loadComponent: () => import('./pages/robot-analytics/robot-analytics.component').then(m => m.RobotAnalyticsComponent),
+    canActivate: [authGuard],
+    title: 'Robot Analytics - KUKA GUI'
+  },
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: '/dashboard'
+  }
+];

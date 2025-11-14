@@ -1,0 +1,721 @@
+@use '@angular/material' as mat;
+
+/* High specificity overrides for saved custom missions table - restore original design */
+app-generic-table.saved-custom-missions-table {
+  .mat-mdc-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-card-header {
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  .mat-mdc-table {
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  .mat-mdc-header-row {
+    background-color: var(--mat-sys-surface-container) !important;
+  }
+
+  .mat-mdc-header-cell {
+    font-weight: 500 !important;
+    color: var(--mat-sys-on-surface) !important;
+    background-color: var(--mat-sys-surface-container) !important;
+    border-bottom: 2px solid var(--mat-sys-primary) !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--mat-sys-surface-container-highest) !important;
+  }
+
+  .mat-mdc-cell {
+    color: var(--mat-sys-on-surface) !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+}
+
+/* Loading container */
+.loading-container {
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+
+  .loading-progress {
+    width: 100%;
+  }
+}
+
+/* Mission name cell styling */
+.mission-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .mission-icon {
+    font-size: 18px;
+    color: var(--mat-sys-primary);
+    flex-shrink: 0;
+  }
+
+  .mission-name {
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .mission-badges {
+    .schedule-chip {
+      background-color: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      font-size: 11px;
+      height: 24px;
+
+      .chip-icon {
+        font-size: 14px;
+        margin-right: 2px;
+      }
+    }
+  }
+}
+
+/* Priority badge styling */
+.priority-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  .priority-icon {
+    font-size: 16px;
+  }
+
+  &.priority-warn {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+  }
+
+  &.priority-accent {
+    background-color: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ff9800;
+  }
+
+  &.priority-primary {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #2196f3;
+  }
+
+  &.priority-low {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+    border: 1px solid #9c27b0;
+  }
+}
+
+/* Schedules cell styling */
+.schedules-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .schedules-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 13px;
+
+    .schedule-icon {
+      font-size: 16px;
+      color: var(--mat-sys-on-surface-variant);
+
+      &.has-schedules {
+        color: var(--mat-sys-primary);
+      }
+    }
+  }
+
+  .schedule-badges {
+    .next-run-chip {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+      font-size: 10px;
+      height: 20px;
+
+      .chip-icon {
+        font-size: 12px;
+        margin-right: 2px;
+      }
+    }
+  }
+}
+
+/* Next run cell styling */
+.next-run {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: 'Roboto Mono', monospace;
+
+  .next-run-icon {
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &.no-schedule {
+    color: var(--mat-sys-on-surface-variant);
+    font-style: italic;
+  }
+}
+
+/* Status badge styling */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+
+  .status-icon {
+    font-size: 16px;
+  }
+
+  &.status-primary {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #2196f3;
+  }
+
+  &.status-accent {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #4caf50;
+  }
+
+  &.status-warn {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+  }
+}
+
+/* Created by cell styling */
+.created-by {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .user-icon {
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Created date cell styling */
+.created-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+
+  .date-icon {
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Robot models cell styling */
+.robot-models {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .robot-icon {
+    font-size: 16px;
+    color: var(--mat-sys-primary);
+  }
+}
+
+/* Mission type badge styling */
+.mission-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+  border: 1px solid var(--mat-sys-outline);
+
+  .mission-type-icon {
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Robot type badge styling */
+.robot-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #e1bee7;
+
+  .robot-type-icon {
+    font-size: 16px;
+    color: #7b1fa2;
+  }
+}
+
+/* Description cell styling */
+.description {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .description-icon {
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+    flex-shrink: 0;
+  }
+}
+
+/* Main container */
+.saved-custom-missions-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+/* Table container */
+.table-container {
+  overflow: hidden;
+}
+
+/* Saved custom missions table */
+.saved-custom-missions-table {
+  width: 100%;
+
+  /* Table cells */
+  .mat-mdc-cell {
+    padding: 16px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+    &.id-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    &.mission-name-cell {
+      min-width: 200px;
+    }
+
+    &.description-cell {
+      max-width: 250px;
+    }
+
+    &.mission-type-cell,
+    &.robot-type-cell {
+      min-width: 120px;
+    }
+
+    &.priority-cell {
+      min-width: 100px;
+    }
+
+    &.robot-models-cell {
+      min-width: 150px;
+    }
+
+    &.schedules-cell {
+      min-width: 120px;
+    }
+
+    &.next-run-cell,
+    &.last-run-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      min-width: 150px;
+    }
+
+    &.last-status-cell {
+      min-width: 120px;
+    }
+
+    &.created-by-cell,
+    &.created-date-cell {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+    }
+
+    &.actions-cell {
+      width: 120px;
+      text-align: right;
+    }
+  }
+
+  /* Table header */
+  .mat-mdc-header-cell {
+    padding: 16px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    background-color: var(--mat-sys-surface-container);
+    border-bottom: 2px solid var(--mat-sys-primary);
+
+    &:hover {
+      background-color: var(--mat-surface-variant);
+    }
+  }
+
+  /* Table rows */
+  .table-row {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+
+  /* No results message */
+  .no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 16px;
+
+    mat-icon {
+      font-size: 24px;
+    }
+  }
+}
+
+/* Paginator styling */
+.mat-mdc-paginator {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+/* Menu styling */
+.mat-mdc-menu-content {
+  .trigger-action {
+    color: var(--mat-sys-primary);
+
+    mat-icon {
+      color: var(--mat-sys-primary);
+    }
+
+    &:hover {
+      background-color: var(--mat-sys-primary-container);
+    }
+  }
+
+  .danger-action {
+    color: #d32f2f;
+
+    mat-icon {
+      color: #d32f2f;
+    }
+
+    &:hover {
+      background-color: #ffebee;
+    }
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .saved-custom-missions-container {
+    padding: 16px;
+  }
+
+  .saved-custom-missions-table {
+    .description-cell,
+    .robot-models-cell {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .saved-custom-missions-container {
+    padding: 12px;
+  }
+
+  .saved-custom-missions-table {
+    .mission-type-cell,
+    .robot-type-cell,
+    .next-run-cell,
+    .last-run-cell,
+    .created-by-cell,
+    .created-date-cell {
+      display: none;
+    }
+
+    .mission-name-cell {
+      min-width: 150px;
+    }
+
+    .mat-mdc-cell {
+      padding: 12px 8px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .saved-custom-missions-container {
+    padding: 8px;
+  }
+
+  .saved-custom-missions-table {
+    .priority-cell,
+    .schedules-cell,
+    .last-status-cell {
+      display: none;
+    }
+
+    .mission-name-cell {
+      .mission-badges {
+        display: none;
+      }
+    }
+  }
+}
+
+/* Generic table KUKA branding overrides for saved custom missions */
+app-generic-table.saved-custom-missions-table {
+  /* Remove any hardcoded colors that might override Material Design theme */
+  .generic-table-container {
+    border: 1px solid var(--mat-sys-outline-variant) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    background-color: var(--mat-sys-surface-container-lowest) !important;
+  }
+
+  /* Table styling ensure Material Design variables are used */
+  .table-container {
+    .generic-table-element {
+      .mat-mdc-cell,
+      .mat-mdc-header-cell {
+        padding: 16px !important;
+        border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-header-cell {
+        font-weight: 500 !important;
+        color: var(--mat-sys-on-surface) !important;
+        background-color: var(--mat-sys-surface-container) !important;
+        border-bottom: 2px solid var(--mat-sys-primary) !important;
+      }
+
+      .mat-mdc-cell {
+        color: var(--mat-sys-on-surface) !important;
+        font-size: 0.875rem !important;
+
+        /* Mission name column */
+        &.mission-name-cell {
+          .mission-name {
+            font-weight: 500 !important;
+            color: var(--mat-sys-primary) !important;
+          }
+
+          .mission-icon {
+            color: #ff6600 !important;
+          }
+        }
+
+        /* Priority column */
+        &.priority-cell {
+          .priority-badge {
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+
+            &.priority-critical {
+              background-color: #ffebee !important;
+              color: #c62828 !important;
+              border: 1px solid #f44336 !important;
+            }
+
+            &.priority-high {
+              background-color: #fff3e0 !important;
+              color: #ef6c00 !important;
+              border: 1px solid #ff9800 !important;
+            }
+
+            &.priority-medium {
+              background-color: #e3f2fd !important;
+              color: #1565c0 !important;
+              border: 1px solid #2196f3 !important;
+            }
+
+            &.priority-low {
+              background-color: #f3e5f5 !important;
+              color: #7b1fa2 !important;
+              border: 1px solid #9c27b0 !important;
+            }
+          }
+        }
+
+        /* Status column */
+        &.last-status-cell {
+          .status-badge {
+            font-weight: 600 !important;
+
+            &.status-completed {
+              background-color: #e8f5e8 !important;
+              color: #2e7d32 !important;
+              border: 1px solid #4caf50 !important;
+            }
+
+            &.status-failed {
+              background-color: #ffebee !important;
+              color: #c62828 !important;
+              border: 1px solid #f44336 !important;
+            }
+
+            &.status-running {
+              background-color: #e3f2fd !important;
+              color: #1565c0 !important;
+              border: 1px solid #2196f3 !important;
+            }
+          }
+        }
+
+        /* Date columns */
+        &.created-date-cell,
+        &.next-run-cell,
+        &.last-run-cell {
+          font-family: 'Roboto Mono', 'Courier New', monospace !important;
+          color: #666666 !important;
+          font-size: 0.875rem !important;
+        }
+
+        /* Robot models column */
+        &.robot-models-cell {
+          .robot-icon {
+            color: #ff6600 !important;
+          }
+        }
+      }
+
+      /* Table rows with hover effect */
+      .table-row {
+        transition: background-color 0.2s ease !important;
+
+        &:hover {
+          background-color: #f8f9fa !important;
+        }
+      }
+    }
+  }
+
+  /* Action buttons with KUKA styling */
+  .action-buttons {
+    button {
+      margin-left: 4px !important;
+
+      &.mat-icon-button {
+        color: #666666 !important;
+
+        &:hover {
+          background-color: #f0f0f0 !important;
+          color: #ff6600 !important;
+        }
+      }
+    }
+  }
+
+  /* Pagination with KUKA theme */
+  .mat-mdc-paginator {
+    border-top: 1px solid #e0e0e0 !important;
+    background-color: #fafafa !important;
+
+    .mat-mdc-paginator-container {
+      color: #333333 !important;
+    }
+  }
+}
+
+/* Additional overrides to ensure correct background colors for search input */
+app-generic-table.saved-custom-missions-table {
+  .filter-section {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-flex {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-input-element {
+        background-color: var(--mat-sys-surface-container) !important;
+        color: var(--mat-sys-on-surface) !important;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        background-color: var(--mat-sys-surface-container) !important;
+      }
+
+      .mat-mdc-form-field-outline {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-end,
+      .mat-mdc-form-field-outline-gap {
+        border-color: var(--mat-sys-outline-variant) !important;
+      }
+    }
+  }
+}

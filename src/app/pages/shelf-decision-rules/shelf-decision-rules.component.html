@@ -1,0 +1,156 @@
+<!-- Rules Summary Card -->
+<mat-card class="rules-summary-card" *ngIf="!isLoading">
+  <div class="summary-content">
+    <div class="summary-stats">
+      <div class="stat-item">
+        <mat-icon class="stat-icon active-icon">check_circle</mat-icon>
+        <div class="stat-details">
+          <span class="stat-number">{{ getRulesCount().active }}</span>
+          <span class="stat-label">Active Rules</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <mat-icon class="stat-icon inactive-icon">pause_circle</mat-icon>
+        <div class="stat-details">
+          <span class="stat-number">{{ getRulesCount().inactive }}</span>
+          <span class="stat-label">Inactive Rules</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <mat-icon class="stat-icon total-icon">rule</mat-icon>
+        <div class="stat-details">
+          <span class="stat-number">{{ getRulesCount().total }}</span>
+          <span class="stat-label">Total Rules</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-card>
+
+<!-- Create Rule Form -->
+<mat-card class="create-rule-card" *ngIf="!isLoading">
+  <div class="card-header">
+    <h3>Create New Rule</h3>
+  </div>
+  <div class="card-content">
+    <form [formGroup]="ruleForm" (ngSubmit)="createRule()">
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Display Name</mat-label>
+          <input matInput formControlName="displayName" placeholder="Enter rule display name">
+          <mat-icon matSuffix>title</mat-icon>
+          <mat-error *ngIf="ruleForm.get('displayName')?.hasError('required')">
+            Display name is required
+          </mat-error>
+          <mat-error *ngIf="ruleForm.get('displayName')?.hasError('minlength')">
+            Display name must be at least 3 characters
+          </mat-error>
+          <mat-error *ngIf="ruleForm.get('displayName')?.hasError('maxlength')">
+            Display name must not exceed 100 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Actual Value</mat-label>
+          <input matInput type="number" formControlName="actualValue" placeholder="Enter numeric value">
+          <mat-icon matSuffix>calculate</mat-icon>
+          <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('required')">
+            Actual value is required
+          </mat-error>
+          <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('min')">
+            Value must be between -999999 and 999999
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" placeholder="Enter rule description (optional)" rows="2"></textarea>
+          <mat-icon matSuffix>description</mat-icon>
+          <mat-error *ngIf="ruleForm.get('description')?.hasError('maxlength')">
+            Description must not exceed 500 characters
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-checkbox formControlName="isActive" class="status-checkbox">
+          Active
+        </mat-checkbox>
+      </div>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="resetForm()">Clear</button>
+        <button mat-raised-button type="submit" color="primary" [disabled]="ruleForm.invalid || isCreating">
+          <mat-icon *ngIf="isCreating" class="loading-icon">refresh</mat-icon>
+          {{ isCreating ? 'Creating...' : 'Create Rule' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</mat-card>
+
+<!-- Generic Table Component -->
+<app-generic-table class="shelf-decision-rules-table"
+  [data]="shelfDecisionRules"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="shelfDecisionRules.length === 0"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>
+
+<!-- Custom Display Name Cell Template -->
+<ng-template #displayNameCell let-data let-column="column">
+  <span class="display-name" [matTooltip]="data.displayName">
+    <mat-icon class="rule-icon">rule</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Actual Value Cell Template -->
+<ng-template #actualValueCell let-data let-column="column">
+  <span class="actual-value"
+        [ngClass]="getValueClass(data.actualValue)"
+        [matTooltip]="'Rule value: ' + data.actualValue">
+    <mat-icon class="value-icon">calculate</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Description Cell Template -->
+<ng-template #descriptionCell let-data let-column="column">
+  <span class="description" [matTooltip]="data.description || 'No description'">
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Status Cell Template -->
+<ng-template #statusCell let-data let-column="column">
+  <span class="status-badge"
+        [ngClass]="getStatusClass(data.isActive)"
+        [matTooltip]="'Status: ' + data.statusText">
+    <mat-icon class="status-icon" *ngIf="data.isActive">check_circle</mat-icon>
+    <mat-icon class="status-icon" *ngIf="!data.isActive">pause_circle</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Created Date Cell Template -->
+<ng-template #createdDateCell let-data let-column="column">
+  <span class="created-date" [matTooltip]="'Created: ' + data.createdDateDisplay">
+    <mat-icon class="date-icon">event</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Updated Date Cell Template -->
+<ng-template #updatedDateCell let-data let-column="column">
+  <span class="updated-date" [matTooltip]="'Last updated: ' + data.updatedDateDisplay">
+    <mat-icon class="date-icon">update</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>

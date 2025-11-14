@@ -1,0 +1,96 @@
+<!-- Storage Usage Banner -->
+<div class="storage-usage"
+     *ngIf="isNearLimit">
+  <mat-card class="storage-warning-card" [style.background]="'linear-gradient(135deg, #ff9800, #f57c00)'" [style.color]="'white'">
+    <div class="storage-content">
+      <mat-icon class="storage-icon">warning</mat-icon>
+      <div class="storage-details">
+        <h3>Storage Warning</h3>
+        <p>
+          Mission history is {{ storageUsagePercentage }}% full ({{ missionCount }}/{{ maxRecords }} records).
+          Old records will be automatically cleared when the limit is reached.
+        </p>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="storageUsagePercentage"
+          class="storage-progress">
+        </mat-progress-bar>
+      </div>
+      <button mat-icon-button
+              matTooltip="Clear all history now"
+              (click)="onTableAction({action: 'clear-history', row: null, rowIndex: -1, type: 'header-action'})"
+              [disabled]="isClearing">
+        <mat-icon>clear_all</mat-icon>
+      </button>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Generic Table Component -->
+<app-generic-table class="mission-history-table"
+  [data]="missionHistory"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="missionHistory.length === 0"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>
+
+<!-- Custom Mission Code Cell Template -->
+<ng-template #missionCodeCell let-data let-column="column">
+  <span class="mission-code" [matTooltip]="data.missionCode">
+    <mat-icon class="mission-type-icon">rocket_launch</mat-icon>
+    {{ data.missionCode }}
+  </span>
+</ng-template>
+
+<!-- Custom Request ID Cell Template -->
+<ng-template #requestIdCell let-data let-column="column">
+  <span class="request-id" [matTooltip]="data.requestId">
+    <mat-icon class="request-icon">link</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Workflow Cell Template -->
+<ng-template #workflowCell let-data let-column="column">
+  <span class="workflow-badge"
+        [ngClass]="getWorkflowClass(data.workflowName)"
+        [matTooltip]="'Workflow: ' + data.workflowName">
+    <mat-icon class="workflow-icon">account_tree</mat-icon>
+    {{ data.workflowDisplay }}
+  </span>
+</ng-template>
+
+<!-- Custom Status Cell Template -->
+<ng-template #statusCell let-data let-column="column">
+  <span class="status-badge"
+        [ngClass]="getStatusClass(data.status)"
+        [matTooltip]="'Status: ' + data.statusText">
+    <mat-icon class="status-icon" *ngIf="data.status === 'Completed'">check_circle</mat-icon>
+    <mat-icon class="status-icon" *ngIf="data.status === 'Failed'">error</mat-icon>
+    <mat-icon class="status-icon" *ngIf="data.status === 'In Progress'">hourglass_empty</mat-icon>
+    <mat-icon class="status-icon" *ngIf="data.status === 'Pending'">schedule</mat-icon>
+    <mat-icon class="status-icon" *ngIf="data.status === 'Cancelled'">cancel</mat-icon>
+    <mat-icon class="status-icon" *ngIf="!data.status || data.status === 'Unknown'">help</mat-icon>
+    {{ data.statusText }}
+  </span>
+</ng-template>
+
+<!-- Custom Created Date Cell Template -->
+<ng-template #createdDateCell let-data let-column="column">
+  <span class="created-date" [matTooltip]="'Created: ' + data.createdDateDisplay">
+    <mat-icon class="date-icon">event</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>
+
+<!-- Custom Time Ago Cell Template -->
+<ng-template #timeAgoCell let-data let-column="column">
+  <span class="time-ago" [matTooltip]="'Time since creation: ' + data.createdDateRelative">
+    <mat-icon class="time-icon">schedule</mat-icon>
+    {{ getCellValue(data, column) }}
+  </span>
+</ng-template>

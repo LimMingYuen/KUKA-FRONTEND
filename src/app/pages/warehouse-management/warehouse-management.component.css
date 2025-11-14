@@ -1,0 +1,536 @@
+@use '@angular/material' as mat;
+
+/* Main container */
+.warehouse-management-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--mat-sys-surface-container-lowest);
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+
+  .loading-card {
+    background-color: var(--mat-sys-surface-container-lowest);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 48px;
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+
+      .loading-text {
+        font-size: 16px;
+        color: var(--mat-sys-on-surface-variant);
+        margin: 0;
+      }
+    }
+  }
+}
+
+/* Header Card */
+.header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px;
+
+    .header-left {
+      .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+
+        .title-icon {
+          font-size: 32px;
+          color: var(--mat-sys-primary);
+        }
+      }
+
+      .page-subtitle {
+        margin: 0;
+        font-size: 16px;
+        color: var(--mat-sys-on-surface-variant);
+      }
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 32px;
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--mat-sys-primary);
+          display: block;
+        }
+
+        .stat-label {
+          font-size: 14px;
+          color: var(--mat-sys-on-surface-variant);
+          display: block;
+          margin-top: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* Tabs Card */
+.tabs-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .tabs-content {
+    padding: 0;
+
+    .warehouse-tabs {
+      .mat-mdc-tab-header {
+        background-color: var(--mat-sys-surface-container);
+        border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+        .mat-mdc-tab {
+          min-width: 120px;
+          color: var(--mat-sys-on-surface-variant);
+
+          .mdc-tab__text-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+
+            .tab-icon {
+              font-size: 20px;
+            }
+
+            .tab-label {
+              font-size: 14px;
+            }
+          }
+
+          &.mdc-tab--active {
+            color: var(--mat-sys-primary);
+
+            .mdc-tab__text-label {
+              color: var(--mat-sys-primary);
+            }
+          }
+        }
+
+        .mat-mdc-tab-indicator {
+          background-color: var(--mat-sys-primary);
+        }
+      }
+
+      .mat-mdc-tab-body-wrapper {
+        background-color: var(--mat-sys-surface-container-lowest);
+        padding: 0;
+      }
+
+      .tab-content {
+        padding: 24px;
+
+        .tab-description {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+          padding: 12px 16px;
+          background-color: var(--mat-sys-surface-container);
+          border-radius: 8px;
+          border-left: 4px solid var(--mat-sys-primary);
+
+          .description-icon {
+            color: var(--mat-sys-primary);
+            font-size: 20px;
+          }
+
+          span {
+            color: var(--mat-sys-on-surface-variant);
+            font-size: 14px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* QR Codes Placeholder */
+.qr-codes-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .placeholder-icon {
+    font-size: 64px;
+    color: var(--mat-sys-on-surface-variant);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 14px;
+    max-width: 400px;
+  }
+
+  button {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+/* Quick Navigation */
+.quick-navigation {
+  .nav-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .nav-content {
+      padding: 24px;
+
+      h3 {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .nav-button {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          padding: 16px 12px;
+          min-width: 100px;
+          border-radius: 8px;
+          background-color: var(--mat-sys-surface-container);
+          border: 1px solid var(--mat-sys-outline-variant);
+          transition: all 0.2s ease;
+
+          mat-icon {
+            font-size: 24px;
+            color: var(--mat-sys-primary);
+          }
+
+          span {
+            font-size: 12px;
+            color: var(--mat-sys-on-surface);
+            font-weight: 500;
+          }
+
+          &:hover {
+            background-color: var(--mat-sys-surface-container-highest);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Material Design Tab Overrides */
+.mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    .mat-mdc-tab {
+      &.mdc-tab--active {
+        .mat-mdc-tab-label {
+          color: var(--mat-sys-primary);
+        }
+      }
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .warehouse-management-container {
+    padding: 16px;
+  }
+
+  .header-card .header-content {
+    flex-direction: column;
+    gap: 24px;
+    align-items: stretch;
+
+    .header-stats {
+      justify-content: space-around;
+    }
+  }
+
+  .warehouse-tabs .mat-mdc-tab-header .mat-mdc-tab {
+    min-width: 100px;
+
+    .mdc-tab__text-label {
+      .tab-label {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .quick-navigation .nav-card .nav-content .nav-links {
+    justify-content: center;
+
+    .nav-button {
+      min-width: 80px;
+      padding: 12px 8px;
+
+      mat-icon {
+        font-size: 20px;
+      }
+
+      span {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .warehouse-management-container {
+    padding: 12px;
+  }
+
+  .header-card .header-content {
+    padding: 20px;
+
+    .header-left .page-title {
+      font-size: 24px;
+
+      .title-icon {
+        font-size: 28px;
+      }
+    }
+
+    .header-stats {
+      gap: 16px;
+
+      .stat-item {
+        .stat-value {
+          font-size: 20px;
+        }
+
+        .stat-label {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .tabs-card .tabs-content .warehouse-tabs .mat-mdc-tab-header {
+    .mat-mdc-tab {
+      min-width: 80px;
+
+      .mdc-tab__text-label {
+        .tab-icon {
+          font-size: 18px;
+        }
+
+        .tab-label {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+
+  .warehouse-tabs .tab-content {
+    padding: 16px;
+
+    .tab-description {
+      margin-bottom: 16px;
+      padding: 8px 12px;
+
+      .description-icon {
+        font-size: 18px;
+      }
+
+      span {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .qr-codes-placeholder {
+    padding: 40px 16px;
+
+    .placeholder-icon {
+      font-size: 48px;
+    }
+
+    h3 {
+      font-size: 18px;
+    }
+
+    p {
+      font-size: 13px;
+    }
+  }
+
+  .quick-navigation .nav-card .nav-content {
+    padding: 16px;
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .nav-links {
+      gap: 8px;
+
+      .nav-button {
+        min-width: 60px;
+        padding: 8px 6px;
+
+        mat-icon {
+          font-size: 18px;
+        }
+
+        span {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .warehouse-management-container {
+    padding: 8px;
+  }
+
+  .header-card .header-content {
+    padding: 16px;
+
+    .header-left .page-title {
+      font-size: 20px;
+
+      .title-icon {
+        font-size: 24px;
+      }
+    }
+
+    .header-stats {
+      gap: 12px;
+
+      .stat-item {
+        .stat-value {
+          font-size: 18px;
+        }
+
+        .stat-label {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+
+  .warehouse-tabs .mat-mdc-tab-header .mat-mdc-tab {
+    min-width: 60px;
+
+    .mdc-tab__text-label {
+      .tab-icon {
+        font-size: 16px;
+      }
+
+      .tab-label {
+        font-size: 10px;
+      }
+    }
+  }
+
+  .warehouse-tabs .tab-content {
+    padding: 12px;
+
+    .tab-description {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 12px;
+
+      .description-icon {
+        align-self: center;
+      }
+    }
+  }
+
+  .quick-navigation .nav-card .nav-content {
+    padding: 12px;
+
+    .nav-links {
+      .nav-button {
+        min-width: 50px;
+        padding: 6px 4px;
+
+        mat-icon {
+          font-size: 16px;
+        }
+
+        span {
+          font-size: 9px;
+        }
+      }
+    }
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply fade-in animation to main content */
+.warehouse-management-container > :not(.loading-container) {
+  animation: fadeIn 0.3s ease-in-out;
+}
