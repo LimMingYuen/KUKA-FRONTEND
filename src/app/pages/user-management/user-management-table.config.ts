@@ -84,9 +84,9 @@ export const USER_MANAGEMENT_TABLE_CONFIG: TableConfig<UserDto> = {
     column: 'username',
     direction: 'asc'
   },
-  emptyState: {
+  empty: {
     message: 'No users found',
-    action: 'add',
-    actionLabel: 'Add First User'
+    icon: 'inbox',
+    actionText: 'Add First User'
   }
 };
