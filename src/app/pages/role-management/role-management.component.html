@@ -1,0 +1,8 @@
+<div class="role-management-container">
+  <app-generic-table
+    [data]="tableData"
+    [config]="tableConfig"
+    [loading]="isLoading"
+    (action)="handleAction($event)"
+  ></app-generic-table>
+</div>
