@@ -1,1 +1,5 @@
-<app-sidebar></app-sidebar>
+<!-- Show sidebar with navigation when authenticated -->
+<app-sidebar *ngIf="authService.isAuthenticated()"></app-sidebar>
+
+<!-- Show standalone router outlet for login page when not authenticated -->
+<router-outlet *ngIf="!authService.isAuthenticated()"></router-outlet>
