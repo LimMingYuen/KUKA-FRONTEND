@@ -561,7 +561,7 @@ app-generic-table.mission-types-table {
             color: #1976d2 !important;
 
             .mission-type-icon {
-              color: #ff6600 !important;
+              color: #1976d2 !important;
             }
           }
         }
@@ -668,7 +668,7 @@ app-generic-table.mission-types-table {
 
         &:hover {
           background-color: #f0f0f0 !important;
-          color: #ff6600 !important;
+          color: #1976d2 !important;
         }
       }
     }

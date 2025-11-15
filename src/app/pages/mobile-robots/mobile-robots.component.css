@@ -805,7 +805,7 @@ app-generic-table.mobile-robot-table {
         &.orientation-cell {
           .orientation {
             .orientation-icon {
-              color: #ff6600 !important;
+              color: #1976d2 !important;
             }
           }
         }
@@ -844,7 +844,7 @@ app-generic-table.mobile-robot-table {
 
         &:hover {
           background-color: #f0f0f0 !important;
-          color: #ff6600 !important;
+          color: #1976d2 !important;
         }
       }
     }

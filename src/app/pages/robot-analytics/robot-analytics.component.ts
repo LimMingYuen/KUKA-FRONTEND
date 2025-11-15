@@ -209,14 +209,14 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
         {
           label: 'Utilization Rate (%)',
           data: dataPoints.map(p => p.utilizationRate),
-          borderColor: '#FF6600',
-          backgroundColor: 'rgba(255, 102, 0, 0.2)',
+          borderColor: '#1976d2',
+          backgroundColor: 'rgba(25, 118, 210, 0.2)',
           borderWidth: 2,
           fill: true,
           tension: 0.4,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: '#FF6600',
+          pointBackgroundColor: '#1976d2',
           pointBorderColor: '#fff',
           pointBorderWidth: 2
         }
