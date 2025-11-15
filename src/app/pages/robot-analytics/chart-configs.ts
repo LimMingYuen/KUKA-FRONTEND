@@ -1,11 +1,11 @@
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 
 /**
- * KUKA Brand Colors
+ * Renesas Brand Colors
  */
 export const KUKA_COLORS = {
-  primary: '#FF6600', // KUKA Orange
-  secondary: '#1976d2', // Blue
+  primary: '#1976d2', // Renesas Blue
+  secondary: '#2196f3', // Light Blue
   success: '#4caf50', // Green
   warning: '#ff9800', // Orange
   danger: '#f44336', // Red

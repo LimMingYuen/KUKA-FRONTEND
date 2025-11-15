@@ -63,6 +63,18 @@ export const routes: Routes = [
     title: 'Robot Analytics - KUKA GUI'
   },
   {
+    path: 'user-management',
+    loadComponent: () => import('./pages/user-management/user-management.component').then(m => m.UserManagementComponent),
+    canActivate: [authGuard],
+    title: 'User Management - KUKA GUI'
+  },
+  {
+    path: 'role-management',
+    loadComponent: () => import('./pages/role-management/role-management.component').then(m => m.RoleManagementComponent),
+    canActivate: [authGuard],
+    title: 'Role Management - KUKA GUI'
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'

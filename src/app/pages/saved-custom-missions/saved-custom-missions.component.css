@@ -570,7 +570,7 @@ app-generic-table.saved-custom-missions-table {
           }
 
           .mission-icon {
-            color: #ff6600 !important;
+            color: #1976d2 !important;
           }
         }
 
@@ -643,7 +643,7 @@ app-generic-table.saved-custom-missions-table {
         /* Robot models column */
         &.robot-models-cell {
           .robot-icon {
-            color: #ff6600 !important;
+            color: #1976d2 !important;
           }
         }
       }
@@ -669,7 +669,7 @@ app-generic-table.saved-custom-missions-table {
 
         &:hover {
           background-color: #f0f0f0 !important;
-          color: #ff6600 !important;
+          color: #1976d2 !important;
         }
       }
     }

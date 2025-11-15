@@ -123,6 +123,24 @@ export class NavigationService {
         ]
       },
       {
+        id: 'administration',
+        label: 'Administration',
+        items: [
+          {
+            id: 'user-management',
+            label: 'User Management',
+            icon: 'people',
+            route: '/user-management'
+          },
+          {
+            id: 'role-management',
+            label: 'Role Management',
+            icon: 'admin_panel_settings',
+            route: '/role-management'
+          }
+        ]
+      },
+      {
         id: 'system',
         label: 'System',
         items: [

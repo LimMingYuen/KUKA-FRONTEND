@@ -622,7 +622,7 @@ app-generic-table.workflow-table {
     }
   }
 
-  // Action buttons with KUKA styling
+  // Action buttons styling
   .action-buttons {
     button {
       margin-left: 4px !important;
@@ -632,7 +632,7 @@ app-generic-table.workflow-table {
 
         &:hover {
           background-color: #f0f0f0 !important;
-          color: #ff6600 !important;
+          color: var(--mat-sys-primary) !important;
         }
       }
     }
