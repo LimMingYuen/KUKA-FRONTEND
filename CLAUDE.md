@@ -253,7 +253,7 @@ The application implements a complete JWT-based authentication system.
 ### Backend Integration
 
 - **API Base URL**: `http://localhost:5109/api`
-- **Login Endpoint**: `POST /api/Login`
+- **Login Endpoint**: `POST /api/Auth/login`
 - **Authentication Method**: JWT token-based
 - **Token Storage**: localStorage (`auth_token` key)
 - **User Data Storage**: localStorage (`user_data` key)
@@ -272,6 +272,7 @@ interface LoginRequest {
 ```typescript
 interface ApiResponse<T> {
   success: boolean;
+  code: string;
   msg: string;
   data?: T;
 }

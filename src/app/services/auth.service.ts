@@ -39,7 +39,7 @@ export class AuthService {
     this.isLoading.set(true);
 
     return this.http.post<ApiResponse<LoginResponseData>>(
-      `${this.API_URL}/Login`,
+      `${this.API_URL}/Auth/login`,
       credentials
     ).pipe(
       map(response => {
