@@ -9,12 +9,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { TableConfig, ActionEvent } from '../../shared/models/table.models';
 import { UserDto, UserCreateRequest, UserUpdateRequest } from '../../models/user.models';
 import { UserService } from '../../services/user.service';
+import { RoleService } from '../../services/role.service';
+import { RoleDto } from '../../models/role.models';
 import { USER_MANAGEMENT_TABLE_CONFIG } from './user-management-table.config';
 
 @Component({
@@ -234,7 +237,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add User' : 'Edit User' }}</h2>
@@ -257,9 +261,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Roles (comma-separated)</mat-label>
-          <input matInput formControlName="rolesString" placeholder="e.g., admin, operator" />
-          <mat-hint>Enter roles separated by commas</mat-hint>
+          <mat-label>Roles</mat-label>
+          <mat-select formControlName="roles" multiple>
+            <mat-option *ngFor="let role of availableRoles" [value]="role.roleCode">
+              {{ role.name }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Select one or more roles</mat-hint>
         </mat-form-field>
 
         <div class="checkbox-field">
@@ -299,20 +307,54 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     `
   ]
 })
-export class UserFormDialogComponent {
+export class UserFormDialogComponent implements OnInit, OnDestroy {
   userForm: FormGroup;
+  availableRoles: RoleDto[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UserFormDialogComponent>,
+    private roleService: RoleService,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; user?: UserDto }
   ) {
     this.userForm = this.fb.group({
       username: [data.user?.username || '', Validators.required],
       nickname: [data.user?.nickname || '', Validators.required],
-      rolesString: [data.user?.roles?.join(', ') || ''],
+      roles: [data.user?.roles || []],
       isSuperAdmin: [data.user?.isSuperAdmin || false]
     });
+  }
+
+  ngOnInit(): void {
+    this.loadRoles();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load available roles from the API
+   */
+  private loadRoles(): void {
+    this.roleService
+      .getAll()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (roles) => {
+          this.availableRoles = roles;
+        },
+        error: (err) => {
+          console.error('Error loading roles:', err);
+          this.snackBar.open(err.message || 'Failed to load roles', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
   }
 
   onCancel(): void {
@@ -322,10 +364,6 @@ export class UserFormDialogComponent {
   onSave(): void {
     if (this.userForm.valid) {
       const formValue = this.userForm.value;
-      const roles = formValue.rolesString
-        ? formValue.rolesString.split(',').map((r: string) => r.trim()).filter((r: string) => r)
-        : [];
-
       const currentUser = localStorage.getItem('user_data');
       const username = currentUser ? JSON.parse(currentUser).username : 'system';
 
@@ -334,7 +372,7 @@ export class UserFormDialogComponent {
           username: formValue.username,
           nickname: formValue.nickname,
           isSuperAdmin: formValue.isSuperAdmin,
-          roles,
+          roles: formValue.roles || [],
           createBy: username,
           createApp: 'KUKA-GUI'
         };
@@ -344,7 +382,7 @@ export class UserFormDialogComponent {
           username: formValue.username,
           nickname: formValue.nickname,
           isSuperAdmin: formValue.isSuperAdmin,
-          roles,
+          roles: formValue.roles || [],
           lastUpdateBy: username,
           lastUpdateApp: 'KUKA-GUI'
         };
