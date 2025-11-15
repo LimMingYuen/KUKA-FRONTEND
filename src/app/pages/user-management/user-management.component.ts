@@ -261,6 +261,34 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            [placeholder]="data.mode === 'create' ? 'Enter password' : 'Enter new password (leave blank to keep current)'"
+            [required]="data.mode === 'create'"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Hide password'"
+            [attr.aria-pressed]="hidePassword"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="userForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+          <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">
+            Password must be at least 6 characters
+          </mat-error>
+          <mat-hint *ngIf="data.mode === 'edit'">Leave blank to keep current password</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Roles</mat-label>
           <mat-select formControlName="roles" multiple>
             <mat-option *ngFor="let role of availableRoles" [value]="role.roleCode">
@@ -310,6 +338,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 export class UserFormDialogComponent implements OnInit, OnDestroy {
   userForm: FormGroup;
   availableRoles: RoleDto[] = [];
+  hidePassword = true;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -319,8 +348,13 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; user?: UserDto }
   ) {
+    const passwordValidators = data.mode === 'create'
+      ? [Validators.required, Validators.minLength(6)]
+      : [Validators.minLength(6)];
+
     this.userForm = this.fb.group({
       username: [data.user?.username || '', Validators.required],
+      password: ['', passwordValidators],
       nickname: [data.user?.nickname || '', Validators.required],
       roles: [data.user?.roles || []],
       isSuperAdmin: [data.user?.isSuperAdmin || false]
@@ -370,6 +404,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
       if (this.data.mode === 'create') {
         const request: UserCreateRequest = {
           username: formValue.username,
+          password: formValue.password,
           nickname: formValue.nickname,
           isSuperAdmin: formValue.isSuperAdmin,
           roles: formValue.roles || [],
@@ -386,6 +421,10 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
           lastUpdateBy: username,
           lastUpdateApp: 'KUKA-GUI'
         };
+        // Only include password if it was provided
+        if (formValue.password && formValue.password.trim() !== '') {
+          request.password = formValue.password;
+        }
         this.dialogRef.close(request);
       }
     }
