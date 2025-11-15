@@ -282,9 +282,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           <mat-error *ngIf="userForm.get('password')?.hasError('required')">
             Password is required
           </mat-error>
-          <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">
-            Password must be at least 6 characters
-          </mat-error>
           <mat-hint *ngIf="data.mode === 'edit'">Leave blank to keep current password</mat-hint>
         </mat-form-field>
 
@@ -349,8 +346,8 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; user?: UserDto }
   ) {
     const passwordValidators = data.mode === 'create'
-      ? [Validators.required, Validators.minLength(6)]
-      : [Validators.minLength(6)];
+      ? [Validators.required]
+      : [];
 
     this.userForm = this.fb.group({
       username: [data.user?.username || '', Validators.required],
