@@ -79,9 +79,9 @@ export const ROLE_MANAGEMENT_TABLE_CONFIG: TableConfig<RoleDto> = {
     column: 'name',
     direction: 'asc'
   },
-  emptyState: {
+  empty: {
     message: 'No roles found',
-    action: 'add',
-    actionLabel: 'Add First Role'
+    icon: 'inbox',
+    actionText: 'Add First Role'
   }
 };
