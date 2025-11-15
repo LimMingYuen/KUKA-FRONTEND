@@ -42,6 +42,7 @@ export interface UserDto {
  */
 export interface UserCreateRequest {
   username: string;
+  password: string;
   nickname: string;
   isSuperAdmin: boolean;
   roles?: string[];
@@ -54,6 +55,7 @@ export interface UserCreateRequest {
  */
 export interface UserUpdateRequest {
   username: string;
+  password?: string;
   nickname: string;
   isSuperAdmin: boolean;
   roles?: string[];
