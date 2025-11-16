@@ -378,8 +378,8 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.missionsService.queryJobs({
-          missionCodes: [missionCode],
-          limit: 1
+          jobCode: missionCode,
+          limit: 10
         }).subscribe({
           next: (response) => {
             if (response.success && response.data && response.data.length > 0) {
