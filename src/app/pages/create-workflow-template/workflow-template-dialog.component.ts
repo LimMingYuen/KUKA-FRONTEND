@@ -29,6 +29,7 @@ import { MapZonesService } from '../../services/map-zones.service';
 import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
+import { createQrCodeUniqueIds } from '../../models/qr-code.models';
 
 export interface WorkflowTemplateDialogData {
   mode: 'create' | 'edit';
@@ -538,8 +539,8 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
           const activeShelfRuleValues = shelfRules.filter(r => r.isActive).map(r => r.actualValue).sort();
           this.activeShelfRules.set(activeShelfRuleValues);
 
-          // Combine QR codes (nodeLabel) and map zones (zoneCode) for positions
-          const qrCodePositions = qrCodes.map(qr => qr.nodeLabel).filter(Boolean);
+          // Combine QR codes (using unique mapCode-Floor-Node format) and map zones (zoneCode) for positions
+          const qrCodePositions = createQrCodeUniqueIds(qrCodes);
           const mapZonePositions = mapZones.map(mz => mz.code).filter(Boolean);
           const allPositions = [...qrCodePositions, ...mapZonePositions].sort();
           this.availablePositions.set([...new Set(allPositions)]);

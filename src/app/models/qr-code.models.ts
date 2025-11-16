@@ -146,3 +146,31 @@ export function getFloorClass(floorNumber: string): string {
 
   return 'floor-ground';
 }
+
+/**
+ * Create unique QR code identifier by combining mapCode-Floor-Node
+ * This format is used for mission step positions in workflow templates
+ *
+ * @param qrCode QR code data object
+ * @returns Unique identifier in format "mapCode-floorNumber-nodeLabel" (e.g., "MAP1-1-A001")
+ */
+export function createQrCodeUniqueId(qrCode: QrCodeSummaryDto): string {
+  const mapCode = qrCode.mapCode || '';
+  const floor = qrCode.floorNumber || '';
+  const node = qrCode.nodeLabel || '';
+
+  // Return combined unique identifier
+  return `${mapCode}-${floor}-${node}`;
+}
+
+/**
+ * Create unique identifiers for an array of QR codes
+ *
+ * @param qrCodes Array of QR code data
+ * @returns Array of unique identifiers
+ */
+export function createQrCodeUniqueIds(qrCodes: QrCodeSummaryDto[]): string[] {
+  return qrCodes
+    .map(qr => createQrCodeUniqueId(qr))
+    .filter(id => id && id !== '--'); // Filter out empty or incomplete IDs
+}
