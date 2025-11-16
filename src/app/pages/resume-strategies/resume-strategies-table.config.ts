@@ -151,14 +151,6 @@ export const RESUME_STRATEGIES_TABLE_CONFIG: TableConfig<ResumeStrategyDisplayDa
       color: 'primary',
       tooltip: 'Create new resume strategy',
       loading: false
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'button',
-      color: 'accent',
-      tooltip: 'Export resume strategies data'
     }
   ],
 

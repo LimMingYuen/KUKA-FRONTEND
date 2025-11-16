@@ -147,14 +147,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       color: 'primary',
       tooltip: 'Create new mission type',
       loading: false
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'button',
-      color: 'accent',
-      tooltip: 'Export mission types data'
     }
   ],
 

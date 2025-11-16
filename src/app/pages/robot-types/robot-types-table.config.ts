@@ -114,14 +114,6 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
       color: 'primary',
       tooltip: 'Create new robot type',
       loading: false
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'button',
-      color: 'accent',
-      tooltip: 'Export robot types data'
     }
   ],
 

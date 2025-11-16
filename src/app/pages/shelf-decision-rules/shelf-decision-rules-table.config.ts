@@ -143,14 +143,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       color: 'primary',
       tooltip: 'Create new shelf decision rule',
       loading: false
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'button',
-      color: 'accent',
-      tooltip: 'Export shelf decision rules data'
     }
   ],
 

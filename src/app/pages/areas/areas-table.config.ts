@@ -151,14 +151,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       color: 'primary',
       tooltip: 'Create new area',
       loading: false
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'button',
-      color: 'accent',
-      tooltip: 'Export areas data'
     }
   ],
 
