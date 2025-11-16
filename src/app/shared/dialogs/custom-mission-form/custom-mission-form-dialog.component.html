@@ -1,0 +1,202 @@
+<h2 mat-dialog-title>
+  <mat-icon>{{ mode === 'create' ? 'add_circle' : 'edit' }}</mat-icon>
+  {{ getTitle() }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="mission-form">
+    <mat-tab-group animationDuration="200ms">
+
+      <!-- Basic Information Tab -->
+      <mat-tab label="Basic Info">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">info</mat-icon>
+          Basic Info
+        </ng-template>
+
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mission Name *</mat-label>
+            <input matInput formControlName="missionName" placeholder="Enter mission name">
+            <mat-error *ngIf="form.get('missionName')?.hasError('required')">
+              Mission name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea
+              matInput
+              formControlName="description"
+              placeholder="Enter mission description"
+              rows="3"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mission Type *</mat-label>
+            <input matInput formControlName="missionType" placeholder="e.g., TRANSPORT, PICK, PLACE">
+            <mat-error *ngIf="form.get('missionType')?.hasError('required')">
+              Mission type is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Robot Type *</mat-label>
+            <input matInput formControlName="robotType" placeholder="e.g., AGV, AMR">
+            <mat-error *ngIf="form.get('robotType')?.hasError('required')">
+              Robot type is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Priority *</mat-label>
+            <mat-select formControlName="priority">
+              <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('priority')?.hasError('required')">
+              Priority is required
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </mat-tab>
+
+      <!-- Robot Configuration Tab -->
+      <mat-tab label="Robot Config">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">smart_toy</mat-icon>
+          Robot Config
+        </ng-template>
+
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Robot Models</mat-label>
+            <input matInput formControlName="robotModels" placeholder="Comma-separated robot models">
+            <mat-hint>e.g., MODEL-A, MODEL-B, MODEL-C</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Robot IDs</mat-label>
+            <input matInput formControlName="robotIds" placeholder="Comma-separated robot IDs">
+            <mat-hint>e.g., ROBOT-001, ROBOT-002, ROBOT-003</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Container Model Code</mat-label>
+            <input matInput formControlName="containerModelCode" placeholder="Enter container model code">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Container Code</mat-label>
+            <input matInput formControlName="containerCode" placeholder="Enter container code">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Idle Node</mat-label>
+            <input matInput formControlName="idleNode" placeholder="Enter idle node position">
+          </mat-form-field>
+        </div>
+      </mat-tab>
+
+      <!-- Advanced Settings Tab -->
+      <mat-tab label="Advanced">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">tune</mat-icon>
+          Advanced
+        </ng-template>
+
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Organization ID</mat-label>
+            <input matInput formControlName="orgId" placeholder="Enter organization ID">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>View Board Type</mat-label>
+            <input matInput formControlName="viewBoardType" placeholder="Enter view board type">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Template Code</mat-label>
+            <input matInput formControlName="templateCode" placeholder="Enter template code">
+          </mat-form-field>
+
+          <div class="checkbox-section">
+            <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
+              Lock robot after finish
+            </mat-checkbox>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Unlock Robot ID</mat-label>
+            <input matInput formControlName="unlockRobotId" placeholder="Enter unlock robot ID">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Unlock Mission Code</mat-label>
+            <input matInput formControlName="unlockMissionCode" placeholder="Enter unlock mission code">
+          </mat-form-field>
+        </div>
+      </mat-tab>
+
+      <!-- Mission Steps Tab -->
+      <mat-tab label="Mission Steps">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">list_alt</mat-icon>
+          Mission Steps
+        </ng-template>
+
+        <div class="tab-content">
+          <div class="json-editor-header">
+            <p>Define mission steps in JSON format</p>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="formatJson()"
+              class="format-btn">
+              <mat-icon>code</mat-icon>
+              Format JSON
+            </button>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mission Steps (JSON) *</mat-label>
+            <textarea
+              matInput
+              formControlName="missionStepsJson"
+              placeholder='[{"sequence": 1, "position": "A1", "type": "PICK", ...}]'
+              rows="15"
+              class="json-editor"></textarea>
+            <mat-hint>Enter a valid JSON array of mission steps</mat-hint>
+            <mat-error *ngIf="form.get('missionStepsJson')?.hasError('required')">
+              Mission steps are required
+            </mat-error>
+          </mat-form-field>
+
+          <div class="json-help">
+            <strong>Example Mission Step:</strong>
+            <pre>{{'{'}}"sequence": 1,"position": "A1","type": "PICK","putDown": false,"passStrategy": "NORMAL","waitingMillis": 0{{'}'}}</pre>
+          </div>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    Cancel
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="form.invalid || isSubmitting">
+    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    <mat-icon *ngIf="!isSubmitting">{{ mode === 'create' ? 'add' : 'save' }}</mat-icon>
+    <span *ngIf="!isSubmitting">{{ mode === 'create' ? 'Create' : 'Update' }}</span>
+    <span *ngIf="isSubmitting">{{ mode === 'create' ? 'Creating...' : 'Updating...' }}</span>
+  </button>
+</mat-dialog-actions>
