@@ -210,7 +210,8 @@ export class SavedCustomMissionsComponent implements OnInit, OnDestroy {
    */
   private editMission(mission: SavedCustomMissionsDisplayData): void {
     const dialogRef = this.dialog.open(CustomMissionFormDialogComponent, {
-      width: '800px',
+      width: '95vw',
+      maxWidth: '1400px',
       maxHeight: '90vh',
       disableClose: false,
       data: {
@@ -293,7 +294,8 @@ export class SavedCustomMissionsComponent implements OnInit, OnDestroy {
    */
   private createNewMission(): void {
     const dialogRef = this.dialog.open(CustomMissionFormDialogComponent, {
-      width: '800px',
+      width: '95vw',
+      maxWidth: '1400px',
       maxHeight: '90vh',
       disableClose: false,
       data: {

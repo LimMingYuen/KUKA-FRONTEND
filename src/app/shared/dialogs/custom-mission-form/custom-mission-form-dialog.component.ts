@@ -9,7 +9,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
@@ -53,7 +52,6 @@ export interface CustomMissionFormDialogData {
     MatCheckboxModule,
     MatProgressSpinnerModule,
     MatIconModule,
-    MatTabsModule,
     MatTooltipModule,
     MatSnackBarModule,
     MatCardModule
