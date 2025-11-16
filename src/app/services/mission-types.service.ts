@@ -340,4 +340,39 @@ export class MissionTypesService {
   public hasValidToken(): boolean {
     return !!this.getAuthToken();
   }
+
+  /**
+   * Check if a mission type is being used by any workflow templates
+   * Returns the count of templates using this mission type
+   */
+  public checkUsageInTemplates(missionTypeValue: string): Observable<{
+    isUsed: boolean;
+    usageCount: number;
+    templateNames: string[];
+  }> {
+    const url = `${this.API_URL.replace('/v1/mission-types', '')}/saved-custom-missions`;
+
+    return this.http.get<ApiResponse<any[]>>(url, {
+      headers: this.getHttpHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          const templatesUsingThisType = response.data.filter(
+            (template: any) => template.missionType === missionTypeValue
+          );
+
+          return {
+            isUsed: templatesUsingThisType.length > 0,
+            usageCount: templatesUsingThisType.length,
+            templateNames: templatesUsingThisType.map((t: any) => t.missionName)
+          };
+        }
+        return { isUsed: false, usageCount: 0, templateNames: [] };
+      }),
+      catchError(error => {
+        console.error('Error checking mission type usage:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }

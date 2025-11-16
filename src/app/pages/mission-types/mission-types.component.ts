@@ -185,18 +185,46 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Delete mission type with confirmation
+   * Delete mission type with confirmation and usage check
    */
   private deleteMissionType(missionType: MissionTypeDisplayData): void {
-    if (confirm(`Are you sure you want to delete mission type "${missionType.displayName}"?`)) {
-      this.missionTypesService.deleteMissionType(missionType.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (error) => {
-            console.error('Error deleting mission type:', error);
+    // First check if this mission type is in use
+    this.missionTypesService.checkUsageInTemplates(missionType.actualValue)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (usage) => {
+          if (usage.isUsed) {
+            // Show warning about templates using this mission type
+            const templateList = usage.templateNames.join('\n  - ');
+            const message = `Cannot delete mission type "${missionType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this mission type instead.`;
+            alert(message);
+          } else {
+            // Not in use, proceed with deletion after confirmation
+            if (confirm(`Are you sure you want to delete mission type "${missionType.displayName}"?`)) {
+              this.missionTypesService.deleteMissionType(missionType.id)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  error: (error) => {
+                    console.error('Error deleting mission type:', error);
+                  }
+                });
+            }
           }
-        });
-    }
+        },
+        error: (error) => {
+          console.error('Error checking mission type usage:', error);
+          // On error, still allow deletion with a warning
+          if (confirm(`Unable to verify usage. Delete mission type "${missionType.displayName}" anyway?`)) {
+            this.missionTypesService.deleteMissionType(missionType.id)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                error: (error) => {
+                  console.error('Error deleting mission type:', error);
+                }
+              });
+          }
+        }
+      });
   }
 
   /**
