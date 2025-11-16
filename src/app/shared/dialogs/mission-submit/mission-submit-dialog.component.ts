@@ -373,8 +373,8 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   startJobPolling(missionCode: string): void {
     this.isPollingJobs = true;
 
-    // Poll every 2 seconds
-    this.pollingSubscription = interval(2000)
+    // Poll every 3 seconds (as per API recommendation)
+    this.pollingSubscription = interval(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.missionsService.queryJobs({

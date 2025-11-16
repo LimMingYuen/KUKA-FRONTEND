@@ -138,7 +138,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       robotModels: ['KMP600I'],
       robotIds: ['14'],
       robotType: 'LIFT',
-      priority: 1,
+      priority: 50, // Priority range: 0-100 (50 = normal)
       containerModelCode: '',
       containerCode: '',
       templateCode: workflow.code,
@@ -203,8 +203,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Poll every 2 seconds
-    const subscription = interval(2000)
+    // Poll every 3 seconds (as per API recommendation)
+    const subscription = interval(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         // Query job status
