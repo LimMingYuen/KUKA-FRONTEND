@@ -248,6 +248,69 @@ export class SavedCustomMissionsService {
   }
 
   /**
+   * Update workflow template
+   */
+  updateWorkflowTemplate(id: number, request: SaveMissionAsTemplateRequest): Observable<SavedCustomMissionsDisplayData> {
+    this.isUpdating.set(true);
+
+    // Transform the nested request to flat structure expected by API
+    const updateRequest: SavedCustomMissionUpdateRequest = {
+      missionName: request.missionName,
+      description: request.description,
+      missionType: request.missionTemplate.missionType,
+      robotType: request.missionTemplate.robotType,
+      priority: this.mapPriorityNumberToString(request.missionTemplate.priority),
+      robotModels: request.missionTemplate.robotModels,
+      robotIds: request.missionTemplate.robotIds,
+      containerModelCode: request.missionTemplate.containerModelCode,
+      containerCode: request.missionTemplate.containerCode,
+      idleNode: request.missionTemplate.idleNode,
+      orgId: request.missionTemplate.orgId,
+      viewBoardType: request.missionTemplate.viewBoardType,
+      templateCode: request.missionTemplate.templateCode,
+      lockRobotAfterFinish: request.missionTemplate.lockRobotAfterFinish,
+      unlockRobotId: request.missionTemplate.unlockRobotId,
+      unlockMissionCode: request.missionTemplate.unlockMissionCode,
+      missionStepsJson: JSON.stringify(request.missionTemplate.missionData)
+    };
+
+    return this.http.put<ApiResponse<SavedCustomMissionDto>>(
+      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}/${id}`,
+      updateRequest,
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to update workflow template');
+        }
+        return SavedCustomMissionsUtils.transformToDisplay(response.data);
+      }),
+      tap(() => {
+        this.isUpdating.set(false);
+        this.showSuccessMessage('Workflow template updated successfully');
+      }),
+      catchError(error => {
+        this.isUpdating.set(false);
+        this.handleError(error, `Failed to update workflow template #${id}`);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Map priority number (1-4) to string (LOW, MEDIUM, HIGH, CRITICAL)
+   */
+  private mapPriorityNumberToString(priority: number): string {
+    const priorityMap: { [key: number]: string } = {
+      1: 'LOW',
+      2: 'MEDIUM',
+      3: 'HIGH',
+      4: 'CRITICAL'
+    };
+    return priorityMap[priority] || 'MEDIUM';
+  }
+
+  /**
    * Export saved custom missions data
    */
   exportSavedCustomMissions(): Observable<Blob> {

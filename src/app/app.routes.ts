@@ -90,7 +90,7 @@ export const routes: Routes = [
     path: 'create-workflow-template',
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],
-    title: 'Create Workflow Template - KUKA GUI'
+    title: 'Workflow Templates - KUKA GUI'
   },
   {
     path: '',

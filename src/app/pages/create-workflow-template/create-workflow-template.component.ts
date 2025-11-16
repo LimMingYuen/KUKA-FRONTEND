@@ -1,81 +1,56 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
+import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
-import {
-  SaveMissionAsTemplateRequest,
-  MissionStepData
-} from '../../models/saved-custom-missions.models';
+import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
+import { WORKFLOW_TEMPLATE_TABLE_CONFIG } from './workflow-template-table.config';
+import { WorkflowTemplateDialogComponent, WorkflowTemplateDialogData } from './workflow-template-dialog.component';
+import { ActionEvent } from '../../shared/models/table.models';
 
 @Component({
   selector: 'app-create-workflow-template',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
+    MatDialogModule,
+    MatSnackBarModule,
+    GenericTableComponent
   ],
   templateUrl: './create-workflow-template.component.html',
   styleUrl: './create-workflow-template.component.scss'
 })
 export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
-  templateForm!: FormGroup;
-  isSubmitting = false;
+  // Table data
+  public workflowTemplates: SavedCustomMissionsDisplayData[] = [];
+
+  // Table configuration
+  public tableConfig = WORKFLOW_TEMPLATE_TABLE_CONFIG;
+
+  // UI state
+  public isLoading = false;
+
+  // Cleanup subject
   private destroy$ = new Subject<void>();
 
-  // Form options
-  priorityOptions = [
-    { value: 1, label: 'Low' },
-    { value: 2, label: 'Medium' },
-    { value: 3, label: 'High' },
-    { value: 4, label: 'Critical' }
-  ];
-
-  stepTypeOptions = [
-    'PICKUP',
-    'DROPOFF',
-    'NAVIGATE',
-    'WAIT',
-    'CHARGE'
-  ];
-
-  passStrategyOptions = [
-    'CONTINUE',
-    'WAIT',
-    'ABORT'
-  ];
-
   constructor(
-    private fb: FormBuilder,
     private savedCustomMissionsService: SavedCustomMissionsService,
-    private router: Router
-  ) {}
+    private dialog: MatDialog
+  ) {
+    // Configure empty state action
+    this.tableConfig.empty!.action = () => this.openCreateDialog();
+  }
 
   ngOnInit(): void {
-    this.initializeForm();
+    this.loadWorkflowTemplates();
   }
 
   ngOnDestroy(): void {
@@ -84,251 +59,167 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize the reactive form
+   * Load workflow templates from the service
    */
-  private initializeForm(): void {
-    this.templateForm = this.fb.group({
-      // Basic information
-      missionName: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required]],
-
-      // Mission template
-      missionTemplate: this.fb.group({
-        orgId: ['', [Validators.required]],
-        missionType: ['', [Validators.required]],
-        viewBoardType: [''],
-        robotModels: [[]],
-        robotIds: [[]],
-        robotType: ['', [Validators.required]],
-        priority: [2, [Validators.required, Validators.min(1), Validators.max(4)]],
-        containerModelCode: [''],
-        containerCode: [''],
-        templateCode: [''],
-        lockRobotAfterFinish: [false],
-        unlockRobotId: [''],
-        unlockMissionCode: [''],
-        idleNode: [''],
-        missionData: this.fb.array([])
-      })
-    });
-
-    // Add one mission step by default
-    this.addMissionStep();
-  }
-
-  /**
-   * Get mission template form group
-   */
-  get missionTemplate(): FormGroup {
-    return this.templateForm.get('missionTemplate') as FormGroup;
-  }
-
-  /**
-   * Get mission data form array
-   */
-  get missionData(): FormArray {
-    return this.missionTemplate.get('missionData') as FormArray;
-  }
-
-  /**
-   * Create a new mission step form group
-   */
-  private createMissionStepFormGroup(sequence: number = 0): FormGroup {
-    return this.fb.group({
-      sequence: [sequence, [Validators.required, Validators.min(0)]],
-      position: ['', [Validators.required]],
-      type: ['NAVIGATE', [Validators.required]],
-      putDown: [false],
-      passStrategy: ['CONTINUE', [Validators.required]],
-      waitingMillis: [0, [Validators.min(0)]]
-    });
-  }
-
-  /**
-   * Add a new mission step
-   */
-  addMissionStep(): void {
-    const newSequence = this.missionData.length;
-    this.missionData.push(this.createMissionStepFormGroup(newSequence));
-  }
-
-  /**
-   * Remove a mission step
-   */
-  removeMissionStep(index: number): void {
-    if (this.missionData.length > 1) {
-      this.missionData.removeAt(index);
-      // Update sequence numbers
-      this.updateSequenceNumbers();
-    }
-  }
-
-  /**
-   * Move mission step up
-   */
-  moveStepUp(index: number): void {
-    if (index > 0) {
-      const step = this.missionData.at(index);
-      this.missionData.removeAt(index);
-      this.missionData.insert(index - 1, step);
-      this.updateSequenceNumbers();
-    }
-  }
-
-  /**
-   * Move mission step down
-   */
-  moveStepDown(index: number): void {
-    if (index < this.missionData.length - 1) {
-      const step = this.missionData.at(index);
-      this.missionData.removeAt(index);
-      this.missionData.insert(index + 1, step);
-      this.updateSequenceNumbers();
-    }
-  }
-
-  /**
-   * Update sequence numbers after reordering
-   */
-  private updateSequenceNumbers(): void {
-    this.missionData.controls.forEach((control, index) => {
-      control.get('sequence')?.setValue(index);
-    });
-  }
-
-  /**
-   * Add robot model to the list
-   */
-  addRobotModel(input: HTMLInputElement): void {
-    const value = input.value.trim();
-    if (value) {
-      const currentModels = this.missionTemplate.get('robotModels')?.value || [];
-      if (!currentModels.includes(value)) {
-        this.missionTemplate.get('robotModels')?.setValue([...currentModels, value]);
-      }
-      input.value = '';
-    }
-  }
-
-  /**
-   * Remove robot model from the list
-   */
-  removeRobotModel(model: string): void {
-    const currentModels = this.missionTemplate.get('robotModels')?.value || [];
-    this.missionTemplate.get('robotModels')?.setValue(
-      currentModels.filter((m: string) => m !== model)
-    );
-  }
-
-  /**
-   * Add robot ID to the list
-   */
-  addRobotId(input: HTMLInputElement): void {
-    const value = input.value.trim();
-    if (value) {
-      const currentIds = this.missionTemplate.get('robotIds')?.value || [];
-      if (!currentIds.includes(value)) {
-        this.missionTemplate.get('robotIds')?.setValue([...currentIds, value]);
-      }
-      input.value = '';
-    }
-  }
-
-  /**
-   * Remove robot ID from the list
-   */
-  removeRobotId(id: string): void {
-    const currentIds = this.missionTemplate.get('robotIds')?.value || [];
-    this.missionTemplate.get('robotIds')?.setValue(
-      currentIds.filter((robotId: string) => robotId !== id)
-    );
-  }
-
-  /**
-   * Handle form submission
-   */
-  onSubmit(): void {
-    if (this.templateForm.valid) {
-      this.isSubmitting = true;
-
-      const formValue = this.templateForm.value;
-      const request: SaveMissionAsTemplateRequest = {
-        missionName: formValue.missionName,
-        description: formValue.description,
-        missionTemplate: {
-          ...formValue.missionTemplate,
-          robotModels: formValue.missionTemplate.robotModels || [],
-          robotIds: formValue.missionTemplate.robotIds || [],
-          containerModelCode: formValue.missionTemplate.containerModelCode || null,
-          containerCode: formValue.missionTemplate.containerCode || null,
-          templateCode: formValue.missionTemplate.templateCode || null,
-          unlockRobotId: formValue.missionTemplate.unlockRobotId || null,
-          unlockMissionCode: formValue.missionTemplate.unlockMissionCode || null,
-          idleNode: formValue.missionTemplate.idleNode || null
+  private loadWorkflowTemplates(): void {
+    this.isLoading = true;
+    this.savedCustomMissionsService.getAllSavedCustomMissions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (templates) => {
+          this.workflowTemplates = templates;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading workflow templates:', error);
+          this.isLoading = false;
         }
-      };
+      });
+  }
 
-      this.savedCustomMissionsService.saveMissionAsTemplate(request)
+  /**
+   * Handle table actions
+   */
+  onTableAction(event: ActionEvent): void {
+    switch (event.action) {
+      case 'view':
+        this.viewTemplate(event.row);
+        break;
+      case 'edit':
+        this.openEditDialog(event.row);
+        break;
+      case 'delete':
+        this.deleteTemplate(event.row);
+        break;
+      case 'create':
+        this.openCreateDialog();
+        break;
+      case 'refresh':
+        this.refreshTemplates();
+        break;
+      default:
+        console.log('Unknown action:', event.action);
+    }
+  }
+
+  /**
+   * Open create template dialog
+   */
+  private openCreateDialog(): void {
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'create'
+    };
+
+    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createTemplate(result);
+      }
+    });
+  }
+
+  /**
+   * Open edit template dialog
+   */
+  private openEditDialog(template: SavedCustomMissionsDisplayData): void {
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'edit',
+      template: template
+    };
+
+    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateTemplate(template.id, result);
+      }
+    });
+  }
+
+  /**
+   * Create new template
+   */
+  private createTemplate(request: any): void {
+    this.savedCustomMissionsService.saveMissionAsTemplate(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.refreshTemplates();
+        },
+        error: (error) => {
+          console.error('Error creating template:', error);
+        }
+      });
+  }
+
+  /**
+   * Update existing template
+   */
+  private updateTemplate(id: number, request: any): void {
+    this.savedCustomMissionsService.updateWorkflowTemplate(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.refreshTemplates();
+        },
+        error: (error) => {
+          console.error('Error updating template:', error);
+        }
+      });
+  }
+
+  /**
+   * View template details
+   */
+  private viewTemplate(template: SavedCustomMissionsDisplayData): void {
+    // Open read-only dialog or navigate to detail view
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'edit',
+      template: template
+    };
+
+    this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: dialogData
+    });
+  }
+
+  /**
+   * Delete template with confirmation
+   */
+  private deleteTemplate(template: SavedCustomMissionsDisplayData): void {
+    const message = `Are you sure you want to delete workflow template "${template.missionName}"? This action cannot be undone.`;
+
+    if (confirm(message)) {
+      this.savedCustomMissionsService.deleteSavedCustomMission(template.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          next: (response) => {
-            console.log('Template saved successfully:', response);
-            this.isSubmitting = false;
-            // Navigate to saved custom missions page
-            this.router.navigate(['/saved-custom-missions']);
+          next: () => {
+            this.refreshTemplates();
           },
           error: (error) => {
-            console.error('Failed to save template:', error);
-            this.isSubmitting = false;
+            console.error('Error deleting template:', error);
           }
         });
-    } else {
-      // Mark all fields as touched to show validation errors
-      this.markFormGroupTouched(this.templateForm);
     }
   }
 
   /**
-   * Mark all form fields as touched
+   * Refresh templates list
    */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      if (control instanceof FormGroup) {
-        this.markFormGroupTouched(control);
-      } else if (control instanceof FormArray) {
-        control.controls.forEach(c => {
-          if (c instanceof FormGroup) {
-            this.markFormGroupTouched(c);
-          }
-        });
-      } else {
-        control?.markAsTouched();
-      }
-    });
-  }
-
-  /**
-   * Reset the form
-   */
-  resetForm(): void {
-    this.templateForm.reset();
-    // Clear mission steps and add one default
-    while (this.missionData.length > 0) {
-      this.missionData.removeAt(0);
-    }
-    this.addMissionStep();
-    // Reset default values
-    this.missionTemplate.get('priority')?.setValue(2);
-    this.missionTemplate.get('lockRobotAfterFinish')?.setValue(false);
-    this.missionTemplate.get('robotModels')?.setValue([]);
-    this.missionTemplate.get('robotIds')?.setValue([]);
-  }
-
-  /**
-   * Cancel and navigate back
-   */
-  cancel(): void {
-    this.router.navigate(['/saved-custom-missions']);
+  private refreshTemplates(): void {
+    this.loadWorkflowTemplates();
   }
 }

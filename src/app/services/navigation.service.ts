@@ -73,9 +73,9 @@ export class NavigationService {
             route: '/workflow-classify'
           },
           {
-            id: 'create-workflow-template',
-            label: 'Create Workflow Template',
-            icon: 'add_task',
+            id: 'workflow-templates',
+            label: 'Workflow Templates',
+            icon: 'assignment',
             route: '/create-workflow-template'
           }
         ]
