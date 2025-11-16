@@ -235,18 +235,46 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Delete robot type with confirmation
+   * Delete robot type with confirmation and usage check
    */
   private deleteRobotType(robotType: RobotTypeDisplayData): void {
-    if (confirm(`Are you sure you want to delete robot type "${robotType.displayName}"?`)) {
-      this.robotTypesService.deleteRobotType(robotType.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (error) => {
-            console.error('Error deleting robot type:', error);
+    // First check if this robot type is in use
+    this.robotTypesService.checkUsageInTemplates(robotType.actualValue)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (usage) => {
+          if (usage.isUsed) {
+            // Show warning about templates using this robot type
+            const templateList = usage.templateNames.join('\n  - ');
+            const message = `Cannot delete robot type "${robotType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this robot type instead.`;
+            alert(message);
+          } else {
+            // Not in use, proceed with deletion after confirmation
+            if (confirm(`Are you sure you want to delete robot type "${robotType.displayName}"?`)) {
+              this.robotTypesService.deleteRobotType(robotType.id)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  error: (error) => {
+                    console.error('Error deleting robot type:', error);
+                  }
+                });
+            }
           }
-        });
-    }
+        },
+        error: (error) => {
+          console.error('Error checking robot type usage:', error);
+          // On error, still allow deletion with a warning
+          if (confirm(`Unable to verify usage. Delete robot type "${robotType.displayName}" anyway?`)) {
+            this.robotTypesService.deleteRobotType(robotType.id)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                error: (error) => {
+                  console.error('Error deleting robot type:', error);
+                }
+              });
+          }
+        }
+      });
   }
 
   /**

@@ -234,18 +234,46 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Delete resume strategy with confirmation
+   * Delete resume strategy with confirmation and usage check
    */
   private deleteResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
-    if (confirm(`Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`)) {
-      this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (error) => {
-            console.error('Error deleting resume strategy:', error);
+    // First check if this resume strategy is in use
+    this.resumeStrategiesService.checkUsageInTemplates(resumeStrategy.actualValue)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (usage) => {
+          if (usage.isUsed) {
+            // Show warning about templates using this resume strategy
+            const templateList = usage.templateNames.join('\n  - ');
+            const message = `Cannot delete resume strategy "${resumeStrategy.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this resume strategy instead.`;
+            alert(message);
+          } else {
+            // Not in use, proceed with deletion after confirmation
+            if (confirm(`Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`)) {
+              this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  error: (error) => {
+                    console.error('Error deleting resume strategy:', error);
+                  }
+                });
+            }
           }
-        });
-    }
+        },
+        error: (error) => {
+          console.error('Error checking resume strategy usage:', error);
+          // On error, still allow deletion with a warning
+          if (confirm(`Unable to verify usage. Delete resume strategy "${resumeStrategy.displayName}" anyway?`)) {
+            this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                error: (error) => {
+                  console.error('Error deleting resume strategy:', error);
+                }
+              });
+          }
+        }
+      });
   }
 
   /**

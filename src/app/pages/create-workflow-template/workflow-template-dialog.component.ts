@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -12,10 +12,18 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Subject, forkJoin, takeUntil } from 'rxjs';
 import {
   SaveMissionAsTemplateRequest,
   SavedCustomMissionsDisplayData
 } from '../../models/saved-custom-missions.models';
+import { MissionTypesService } from '../../services/mission-types.service';
+import { RobotTypesService } from '../../services/robot-types.service';
+import { ResumeStrategiesService } from '../../services/resume-strategies.service';
+import { MissionTypeDisplayData } from '../../models/mission-types.models';
+import { RobotTypeDisplayData } from '../../models/robot-types.models';
+import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
 
 export interface WorkflowTemplateDialogData {
   mode: 'create' | 'edit';
@@ -38,7 +46,8 @@ export interface WorkflowTemplateDialogData {
     MatChipsModule,
     MatDividerModule,
     MatTooltipModule,
-    MatCardModule
+    MatCardModule,
+    MatProgressSpinnerModule
   ],
   template: `
     <h2 mat-dialog-title>
@@ -47,7 +56,12 @@ export interface WorkflowTemplateDialogData {
     </h2>
 
     <mat-dialog-content>
-      <form [formGroup]="templateForm" class="template-form">
+      <div *ngIf="isLoadingConfig()" class="loading-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading configuration options...</p>
+      </div>
+
+      <form [formGroup]="templateForm" class="template-form" [class.loading]="isLoadingConfig()">
         <!-- Basic Information -->
         <section class="form-section">
           <h3>Basic Information</h3>
@@ -92,18 +106,32 @@ export interface WorkflowTemplateDialogData {
 
             <mat-form-field appearance="outline">
               <mat-label>Mission Type</mat-label>
-              <input matInput formControlName="missionType" />
+              <mat-select formControlName="missionType">
+                <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.actualValue">
+                  {{ type.displayName }} ({{ type.actualValue }})
+                </mat-option>
+              </mat-select>
               <mat-icon matPrefix>category</mat-icon>
-              <mat-error>Required</mat-error>
+              <mat-hint *ngIf="activeMissionTypes().length === 0" class="warning-hint">
+                No active mission types available
+              </mat-hint>
+              <mat-error>Mission type is required</mat-error>
             </mat-form-field>
           </div>
 
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Robot Type</mat-label>
-              <input matInput formControlName="robotType" />
+              <mat-select formControlName="robotType">
+                <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.actualValue">
+                  {{ type.displayName }} ({{ type.actualValue }})
+                </mat-option>
+              </mat-select>
               <mat-icon matPrefix>precision_manufacturing</mat-icon>
-              <mat-error>Required</mat-error>
+              <mat-hint *ngIf="activeRobotTypes().length === 0" class="warning-hint">
+                No active robot types available
+              </mat-hint>
+              <mat-error>Robot type is required</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
@@ -229,10 +257,13 @@ export interface WorkflowTemplateDialogData {
                   <mat-form-field appearance="outline">
                     <mat-label>Pass Strategy</mat-label>
                     <mat-select formControlName="passStrategy">
-                      <mat-option value="CONTINUE">CONTINUE</mat-option>
-                      <mat-option value="WAIT">WAIT</mat-option>
-                      <mat-option value="ABORT">ABORT</mat-option>
+                      <mat-option *ngFor="let strategy of activeResumeStrategies()" [value]="strategy.actualValue">
+                        {{ strategy.displayName }} ({{ strategy.actualValue }})
+                      </mat-option>
                     </mat-select>
+                    <mat-hint *ngIf="activeResumeStrategies().length === 0" class="warning-hint">
+                      No active resume strategies available
+                    </mat-hint>
                   </mat-form-field>
                   <mat-form-field appearance="outline">
                     <mat-label>Wait Time (ms)</mat-label>
@@ -252,7 +283,11 @@ export interface WorkflowTemplateDialogData {
         <mat-icon>cancel</mat-icon>
         Cancel
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!templateForm.valid">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onSubmit()"
+        [disabled]="!templateForm.valid || isLoadingConfig()">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -264,9 +299,35 @@ export interface WorkflowTemplateDialogData {
       width: 100%;
     }
 
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 16px;
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+      }
+    }
+
     .template-form {
       width: 100%;
       max-width: 100%;
+
+      &.loading {
+        opacity: 0.5;
+        pointer-events: none;
+      }
     }
 
     .form-section {
@@ -300,6 +361,11 @@ export interface WorkflowTemplateDialogData {
       mat-form-field {
         flex: 1;
       }
+    }
+
+    .warning-hint {
+      color: #ff9800 !important;
+      font-weight: 500;
     }
 
     .mission-steps {
@@ -418,20 +484,39 @@ export interface WorkflowTemplateDialogData {
     }
   `]
 })
-export class WorkflowTemplateDialogComponent implements OnInit {
+export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   templateForm!: FormGroup;
+
+  // Configuration data signals
+  public activeMissionTypes = signal<MissionTypeDisplayData[]>([]);
+  public activeRobotTypes = signal<RobotTypeDisplayData[]>([]);
+  public activeResumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
+  public isLoadingConfig = signal<boolean>(false);
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<WorkflowTemplateDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: WorkflowTemplateDialogData
+    @Inject(MAT_DIALOG_DATA) public data: WorkflowTemplateDialogData,
+    private missionTypesService: MissionTypesService,
+    private robotTypesService: RobotTypesService,
+    private resumeStrategiesService: ResumeStrategiesService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadConfigurationData();
+
     if (this.data.mode === 'edit' && this.data.template) {
-      this.populateForm(this.data.template);
+      // Wait for configuration to load before populating form
+      setTimeout(() => this.populateForm(this.data.template!), 500);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get missionTemplate(): FormGroup {
@@ -440,6 +525,33 @@ export class WorkflowTemplateDialogComponent implements OnInit {
 
   get missionData(): FormArray {
     return this.missionTemplate.get('missionData') as FormArray;
+  }
+
+  /**
+   * Load configuration data from services
+   */
+  private loadConfigurationData(): void {
+    this.isLoadingConfig.set(true);
+
+    forkJoin({
+      missionTypes: this.missionTypesService.getMissionTypes(),
+      robotTypes: this.robotTypesService.getRobotTypes(),
+      resumeStrategies: this.resumeStrategiesService.getResumeStrategies()
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ missionTypes, robotTypes, resumeStrategies }) => {
+          // Filter for active items only
+          this.activeMissionTypes.set(missionTypes.filter(mt => mt.isActive));
+          this.activeRobotTypes.set(robotTypes.filter(rt => rt.isActive));
+          this.activeResumeStrategies.set(resumeStrategies.filter(rs => rs.isActive));
+          this.isLoadingConfig.set(false);
+        },
+        error: (error) => {
+          console.error('Error loading configuration data:', error);
+          this.isLoadingConfig.set(false);
+        }
+      });
   }
 
   private initializeForm(): void {

@@ -221,4 +221,39 @@ export class RobotTypesService {
   public clearError(): void {
     this.error.set(null);
   }
+
+  /**
+   * Check if a robot type is being used by any workflow templates
+   * Returns the count of templates using this robot type
+   */
+  public checkUsageInTemplates(robotTypeValue: string): Observable<{
+    isUsed: boolean;
+    usageCount: number;
+    templateNames: string[];
+  }> {
+    const url = `${this.apiUrl.replace('/v1/robot-types', '')}/saved-custom-missions`;
+
+    return this.http.get<ApiResponse<any[]>>(url, {
+      headers: this.getHttpHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          const templatesUsingThisType = response.data.filter(
+            (template: any) => template.robotType === robotTypeValue
+          );
+
+          return {
+            isUsed: templatesUsingThisType.length > 0,
+            usageCount: templatesUsingThisType.length,
+            templateNames: templatesUsingThisType.map((t: any) => t.missionName)
+          };
+        }
+        return { isUsed: false, usageCount: 0, templateNames: [] };
+      }),
+      catchError(error => {
+        console.error('Error checking robot type usage:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }

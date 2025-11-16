@@ -340,4 +340,51 @@ export class ResumeStrategiesService {
   public hasValidToken(): boolean {
     return !!this.getAuthToken();
   }
+
+  /**
+   * Check if a resume strategy is being used by any workflow templates
+   * Returns the count of templates using this resume strategy in their mission steps
+   */
+  public checkUsageInTemplates(resumeStrategyValue: string): Observable<{
+    isUsed: boolean;
+    usageCount: number;
+    templateNames: string[];
+  }> {
+    const url = `${this.API_URL.replace('/v1/resume-strategies', '')}/saved-custom-missions`;
+
+    return this.http.get<ApiResponse<any[]>>(url, {
+      headers: this.getHttpHeaders()
+    }).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          const templatesUsingThisStrategy: any[] = [];
+
+          response.data.forEach((template: any) => {
+            try {
+              const missionSteps = JSON.parse(template.missionStepsJson || '[]');
+              const usesStrategy = missionSteps.some(
+                (step: any) => step.passStrategy === resumeStrategyValue
+              );
+              if (usesStrategy) {
+                templatesUsingThisStrategy.push(template);
+              }
+            } catch (error) {
+              console.error(`Error parsing mission steps for template ${template.id}:`, error);
+            }
+          });
+
+          return {
+            isUsed: templatesUsingThisStrategy.length > 0,
+            usageCount: templatesUsingThisStrategy.length,
+            templateNames: templatesUsingThisStrategy.map((t: any) => t.missionName)
+          };
+        }
+        return { isUsed: false, usageCount: 0, templateNames: [] };
+      }),
+      catchError(error => {
+        console.error('Error checking resume strategy usage:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }
