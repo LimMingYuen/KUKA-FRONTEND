@@ -11,14 +11,15 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
-import { JobData } from '../../models/missions.models';
-import { Subject, takeUntil, interval } from 'rxjs';
+import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
+import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-mission-control',
@@ -35,7 +36,8 @@ import { Subject, takeUntil, interval } from 'rxjs';
     MatBadgeModule,
     MatTooltipModule,
     MatSnackBarModule,
-    MatDialogModule
+    MatDialogModule,
+    MatDividerModule
   ],
   templateUrl: './mission-control.component.html',
   styleUrl: './mission-control.component.scss'
@@ -45,6 +47,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public workflows: WorkflowDisplayData[] = [];
   public customMissions: SavedCustomMissionsDisplayData[] = [];
   public activeJobs: Map<string, JobData> = new Map();
+  public activeRobots: Map<string, RobotData> = new Map(); // robotId -> RobotData
 
   // Loading states
   public isLoadingWorkflows = false;
@@ -54,6 +57,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Cleanup
   private destroy$ = new Subject<void>();
   private pollingSubscriptions: Map<string, any> = new Map();
+
+  // Expose MissionsUtils to template
+  public readonly MissionsUtils = MissionsUtils;
 
   constructor(
     private missionsService: MissionsService,
@@ -189,7 +195,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Start polling for job status
+   * Start polling for job and robot status
    */
   startJobPolling(missionCode: string): void {
     // Don't start if already polling
@@ -201,6 +207,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     const subscription = interval(2000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        // Query job status
         this.missionsService.queryJobs({
           missionCodes: [missionCode],
           limit: 1
@@ -210,10 +217,13 @@ export class MissionControlComponent implements OnInit, OnDestroy {
               const jobData = response.data[0];
               this.activeJobs.set(missionCode, jobData);
 
-              // Stop polling if job is completed, failed, or cancelled
-              if (jobData.status?.toUpperCase().includes('COMPLETED') ||
-                  jobData.status?.toUpperCase().includes('FAILED') ||
-                  jobData.status?.toUpperCase().includes('CANCELLED')) {
+              // Query robot status if robotId is available
+              if (jobData.robotId) {
+                this.queryRobotStatus(jobData.robotId);
+              }
+
+              // Stop polling if job is in terminal state
+              if (MissionsUtils.isJobTerminal(jobData.status)) {
                 this.stopJobPolling(missionCode);
               }
             }
@@ -225,6 +235,26 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       });
 
     this.pollingSubscriptions.set(missionCode, subscription);
+  }
+
+  /**
+   * Query robot status
+   */
+  private queryRobotStatus(robotId: string): void {
+    this.missionsService.queryRobots({
+      robotId: robotId,
+      includeCurrentMission: true
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.length > 0) {
+          const robotData = response.data[0];
+          this.activeRobots.set(robotId, robotData);
+        }
+      },
+      error: (error) => {
+        console.error('Error querying robot status:', error);
+      }
+    });
   }
 
   /**
@@ -242,8 +272,18 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    * Clear job from active jobs
    */
   clearJob(missionCode: string): void {
+    const job = this.activeJobs.get(missionCode);
     this.activeJobs.delete(missionCode);
     this.stopJobPolling(missionCode);
+
+    // Clear robot data if no other jobs are using it
+    if (job?.robotId) {
+      const robotStillInUse = Array.from(this.activeJobs.values())
+        .some(j => j.robotId === job.robotId);
+      if (!robotStillInUse) {
+        this.activeRobots.delete(job.robotId);
+      }
+    }
   }
 
   /**
@@ -254,20 +294,11 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get job status color
+   * Get robot data for a job
    */
-  getStatusColor(status: string): string {
-    const statusUpper = status?.toUpperCase();
-    if (statusUpper?.includes('EXECUTING') || statusUpper?.includes('PROGRESS')) {
-      return 'primary';
-    }
-    if (statusUpper?.includes('COMPLETED') || statusUpper?.includes('SUCCESS')) {
-      return 'accent';
-    }
-    if (statusUpper?.includes('FAILED') || statusUpper?.includes('ERROR')) {
-      return 'warn';
-    }
-    return '';
+  getRobotForJob(job: JobData): RobotData | undefined {
+    if (!job.robotId) return undefined;
+    return this.activeRobots.get(job.robotId);
   }
 
   /**
