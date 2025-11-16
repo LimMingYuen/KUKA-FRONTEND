@@ -14,23 +14,222 @@ h2[mat-dialog-title] {
 }
 
 mat-dialog-content {
-  min-width: 500px;
-  max-width: 600px;
-  max-height: 70vh;
+  min-width: 700px;
+  max-width: 900px;
+  max-height: 80vh;
   overflow-y: auto;
   padding: 0 24px;
+
+  .tab-content {
+    padding: 20px 0;
+  }
+
+  .tab-description {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.7);
+
+    mat-icon {
+      color: var(--mat-primary-color, #ff6600);
+    }
+  }
 
   .mission-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 
-    mat-form-field {
-      width: 100%;
+    .section-card {
+      margin-bottom: 16px;
+
+      mat-card-header {
+        margin-bottom: 16px;
+
+        mat-card-title {
+          font-size: 18px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+
+      mat-card-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+
+        mat-form-field {
+          width: 100%;
+        }
+      }
+    }
+
+    .mission-steps-card {
+      .add-step-btn {
+        width: 36px;
+        height: 36px;
+        margin-left: auto;
+      }
+
+      .mission-step {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        background-color: rgba(0, 0, 0, 0.02);
+
+        .step-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+          .step-number {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--mat-primary-color, #ff6600);
+          }
+
+          .step-actions {
+            display: flex;
+            gap: 4px;
+          }
+        }
+
+        .step-fields {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          align-items: start;
+
+          mat-form-field {
+            width: 100%;
+          }
+
+          .checkbox-field {
+            margin-top: 8px;
+          }
+        }
+      }
+
+      .no-steps {
+        text-align: center;
+        padding: 40px 20px;
+        color: rgba(0, 0, 0, 0.5);
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: 12px;
+          opacity: 0.5;
+        }
+
+        p {
+          margin: 0;
+          font-size: 14px;
+        }
+      }
     }
 
     .checkbox-field {
       margin: 8px 0;
+    }
+
+    mat-expansion-panel {
+      margin-top: 16px;
+
+      .advanced-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        padding: 16px 0;
+
+        mat-form-field {
+          width: 100%;
+        }
+
+        .checkbox-field {
+          grid-column: 1 / -1;
+        }
+      }
+    }
+  }
+
+  .job-status-container {
+    padding: 20px 0;
+
+    .status-card {
+      mat-card-header {
+        margin-bottom: 20px;
+
+        mat-card-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #4caf50;
+
+          mat-icon {
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+          }
+        }
+      }
+
+      .status-info {
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+
+          .label {
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.6);
+            min-width: 150px;
+          }
+
+          .value {
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.87);
+            text-align: right;
+            word-break: break-word;
+          }
+
+          mat-chip {
+            min-height: 28px;
+          }
+        }
+
+        mat-divider {
+          margin: 16px 0;
+        }
+
+        .polling-status {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          text-align: center;
+          justify-content: center;
+          color: rgba(0, 0, 0, 0.6);
+          font-style: italic;
+        }
+
+        .job-details {
+          margin-top: 16px;
+        }
+      }
     }
   }
 }
@@ -50,9 +249,37 @@ mat-dialog-actions {
 }
 
 // Responsive
+@media (max-width: 1024px) {
+  mat-dialog-content {
+    min-width: 600px;
+  }
+}
+
 @media (max-width: 768px) {
   mat-dialog-content {
-    min-width: 300px;
+    min-width: 90vw;
     max-width: 100%;
+
+    .mission-form {
+      .section-card {
+        mat-card-content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .mission-steps-card {
+        .mission-step {
+          .step-fields {
+            grid-template-columns: 1fr;
+          }
+        }
+      }
+
+      mat-expansion-panel {
+        .advanced-options {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
   }
 }
