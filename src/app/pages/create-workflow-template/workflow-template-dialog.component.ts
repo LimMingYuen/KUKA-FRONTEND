@@ -580,7 +580,7 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
 
           // Store map zones with both name (for display) and code (for API) - sorted by name ascending
           const zonePositions = mapZones
-            .map(mz => ({ name: mz.zoneName, code: mz.zoneCode }))
+            .map(mz => ({ name: mz.name, code: mz.code }))
             .filter(z => z.name && z.code)
             .sort((a, b) => a.name.localeCompare(b.name));
           this.mapZonePositions.set(zonePositions);
