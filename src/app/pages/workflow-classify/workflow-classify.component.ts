@@ -12,7 +12,8 @@ import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.ser
 import {
   SyncAndClassifyAllResult,
   ClassifiedWorkflow,
-  SyncClassifyHistoryEntry
+  SyncClassifyHistoryEntry,
+  WorkflowZoneMapping
 } from '../../models/workflow-node-codes.models';
 import { TableConfig, ActionEvent } from '../../shared/models/table.models';
 import { Subject, takeUntil } from 'rxjs';
@@ -42,9 +43,85 @@ export class WorkflowClassifyComponent implements OnInit, OnDestroy {
   // Current sync result
   currentSyncResult = signal<SyncAndClassifyAllResult | null>(null);
 
-  // Classified workflows table configuration
+  // Zone mappings (cached classification data)
+  zoneMappings: WorkflowZoneMapping[] = [];
+  isLoadingZoneMappings = signal<boolean>(false);
+
+  // Zone mappings table configuration (uses cached data)
+  zoneMappingsTableConfig: TableConfig<WorkflowZoneMapping> = {
+    title: 'Workflow Zone Mappings (Cached)',
+    columns: [
+      {
+        key: 'externalWorkflowId',
+        header: 'Workflow ID',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'workflowCode',
+        header: 'Workflow Code',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'workflowName',
+        header: 'Workflow Name',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'zoneName',
+        header: 'Zone Name',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'zoneCode',
+        header: 'Zone Code',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'mapCode',
+        header: 'Map Code',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'matchedNodesCount',
+        header: 'Matched Nodes',
+        sortable: true,
+        filterable: false
+      },
+      {
+        key: 'updatedUtc',
+        header: 'Last Updated',
+        sortable: true,
+        filterable: false,
+        transform: (value) => new Date(value).toLocaleString()
+      }
+    ],
+    pagination: {
+      pageSize: 25,
+      pageSizeOptions: [10, 25, 50, 100]
+    },
+    filter: {
+      placeholder: 'Search zone mappings...',
+      enabled: true
+    },
+    defaultSort: {
+      column: 'externalWorkflowId',
+      direction: 'asc'
+    },
+    empty: {
+      message: 'No zone mappings available. Run sync & classify to populate data.',
+      icon: 'category'
+    }
+  };
+
+  // Classified workflows table configuration (from sync operation)
   classifiedTableConfig: TableConfig<ClassifiedWorkflow> = {
-    title: 'Classified Workflows',
+    title: 'Newly Classified Workflows',
     columns: [
       {
         key: 'externalWorkflowId',
@@ -90,7 +167,7 @@ export class WorkflowClassifyComponent implements OnInit, OnDestroy {
       direction: 'asc'
     },
     empty: {
-      message: 'No classified workflows available. Run sync & classify to populate data.',
+      message: 'No newly classified workflows. These appear after running sync & classify.',
       icon: 'category'
     }
   };
@@ -191,6 +268,9 @@ export class WorkflowClassifyComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Load any persisted history from localStorage
     this.loadHistoryFromStorage();
+
+    // Load cached zone mappings (fast)
+    this.loadZoneMappings();
   }
 
   ngOnDestroy(): void {
@@ -199,7 +279,28 @@ export class WorkflowClassifyComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load cached zone mappings (fast - no classification needed)
+   */
+  loadZoneMappings(): void {
+    this.isLoadingZoneMappings.set(true);
+
+    this.workflowNodeCodesService.getZoneMappings()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (mappings) => {
+          this.zoneMappings = mappings;
+          this.isLoadingZoneMappings.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to load zone mappings:', err);
+          this.isLoadingZoneMappings.set(false);
+        }
+      });
+  }
+
+  /**
    * Trigger sync and classify operation
+   * After completion, reload the cached zone mappings
    */
   syncAndClassifyNow(): void {
     const startTime = Date.now();
@@ -210,6 +311,8 @@ export class WorkflowClassifyComponent implements OnInit, OnDestroy {
         next: (result) => {
           const duration = Date.now() - startTime;
           this.addToHistory({ ...result, timestamp: new Date() }, duration);
+          // Reload cached zone mappings after sync completes
+          this.loadZoneMappings();
         },
         error: (err) => {
           console.error('Sync & classify failed:', err);

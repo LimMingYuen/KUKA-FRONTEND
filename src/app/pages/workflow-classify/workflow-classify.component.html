@@ -20,28 +20,56 @@
             <div class="sync-text">
               <h2>Sync & Classify Workflows</h2>
               <p>
-                Synchronize all workflow node codes and classify workflows into their respective zones.
-                This comprehensive operation updates node mappings and zone assignments.
+                Click to re-sync workflow node codes and re-classify workflows into zones.
+                The cached zone mappings below are automatically updated after each sync.
               </p>
             </div>
           </div>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="syncAndClassifyNow()"
-            [disabled]="workflowNodeCodesService.isSyncingAndClassifying()"
-            class="sync-button">
-            <mat-icon>autorenew</mat-icon>
-            @if (workflowNodeCodesService.isSyncingAndClassifying()) {
-              <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
-              Processing...
-            } @else {
-              Sync & Classify
-            }
-          </button>
+          <div class="action-buttons">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="syncAndClassifyNow()"
+              [disabled]="workflowNodeCodesService.isSyncingAndClassifying()"
+              class="sync-button">
+              <mat-icon>autorenew</mat-icon>
+              @if (workflowNodeCodesService.isSyncingAndClassifying()) {
+                <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+                Processing...
+              } @else {
+                Sync & Classify
+              }
+            </button>
+            <button
+              mat-stroked-button
+              color="accent"
+              (click)="loadZoneMappings()"
+              [disabled]="isLoadingZoneMappings()"
+              class="refresh-button">
+              <mat-icon>refresh</mat-icon>
+              Refresh Cached Data
+            </button>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>
+  </div>
+
+  <!-- Zone Mappings (Cached Data) - Primary Display -->
+  <div class="zone-mappings-section">
+    <h2 class="section-title">
+      <mat-icon>storage</mat-icon>
+      Workflow Zone Mappings (Cached)
+      @if (isLoadingZoneMappings()) {
+        <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+      }
+    </h2>
+    <app-generic-table
+      [data]="zoneMappings"
+      [config]="zoneMappingsTableConfig"
+      [loading]="isLoadingZoneMappings()"
+      (action)="handleAction($event)">
+    </app-generic-table>
   </div>
 
   <!-- Current Sync Results -->

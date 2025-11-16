@@ -82,6 +82,22 @@ export interface SyncClassifyHistoryEntry {
 }
 
 /**
+ * Workflow zone mapping (cached classification data)
+ */
+export interface WorkflowZoneMapping {
+  id: number;
+  externalWorkflowId: number;
+  workflowCode: string;
+  workflowName: string;
+  zoneName: string;
+  zoneCode: string;
+  mapCode: string;
+  matchedNodesCount: number;
+  createdUtc: string;
+  updatedUtc: string;
+}
+
+/**
  * API Response wrapper
  */
 export interface ApiResponse<T> {

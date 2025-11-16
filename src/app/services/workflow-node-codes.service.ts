@@ -5,7 +5,8 @@ import { Observable, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   WorkflowNodeCodeSyncResult,
-  SyncAndClassifyAllResult
+  SyncAndClassifyAllResult,
+  WorkflowZoneMapping
 } from '../models/workflow-node-codes.models';
 
 @Injectable({
@@ -204,5 +205,21 @@ export class WorkflowNodeCodesService {
    */
   public clearSyncClassifyResult(): void {
     this.lastSyncClassifyResult.set(null);
+  }
+
+  /**
+   * Get zone mappings (cached classification data)
+   * This is much faster than re-classifying as it retrieves pre-stored data
+   */
+  getZoneMappings(): Observable<WorkflowZoneMapping[]> {
+    return this.http.get<WorkflowZoneMapping[]>(
+      `${this.API_URL}${this.ENDPOINT}/zone-mappings`,
+      { headers: this.createHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.handleError(error, 'Failed to load zone mappings');
+        return throwError(() => error);
+      })
+    );
   }
 }
