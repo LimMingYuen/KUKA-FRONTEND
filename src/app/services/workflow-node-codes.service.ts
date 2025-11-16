@@ -3,7 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkflowNodeCodeSyncResult } from '../models/workflow-node-codes.models';
+import {
+  WorkflowNodeCodeSyncResult,
+  SyncAndClassifyAllResult
+} from '../models/workflow-node-codes.models';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +18,8 @@ export class WorkflowNodeCodesService {
   // Reactive state using Angular signals
   public isSyncing = signal<boolean>(false);
   public lastSyncResult = signal<WorkflowNodeCodeSyncResult | null>(null);
+  public isSyncingAndClassifying = signal<boolean>(false);
+  public lastSyncClassifyResult = signal<SyncAndClassifyAllResult | null>(null);
 
   constructor(
     private http: HttpClient,
@@ -129,9 +134,75 @@ export class WorkflowNodeCodesService {
   }
 
   /**
+   * Sync and classify all workflows
+   * Syncs workflow node codes and classifies them into zones
+   */
+  syncAndClassifyAllWorkflows(): Observable<SyncAndClassifyAllResult> {
+    this.isSyncingAndClassifying.set(true);
+    const startTime = Date.now();
+
+    return this.http.post<SyncAndClassifyAllResult>(
+      `${this.API_URL}${this.ENDPOINT}/sync-and-classify-all`,
+      {},
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(result => ({
+        ...result,
+        timestamp: new Date()
+      })),
+      tap(result => {
+        this.isSyncingAndClassifying.set(false);
+        this.lastSyncClassifyResult.set(result);
+
+        const duration = Date.now() - startTime;
+        const durationSeconds = (duration / 1000).toFixed(1);
+
+        // Show success/failure message based on results
+        let message: string;
+        let panelClass: string[] = [];
+
+        const hasIssues = result.failureCount > 0 || result.noZoneMatchCount > 0;
+
+        if (!hasIssues) {
+          message = `✓ Sync & classify completed successfully in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} workflows classified`;
+          panelClass = ['success-snackbar'];
+        } else if (result.successCount > 0) {
+          const issues = [];
+          if (result.failureCount > 0) issues.push(`${result.failureCount} failures`);
+          if (result.noZoneMatchCount > 0) issues.push(`${result.noZoneMatchCount} no zone match`);
+          message = `⚠ Sync & classify completed with issues in ${durationSeconds}s: ${issues.join(', ')}`;
+          panelClass = ['warning-snackbar'];
+        } else {
+          message = `✗ Sync & classify failed: All ${result.totalWorkflows} workflows failed`;
+          panelClass = ['error-snackbar'];
+        }
+
+        this.snackBar.open(message, 'Close', {
+          duration: 7000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass
+        });
+      }),
+      catchError(error => {
+        this.isSyncingAndClassifying.set(false);
+        this.handleError(error, 'Failed to sync and classify workflows');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Clear last sync result
    */
   public clearSyncResult(): void {
     this.lastSyncResult.set(null);
+  }
+
+  /**
+   * Clear last sync and classify result
+   */
+  public clearSyncClassifyResult(): void {
+    this.lastSyncClassifyResult.set(null);
   }
 }
