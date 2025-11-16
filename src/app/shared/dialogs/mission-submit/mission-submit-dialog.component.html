@@ -357,8 +357,8 @@
           <div *ngIf="jobStatus && !isPollingJobs" class="job-details">
             <div class="info-row">
               <span class="label">Status:</span>
-              <mat-chip [color]="getStatusColor(jobStatus.status || '')" selected>
-                {{ jobStatus.status || 'Unknown' }}
+              <mat-chip [color]="getStatusColor(jobStatus.status)" selected>
+                {{ getStatusText(jobStatus.status) }}
               </mat-chip>
             </div>
             <div class="info-row" *ngIf="jobStatus.robotId">
