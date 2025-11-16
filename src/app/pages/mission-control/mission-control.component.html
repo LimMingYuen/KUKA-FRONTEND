@@ -1,0 +1,353 @@
+<div class="mission-control-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <mat-icon>settings_remote</mat-icon>
+      Mission Control Center
+    </h1>
+    <p class="subtitle">Submit missions, query status, and manage robot operations</p>
+  </div>
+
+  <!-- Main Content with Tabs -->
+  <mat-tab-group animationDuration="300ms" class="mission-tabs">
+
+    <!-- Tab 1: Submit Mission -->
+    <mat-tab label="Submit Mission">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">send</mat-icon>
+        Submit Mission
+      </ng-template>
+
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>rocket_launch</mat-icon>
+              Submit New Mission
+            </mat-card-title>
+            <mat-card-subtitle>Queue a new mission for execution</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Click the button below to open the mission submission dialog where you can configure and submit a new mission to the queue.</p>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openSubmitMissionDialog()"
+              class="submit-btn">
+              <mat-icon>add_circle</mat-icon>
+              Open Mission Submit Dialog
+            </button>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 2: Cancel Mission -->
+    <mat-tab label="Cancel Mission">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">cancel</mat-icon>
+        Cancel Mission
+      </ng-template>
+
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>cancel_presentation</mat-icon>
+              Cancel Mission
+            </mat-card-title>
+            <mat-card-subtitle>Cancel a running or queued mission</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="cancelMissionForm" class="form-container">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Mission Code *</mat-label>
+                <input matInput formControlName="missionCode" placeholder="Enter mission code to cancel">
+                <mat-error *ngIf="cancelMissionForm.get('missionCode')?.hasError('required')">
+                  Mission code is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Reason (Optional)</mat-label>
+                <textarea
+                  matInput
+                  formControlName="reason"
+                  placeholder="Enter reason for cancellation"
+                  rows="3"></textarea>
+              </mat-form-field>
+
+              <div class="form-actions">
+                <button
+                  mat-raised-button
+                  color="warn"
+                  (click)="onCancelMission()"
+                  [disabled]="cancelMissionForm.invalid || isCancelling">
+                  <mat-spinner *ngIf="isCancelling" diameter="20"></mat-spinner>
+                  <mat-icon *ngIf="!isCancelling">cancel</mat-icon>
+                  <span *ngIf="!isCancelling">Cancel Mission</span>
+                  <span *ngIf="isCancelling">Cancelling...</span>
+                </button>
+                <button
+                  mat-button
+                  type="button"
+                  (click)="cancelMissionForm.reset()"
+                  [disabled]="isCancelling">
+                  Clear
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 3: Query Jobs -->
+    <mat-tab label="Query Jobs">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">search</mat-icon>
+        Query Jobs
+      </ng-template>
+
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>assignment_turned_in</mat-icon>
+              Query Job Status
+            </mat-card-title>
+            <mat-card-subtitle>Search and view job execution status</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="queryJobsForm" class="form-container">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Mission Codes</mat-label>
+                  <input matInput formControlName="missionCodes" placeholder="Comma-separated mission codes">
+                  <mat-hint>e.g., MISSION001, MISSION002</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Queue Item IDs</mat-label>
+                  <input matInput formControlName="queueItemIds" placeholder="Comma-separated queue IDs">
+                  <mat-hint>e.g., 1, 2, 3</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Robot ID</mat-label>
+                  <input matInput formControlName="robotId" placeholder="Filter by robot ID">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Status</mat-label>
+                  <input matInput formControlName="status" placeholder="Filter by status">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="limit-field">
+                  <mat-label>Limit</mat-label>
+                  <input matInput type="number" formControlName="limit" min="1" max="100">
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="onQueryJobs()"
+                  [disabled]="isQueryingJobs">
+                  <mat-spinner *ngIf="isQueryingJobs" diameter="20"></mat-spinner>
+                  <mat-icon *ngIf="!isQueryingJobs">search</mat-icon>
+                  <span *ngIf="!isQueryingJobs">Query Jobs</span>
+                  <span *ngIf="isQueryingJobs">Querying...</span>
+                </button>
+                <button
+                  mat-button
+                  type="button"
+                  (click)="clearJobResults()">
+                  Clear
+                </button>
+              </div>
+            </form>
+
+            <!-- Job Results Table -->
+            <div *ngIf="jobResults.length > 0" class="results-section">
+              <h3>Job Results ({{ jobResults.length }})</h3>
+              <div class="table-container">
+                <table mat-table [dataSource]="jobResults" class="results-table">
+                  <ng-container matColumnDef="missionCode">
+                    <th mat-header-cell *matHeaderCellDef>Mission Code</th>
+                    <td mat-cell *matCellDef="let job">{{ job.missionCode }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let job">
+                      <mat-chip [color]="getStatusColor(job.status)">{{ job.status }}</mat-chip>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="robotId">
+                    <th mat-header-cell *matHeaderCellDef>Robot ID</th>
+                    <td mat-cell *matCellDef="let job">{{ job.robotId || '-' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="progress">
+                    <th mat-header-cell *matHeaderCellDef>Progress</th>
+                    <td mat-cell *matCellDef="let job">{{ job.progress || 0 }}%</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="currentLocation">
+                    <th mat-header-cell *matHeaderCellDef>Current Location</th>
+                    <td mat-cell *matCellDef="let job">{{ job.currentLocation || '-' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="updatedAt">
+                    <th mat-header-cell *matHeaderCellDef>Updated At</th>
+                    <td mat-cell *matCellDef="let job">{{ formatDateTime(job.updatedAt) }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="jobColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: jobColumns;"></tr>
+                </table>
+              </div>
+            </div>
+
+            <div *ngIf="!isQueryingJobs && jobResults.length === 0" class="empty-state">
+              <mat-icon>search_off</mat-icon>
+              <p>No job results yet. Use the form above to query jobs.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 4: Query Robots -->
+    <mat-tab label="Query Robots">
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">smart_toy</mat-icon>
+        Query Robots
+      </ng-template>
+
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>precision_manufacturing</mat-icon>
+              Query Robot Status
+            </mat-card-title>
+            <mat-card-subtitle>View real-time robot status and location</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="queryRobotsForm" class="form-container">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Robot ID</mat-label>
+                  <input matInput formControlName="robotId" placeholder="Filter by robot ID">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Robot Type</mat-label>
+                  <input matInput formControlName="robotType" placeholder="Filter by robot type">
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Map Code</mat-label>
+                  <input matInput formControlName="mapCode" placeholder="Filter by map code">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Floor Number</mat-label>
+                  <input matInput type="number" formControlName="floorNumber" placeholder="Filter by floor">
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="onQueryRobots()"
+                  [disabled]="isQueryingRobots">
+                  <mat-spinner *ngIf="isQueryingRobots" diameter="20"></mat-spinner>
+                  <mat-icon *ngIf="!isQueryingRobots">search</mat-icon>
+                  <span *ngIf="!isQueryingRobots">Query Robots</span>
+                  <span *ngIf="isQueryingRobots">Querying...</span>
+                </button>
+                <button
+                  mat-button
+                  type="button"
+                  (click)="clearRobotResults()">
+                  Clear
+                </button>
+              </div>
+            </form>
+
+            <!-- Robot Results Table -->
+            <div *ngIf="robotResults.length > 0" class="results-section">
+              <h3>Robot Results ({{ robotResults.length }})</h3>
+              <div class="table-container">
+                <table mat-table [dataSource]="robotResults" class="results-table">
+                  <ng-container matColumnDef="robotId">
+                    <th mat-header-cell *matHeaderCellDef>Robot ID</th>
+                    <td mat-cell *matCellDef="let robot">{{ robot.robotId }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="robotName">
+                    <th mat-header-cell *matHeaderCellDef>Robot Name</th>
+                    <td mat-cell *matCellDef="let robot">{{ robot.robotName || '-' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let robot">
+                      <mat-chip [color]="getStatusColor(robot.status)">{{ robot.status }}</mat-chip>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="batteryLevel">
+                    <th mat-header-cell *matHeaderCellDef>Battery</th>
+                    <td mat-cell *matCellDef="let robot">
+                      <mat-chip *ngIf="robot.batteryLevel" [color]="getBatteryColor(robot.batteryLevel)">
+                        {{ robot.batteryLevel }}%
+                      </mat-chip>
+                      <span *ngIf="!robot.batteryLevel">-</span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="currentLocation">
+                    <th mat-header-cell *matHeaderCellDef>Location</th>
+                    <td mat-cell *matCellDef="let robot">{{ robot.currentLocation || '-' }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="currentMission">
+                    <th mat-header-cell *matHeaderCellDef>Current Mission</th>
+                    <td mat-cell *matCellDef="let robot">
+                      <div *ngIf="robot.currentMission" class="mission-info">
+                        <strong>{{ robot.currentMission.missionCode }}</strong>
+                        <br>
+                        <small>Progress: {{ robot.currentMission.progress }}%</small>
+                      </div>
+                      <span *ngIf="!robot.currentMission">-</span>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="robotColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: robotColumns;"></tr>
+                </table>
+              </div>
+            </div>
+
+            <div *ngIf="!isQueryingRobots && robotResults.length === 0" class="empty-state">
+              <mat-icon>search_off</mat-icon>
+              <p>No robot results yet. Use the form above to query robots.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

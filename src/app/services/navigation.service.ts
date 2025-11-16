@@ -131,6 +131,12 @@ export class NavigationService {
             label: 'Queue Monitor',
             icon: 'queue',
             route: '/queue-monitor'
+          },
+          {
+            id: 'mission-control',
+            label: 'Mission Control',
+            icon: 'settings_remote',
+            route: '/mission-control'
           }
         ]
       },
