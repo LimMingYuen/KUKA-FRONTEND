@@ -42,8 +42,8 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       width: '140px',
       headerClass: 'actual-value-header',
       cellClass: 'actual-value-cell',
-      transform: (value: number) => {
-        return value?.toLocaleString() || '0';
+      transform: (value: string) => {
+        return value || 'N/A';
       }
     },
     {
