@@ -11,17 +11,16 @@
 
 <mat-dialog-content>
   <form [formGroup]="form" class="mission-form">
-    <mat-tab-group animationDuration="200ms">
 
-      <!-- Basic Information Tab -->
-      <mat-tab label="Basic Info">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">info</mat-icon>
-          Basic Info
-        </ng-template>
-
-        <div class="tab-content">
-          <mat-form-field appearance="outline" class="full-width">
+    <!-- Basic Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>info</mat-icon>
+        Basic Information
+      </h3>
+      <div class="section-content">
+        <div class="form-grid">
+          <mat-form-field appearance="outline" class="span-2">
             <mat-label>Mission Name *</mat-label>
             <input matInput formControlName="missionName" placeholder="Enter mission name">
             <mat-error *ngIf="form.get('missionName')?.hasError('required')">
@@ -29,16 +28,16 @@
             </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="span-2">
             <mat-label>Description</mat-label>
             <textarea
               matInput
               formControlName="description"
               placeholder="Enter mission description"
-              rows="3"></textarea>
+              rows="2"></textarea>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Mission Type *</mat-label>
             <mat-select formControlName="missionType">
               <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.actualValue">
@@ -46,14 +45,14 @@
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="activeMissionTypes().length === 0" class="warning-hint">
-              No active mission types available. Please configure mission types first.
+              No active mission types available
             </mat-hint>
             <mat-error *ngIf="form.get('missionType')?.hasError('required')">
               Mission type is required
             </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Robot Type *</mat-label>
             <mat-select formControlName="robotType">
               <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.actualValue">
@@ -61,14 +60,14 @@
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="activeRobotTypes().length === 0" class="warning-hint">
-              No active robot types available. Please configure robot types first.
+              No active robot types available
             </mat-hint>
             <mat-error *ngIf="form.get('robotType')?.hasError('required')">
               Robot type is required
             </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Priority *</mat-label>
             <mat-select formControlName="priority">
               <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
@@ -80,17 +79,18 @@
             </mat-error>
           </mat-form-field>
         </div>
-      </mat-tab>
+      </div>
+    </div>
 
-      <!-- Robot Configuration Tab -->
-      <mat-tab label="Robot Config">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">smart_toy</mat-icon>
-          Robot Config
-        </ng-template>
-
-        <div class="tab-content">
-          <mat-form-field appearance="outline" class="full-width">
+    <!-- Robot Configuration Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>smart_toy</mat-icon>
+        Robot Configuration
+      </h3>
+      <div class="section-content">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
             <mat-label>Robot Models</mat-label>
             <mat-select formControlName="robotModels" multiple>
               <mat-option *ngFor="let model of availableRobotModels()" [value]="model">
@@ -98,12 +98,12 @@
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="availableRobotModels().length === 0" class="warning-hint">
-              No robot models available. Please configure robots first.
+              No robot models available
             </mat-hint>
-            <mat-hint *ngIf="availableRobotModels().length > 0">Select one or more robot models</mat-hint>
+            <mat-hint *ngIf="availableRobotModels().length > 0">Select robot models</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Robot IDs</mat-label>
             <mat-select formControlName="robotIds" multiple>
               <mat-option *ngFor="let id of availableRobotIds()" [value]="id">
@@ -111,208 +111,194 @@
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="availableRobotIds().length === 0" class="warning-hint">
-              No robot IDs available. Please configure robots first.
+              No robot IDs available
             </mat-hint>
-            <mat-hint *ngIf="availableRobotIds().length > 0">Select one or more robot IDs</mat-hint>
+            <mat-hint *ngIf="availableRobotIds().length > 0">Select robot IDs</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Container Model Code</mat-label>
-            <input matInput formControlName="containerModelCode" placeholder="Enter container model code">
+            <input matInput formControlName="containerModelCode" placeholder="Container model">
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Container Code</mat-label>
-            <input matInput formControlName="containerCode" placeholder="Enter container code">
+            <input matInput formControlName="containerCode" placeholder="Container code">
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Idle Node</mat-label>
-            <input matInput formControlName="idleNode" placeholder="Enter idle node position">
+            <input matInput formControlName="idleNode" placeholder="Idle node position">
           </mat-form-field>
         </div>
-      </mat-tab>
+      </div>
+    </div>
 
-      <!-- Advanced Settings Tab -->
-      <mat-tab label="Advanced">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">tune</mat-icon>
-          Advanced
-        </ng-template>
-
-        <div class="tab-content">
-          <mat-form-field appearance="outline" class="full-width">
+    <!-- Advanced Settings Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>tune</mat-icon>
+        Advanced Settings
+      </h3>
+      <div class="section-content">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
             <mat-label>Organization ID</mat-label>
-            <input matInput formControlName="orgId" placeholder="Enter organization ID">
+            <input matInput formControlName="orgId" placeholder="Organization ID">
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>View Board Type</mat-label>
-            <input matInput formControlName="viewBoardType" placeholder="Enter view board type">
+            <input matInput formControlName="viewBoardType" placeholder="View board type">
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline">
             <mat-label>Template Code</mat-label>
-            <input matInput formControlName="templateCode" placeholder="Enter template code">
+            <input matInput formControlName="templateCode" placeholder="Template code">
           </mat-form-field>
 
-          <div class="checkbox-section">
-            <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
+          <mat-form-field appearance="outline">
+            <mat-label>Unlock Robot ID</mat-label>
+            <input matInput formControlName="unlockRobotId" placeholder="Unlock robot ID">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Unlock Mission Code</mat-label>
+            <input matInput formControlName="unlockMissionCode" placeholder="Unlock mission code">
+          </mat-form-field>
+
+          <div class="checkbox-wrapper">
+            <mat-checkbox formControlName="lockRobotAfterFinish">
               Lock robot after finish
             </mat-checkbox>
           </div>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Unlock Robot ID</mat-label>
-            <input matInput formControlName="unlockRobotId" placeholder="Enter unlock robot ID">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Unlock Mission Code</mat-label>
-            <input matInput formControlName="unlockMissionCode" placeholder="Enter unlock mission code">
-          </mat-form-field>
         </div>
-      </mat-tab>
+      </div>
+    </div>
 
-      <!-- Mission Steps Tab -->
-      <mat-tab label="Mission Steps">
-        <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">list_alt</mat-icon>
-          Mission Steps
-        </ng-template>
+    <!-- Mission Steps Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>list_alt</mat-icon>
+        Mission Steps
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          class="add-step-btn"
+          (click)="addMissionStep()">
+          <mat-icon>add</mat-icon>
+          Add Step
+        </button>
+      </h3>
 
-        <div class="tab-content">
-          <div class="steps-header">
-            <h3>Mission Steps</h3>
-            <button
-              mat-raised-button
-              color="primary"
-              type="button"
-              (click)="addMissionStep()">
-              <mat-icon>add</mat-icon>
-              Add Step
-            </button>
-          </div>
+      <div class="section-content">
+        <!-- Empty state -->
+        <div *ngIf="missionSteps.length === 0" class="empty-steps">
+          <mat-icon>info</mat-icon>
+          <p>No mission steps added yet. Click "Add Step" to create your first step.</p>
+        </div>
 
-          <!-- Empty state -->
-          <div *ngIf="missionSteps.length === 0" class="empty-steps">
-            <mat-icon>info</mat-icon>
-            <p>No mission steps added yet. Click "Add Step" to create your first step.</p>
-          </div>
+        <!-- Mission Steps List -->
+        <div *ngIf="missionSteps.length > 0" class="steps-list">
+          <mat-card
+            *ngFor="let step of missionSteps.controls; let i = index"
+            class="step-card"
+            [formGroup]="$any(step)">
 
-          <!-- Mission Steps List -->
-          <div *ngIf="missionSteps.length > 0" class="steps-list">
-            <mat-card
-              *ngFor="let step of missionSteps.controls; let i = index"
-              class="step-card"
-              [formGroup]="$any(step)">
-
-              <mat-card-header>
-                <mat-card-title>
-                  <span>Step {{ i + 1 }}</span>
-                  <div class="step-actions">
-                    <button
-                      mat-icon-button
-                      type="button"
-                      [disabled]="i === 0"
-                      (click)="moveStepUp(i)"
-                      matTooltip="Move Up">
-                      <mat-icon>arrow_upward</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      type="button"
-                      [disabled]="i === missionSteps.length - 1"
-                      (click)="moveStepDown(i)"
-                      matTooltip="Move Down">
-                      <mat-icon>arrow_downward</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      type="button"
-                      (click)="removeMissionStep(i)"
-                      matTooltip="Delete Step">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </mat-card-title>
-              </mat-card-header>
-
-              <mat-card-content>
-                <div class="step-fields">
-                  <!-- Type Selection -->
-                  <mat-form-field appearance="outline" class="field-type">
-                    <mat-label>Type *</mat-label>
-                    <mat-select formControlName="type" (selectionChange)="onStepTypeChange(i)">
-                      <mat-option *ngFor="let typeOption of stepTypeOptions" [value]="typeOption.value">
-                        {{ typeOption.label }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <!-- Position Selection (Dynamic based on type) -->
-                  <mat-form-field appearance="outline" class="field-position">
-                    <mat-label>Position *</mat-label>
-                    <mat-select formControlName="position">
-                      <mat-option
-                        *ngFor="let pos of getAvailablePositionsForStep(i)"
-                        [value]="pos">
-                        {{ pos }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-hint *ngIf="getAvailablePositionsForStep(i).length === 0" class="warning-hint">
-                      No positions available for selected type
-                    </mat-hint>
-                  </mat-form-field>
-
-                  <!-- Pass Strategy -->
-                  <mat-form-field appearance="outline" class="field-strategy">
-                    <mat-label>Pass Strategy *</mat-label>
-                    <mat-select formControlName="passStrategy">
-                      <mat-option
-                        *ngFor="let strategy of activeResumeStrategies()"
-                        [value]="strategy.actualValue">
-                        {{ strategy.displayName }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-hint *ngIf="activeResumeStrategies().length === 0" class="warning-hint">
-                      No resume strategies available
-                    </mat-hint>
-                  </mat-form-field>
-
-                  <!-- Waiting Time -->
-                  <mat-form-field appearance="outline" class="field-waiting">
-                    <mat-label>Waiting Time (ms)</mat-label>
-                    <input matInput type="number" formControlName="waitingMillis" min="0">
-                  </mat-form-field>
-
-                  <!-- Put Down Checkbox -->
-                  <div class="field-checkbox">
-                    <mat-checkbox formControlName="putDown">
-                      Put Down
-                    </mat-checkbox>
-                  </div>
+            <mat-card-header>
+              <mat-card-title>
+                <span>Step {{ i + 1 }}</span>
+                <div class="step-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [disabled]="i === 0"
+                    (click)="moveStepUp(i)"
+                    matTooltip="Move Up">
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [disabled]="i === missionSteps.length - 1"
+                    (click)="moveStepDown(i)"
+                    matTooltip="Move Down">
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    (click)="removeMissionStep(i)"
+                    matTooltip="Delete Step">
+                    <mat-icon>delete</mat-icon>
+                  </button>
                 </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
+              </mat-card-title>
+            </mat-card-header>
 
-          <!-- Add Step Button at bottom -->
-          <div *ngIf="missionSteps.length > 0" class="add-step-bottom">
-            <button
-              mat-stroked-button
-              color="primary"
-              type="button"
-              (click)="addMissionStep()">
-              <mat-icon>add</mat-icon>
-              Add Another Step
-            </button>
-          </div>
+            <mat-card-content>
+              <div class="step-fields">
+                <!-- Type Selection -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Type *</mat-label>
+                  <mat-select formControlName="type" (selectionChange)="onStepTypeChange(i)">
+                    <mat-option *ngFor="let typeOption of stepTypeOptions" [value]="typeOption.value">
+                      {{ typeOption.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <!-- Position Selection (Dynamic based on type) -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Position *</mat-label>
+                  <mat-select formControlName="position">
+                    <mat-option
+                      *ngFor="let pos of getAvailablePositionsForStep(i)"
+                      [value]="pos">
+                      {{ pos }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint *ngIf="getAvailablePositionsForStep(i).length === 0" class="warning-hint">
+                    No positions available for selected type
+                  </mat-hint>
+                </mat-form-field>
+
+                <!-- Pass Strategy -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Pass Strategy *</mat-label>
+                  <mat-select formControlName="passStrategy">
+                    <mat-option
+                      *ngFor="let strategy of activeResumeStrategies()"
+                      [value]="strategy.actualValue">
+                      {{ strategy.displayName }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint *ngIf="activeResumeStrategies().length === 0" class="warning-hint">
+                    No resume strategies available
+                  </mat-hint>
+                </mat-form-field>
+
+                <!-- Waiting Time -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Waiting Time (ms)</mat-label>
+                  <input matInput type="number" formControlName="waitingMillis" min="0">
+                </mat-form-field>
+
+                <!-- Put Down Checkbox -->
+                <div class="checkbox-wrapper">
+                  <mat-checkbox formControlName="putDown">
+                    Put Down
+                  </mat-checkbox>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
-      </mat-tab>
+      </div>
+    </div>
 
-    </mat-tab-group>
   </form>
 </mat-dialog-content>
 
