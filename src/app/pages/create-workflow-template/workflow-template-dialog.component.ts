@@ -259,9 +259,14 @@ export interface WorkflowTemplateDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
+    :host {
+      display: block;
+      width: 100%;
+    }
+
     .template-form {
-      min-width: 600px;
-      max-width: 800px;
+      width: 100%;
+      max-width: 100%;
     }
 
     .form-section {
@@ -384,13 +389,31 @@ export interface WorkflowTemplateDialogData {
       }
     }
 
+    @media (max-width: 1200px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
     @media (max-width: 768px) {
       .template-form {
         min-width: 100%;
       }
 
-      .form-row {
+      .step-form-row {
         flex-direction: column;
+        gap: 0;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        button {
+          width: 100%;
+        }
       }
     }
   `]
@@ -499,7 +522,9 @@ export class WorkflowTemplateDialogComponent implements OnInit {
     }
   }
 
-  private parsePriority(priority: string): number {
+  private parsePriority(priority: string | null | undefined): number {
+    if (!priority) return 2; // Default to MEDIUM
+
     const priorityMap: { [key: string]: number } = {
       'LOW': 1,
       'MEDIUM': 2,

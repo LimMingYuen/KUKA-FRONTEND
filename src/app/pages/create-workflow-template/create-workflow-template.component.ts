@@ -111,10 +111,12 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '800px',
+      width: '95vw',
+      maxWidth: '1400px',
       maxHeight: '90vh',
       disableClose: true,
-      data: dialogData
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -134,10 +136,12 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '800px',
+      width: '95vw',
+      maxWidth: '1400px',
       maxHeight: '90vh',
       disableClose: true,
-      data: dialogData
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -190,9 +194,11 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
     };
 
     this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '800px',
+      width: '95vw',
+      maxWidth: '1400px',
       maxHeight: '90vh',
-      data: dialogData
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
     });
   }
 
