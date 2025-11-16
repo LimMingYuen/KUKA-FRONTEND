@@ -129,9 +129,13 @@
                   <span class="label">Priority:</span>
                   <mat-chip class="priority-chip">{{ mission.priority }}</mat-chip>
                 </div>
-                <div class="info-row" *ngIf="mission.stepCount">
-                  <span class="label">Steps:</span>
-                  <span class="value">{{ mission.stepCount }}</span>
+                <div class="info-row" *ngIf="mission.robotType">
+                  <span class="label">Robot Type:</span>
+                  <span class="value">{{ mission.robotType }}</span>
+                </div>
+                <div class="info-row" *ngIf="mission.robotIds && mission.robotIds !== '-'">
+                  <span class="label">Robot IDs:</span>
+                  <span class="value">{{ mission.robotIds }}</span>
                 </div>
               </div>
             </mat-card-content>
