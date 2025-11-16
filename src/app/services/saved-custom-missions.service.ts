@@ -220,12 +220,13 @@ export class SavedCustomMissionsService {
 
   /**
    * Save mission as template (workflow template creation)
+   * Uses the /api/missions/save-as-template endpoint
    */
   saveMissionAsTemplate(request: SaveMissionAsTemplateRequest): Observable<SaveMissionAsTemplateResponse> {
     this.isCreating.set(true);
 
     return this.http.post<SaveMissionAsTemplateResponse>(
-      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}/save-as-template`,
+      `${this.API_URL}/missions/save-as-template`,
       request,
       { headers: this.createHeaders() }
     ).pipe(
