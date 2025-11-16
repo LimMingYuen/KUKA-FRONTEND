@@ -5,8 +5,8 @@ export interface SavedCustomMissionDto {
   missionType: string;
   robotType: string;
   priority: string;
-  robotModels: string[];
-  robotIds: string[];
+  robotModels: string[] | string;  // Can be array or comma-separated string from backend
+  robotIds: string[] | string;      // Can be array or comma-separated string from backend
   containerModelCode: string | null;
   containerCode: string | null;
   idleNode: string | null;
@@ -173,6 +173,16 @@ export enum MissionTriggerSource {
 // Utility functions for data transformation
 export class SavedCustomMissionsUtils {
   static transformToDisplay(dto: SavedCustomMissionDto): SavedCustomMissionsDisplayData {
+    // Helper function to normalize string/array to display string
+    const normalizeList = (value: string[] | string | null | undefined): string => {
+      if (!value) return '-';
+      if (Array.isArray(value)) {
+        return value.length > 0 ? value.join(', ') : '-';
+      }
+      // If it's a string, return as-is (backend already provides comma-separated)
+      return value || '-';
+    };
+
     return {
       id: dto.id,
       missionName: dto.missionName,
@@ -180,8 +190,8 @@ export class SavedCustomMissionsUtils {
       missionType: dto.missionType,
       robotType: dto.robotType,
       priority: dto.priority,
-      robotModels: dto.robotModels.join(', ') || '-',
-      robotIds: dto.robotIds.join(', ') || '-',
+      robotModels: normalizeList(dto.robotModels),
+      robotIds: normalizeList(dto.robotIds),
       containerModelCode: dto.containerModelCode || '-',
       containerCode: dto.containerCode || '-',
       idleNode: dto.idleNode || '-',
