@@ -22,6 +22,10 @@ import { MissionTypesService } from '../../services/mission-types.service';
 import { RobotTypesService } from '../../services/robot-types.service';
 import { ResumeStrategiesService } from '../../services/resume-strategies.service';
 import { MobileRobotsService } from '../../services/mobile-robots.service';
+import { AreasService } from '../../services/areas.service';
+import { ShelfDecisionRulesService } from '../../services/shelf-decision-rules.service';
+import { QrCodesService } from '../../services/qr-codes.service';
+import { MapZonesService } from '../../services/map-zones.service';
 import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
@@ -214,17 +218,29 @@ export interface WorkflowTemplateDialogData {
                 <div class="step-row">
                   <mat-form-field appearance="outline">
                     <mat-label>Position</mat-label>
-                    <input matInput formControlName="position" />
+                    <mat-select formControlName="position">
+                      <mat-optgroup label="QR Codes & Map Zones">
+                        <mat-option *ngFor="let position of availablePositions()" [value]="position">
+                          {{ position }}
+                        </mat-option>
+                      </mat-optgroup>
+                    </mat-select>
+                    <mat-hint *ngIf="availablePositions().length === 0" class="warning-hint">
+                      No positions available
+                    </mat-hint>
+                    <mat-error>Position is required</mat-error>
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Type</mat-label>
+                    <mat-label>Type (Area)</mat-label>
                     <mat-select formControlName="type">
-                      <mat-option value="PICKUP">PICKUP</mat-option>
-                      <mat-option value="DROPOFF">DROPOFF</mat-option>
-                      <mat-option value="NAVIGATE">NAVIGATE</mat-option>
-                      <mat-option value="WAIT">WAIT</mat-option>
-                      <mat-option value="CHARGE">CHARGE</mat-option>
+                      <mat-option *ngFor="let area of activeAreas()" [value]="area">
+                        {{ area }}
+                      </mat-option>
                     </mat-select>
+                    <mat-hint *ngIf="activeAreas().length === 0" class="warning-hint">
+                      No active areas available
+                    </mat-hint>
+                    <mat-error>Type is required</mat-error>
                   </mat-form-field>
                 </div>
                 <div class="step-row">
@@ -238,13 +254,26 @@ export interface WorkflowTemplateDialogData {
                     <mat-hint *ngIf="activeResumeStrategies().length === 0" class="warning-hint">
                       No active resume strategies available
                     </mat-hint>
+                    <mat-error>Pass strategy is required</mat-error>
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Wait Time (ms)</mat-label>
-                    <input matInput type="number" formControlName="waitingMillis" min="0" />
+                    <mat-label>Shelf Decision Rule</mat-label>
+                    <mat-select formControlName="putDown">
+                      <mat-option *ngFor="let rule of activeShelfRules()" [value]="rule">
+                        {{ rule }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-hint *ngIf="activeShelfRules().length === 0" class="warning-hint">
+                      No active shelf decision rules available
+                    </mat-hint>
+                    <mat-error>Shelf decision rule is required</mat-error>
                   </mat-form-field>
                 </div>
-                <mat-checkbox formControlName="putDown">Put Down</mat-checkbox>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Wait Time (ms)</mat-label>
+                  <input matInput type="number" formControlName="waitingMillis" min="0" placeholder="Enter wait time in milliseconds" />
+                  <mat-hint>Optional waiting time in milliseconds</mat-hint>
+                </mat-form-field>
               </mat-card-content>
             </mat-card>
           </div>
@@ -424,6 +453,9 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   public activeMissionTypes = signal<MissionTypeDisplayData[]>([]);
   public activeRobotTypes = signal<RobotTypeDisplayData[]>([]);
   public activeResumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
+  public activeAreas = signal<string[]>([]);
+  public activeShelfRules = signal<string[]>([]);
+  public availablePositions = signal<string[]>([]);
   public availableRobotModels = signal<string[]>([]);
   public availableRobotIds = signal<string[]>([]);
   public isLoadingConfig = signal<boolean>(false);
@@ -437,7 +469,11 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     private missionTypesService: MissionTypesService,
     private robotTypesService: RobotTypesService,
     private resumeStrategiesService: ResumeStrategiesService,
-    private mobileRobotsService: MobileRobotsService
+    private mobileRobotsService: MobileRobotsService,
+    private areasService: AreasService,
+    private shelfDecisionRulesService: ShelfDecisionRulesService,
+    private qrCodesService: QrCodesService,
+    private mapZonesService: MapZonesService
   ) {}
 
   ngOnInit(): void {
@@ -473,11 +509,15 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       missionTypes: this.missionTypesService.getMissionTypes(),
       robotTypes: this.robotTypesService.getRobotTypes(),
       resumeStrategies: this.resumeStrategiesService.getResumeStrategies(),
-      mobileRobots: this.mobileRobotsService.getMobileRobots()
+      mobileRobots: this.mobileRobotsService.getMobileRobots(),
+      areas: this.areasService.getAreas(),
+      shelfRules: this.shelfDecisionRulesService.getShelfDecisionRules(),
+      qrCodes: this.qrCodesService.getQrCodes(),
+      mapZones: this.mapZonesService.getMapZones()
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots }) => {
+        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots, areas, shelfRules, qrCodes, mapZones }) => {
           // Filter for active items only
           this.activeMissionTypes.set(missionTypes.filter(mt => mt.isActive));
           this.activeRobotTypes.set(robotTypes.filter(rt => rt.isActive));
@@ -489,6 +529,20 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
 
           this.availableRobotModels.set(uniqueRobotModels);
           this.availableRobotIds.set(uniqueRobotIds);
+
+          // Extract active areas (actualValue)
+          const activeAreaValues = areas.filter(a => a.isActive).map(a => a.actualValue).sort();
+          this.activeAreas.set(activeAreaValues);
+
+          // Extract active shelf decision rules (actualValue)
+          const activeShelfRuleValues = shelfRules.filter(r => r.isActive).map(r => r.actualValue).sort();
+          this.activeShelfRules.set(activeShelfRuleValues);
+
+          // Combine QR codes (nodeLabel) and map zones (zoneCode) for positions
+          const qrCodePositions = qrCodes.map(qr => qr.nodeLabel).filter(Boolean);
+          const mapZonePositions = mapZones.map(mz => mz.code).filter(Boolean);
+          const allPositions = [...qrCodePositions, ...mapZonePositions].sort();
+          this.availablePositions.set([...new Set(allPositions)]);
 
           this.isLoadingConfig.set(false);
         },
@@ -565,9 +619,9 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
           this.missionData.push(this.fb.group({
             sequence: [step.sequence || 0],
             position: [step.position || '', Validators.required],
-            type: [step.type || 'NAVIGATE', Validators.required],
-            putDown: [step.putDown || false],
-            passStrategy: [step.passStrategy || 'CONTINUE', Validators.required],
+            type: [step.type || '', Validators.required],
+            putDown: [step.putDown || '', Validators.required],
+            passStrategy: [step.passStrategy || '', Validators.required],
             waitingMillis: [step.waitingMillis || 0, Validators.min(0)]
           }));
         });
@@ -602,9 +656,9 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     this.missionData.push(this.fb.group({
       sequence: [this.missionData.length],
       position: ['', Validators.required],
-      type: ['NAVIGATE', Validators.required],
-      putDown: [false],
-      passStrategy: ['CONTINUE', Validators.required],
+      type: ['', Validators.required],
+      putDown: ['', Validators.required],
+      passStrategy: ['', Validators.required],
       waitingMillis: [0, Validators.min(0)]
     }));
   }
