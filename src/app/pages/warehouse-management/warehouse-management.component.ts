@@ -206,6 +206,7 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
     totalRules: number;
     totalMissionTypes: number;
     totalRobotTypes: number;
+    totalResumeStrategies: number;
     totalAreas: number;
   } {
     // These would come from respective services in a real implementation
@@ -213,6 +214,7 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
       totalRules: 0,
       totalMissionTypes: 0,
       totalRobotTypes: 0,
+      totalResumeStrategies: 0,
       totalAreas: 0
     };
   }
