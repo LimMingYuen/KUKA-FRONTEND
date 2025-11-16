@@ -118,53 +118,69 @@ export interface WorkflowTemplateDialogData {
             </mat-form-field>
           </div>
 
-          <!-- Robot Models Chips -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Robot Models</mat-label>
-            <mat-chip-grid #robotModelsChipGrid>
-              <mat-chip-row
-                *ngFor="let model of missionTemplate.get('robotModels')?.value"
-                (removed)="removeRobotModel(model)"
-              >
-                {{ model }}
-                <button matChipRemove><mat-icon>cancel</mat-icon></button>
-              </mat-chip-row>
-            </mat-chip-grid>
-            <input
-              placeholder="Add robot model..."
-              #robotModelInput
-              (keyup.enter)="addRobotModel(robotModelInput)"
-            />
-            <mat-icon matPrefix>smart_toy</mat-icon>
-            <mat-hint>Press Enter to add</mat-hint>
-          </mat-form-field>
+          <!-- Robot Models -->
+          <div class="chip-input-container">
+            <label class="chip-label">Robot Models</label>
+            <div class="chips-display">
+              <mat-chip-set>
+                <mat-chip
+                  *ngFor="let model of missionTemplate.get('robotModels')?.value"
+                  (removed)="removeRobotModel(model)"
+                >
+                  {{ model }}
+                  <button matChipRemove [attr.aria-label]="'Remove ' + model">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Add Robot Model</mat-label>
+              <input
+                matInput
+                placeholder="Enter robot model and press Enter"
+                #robotModelInput
+                (keyup.enter)="addRobotModel(robotModelInput); $event.preventDefault()"
+              />
+              <mat-icon matPrefix>smart_toy</mat-icon>
+              <mat-hint>Press Enter to add</mat-hint>
+            </mat-form-field>
+          </div>
 
-          <!-- Robot IDs Chips -->
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Robot IDs</mat-label>
-            <mat-chip-grid #robotIdsChipGrid>
-              <mat-chip-row
-                *ngFor="let id of missionTemplate.get('robotIds')?.value"
-                (removed)="removeRobotId(id)"
-              >
-                {{ id }}
-                <button matChipRemove><mat-icon>cancel</mat-icon></button>
-              </mat-chip-row>
-            </mat-chip-grid>
-            <input
-              placeholder="Add robot ID..."
-              #robotIdInput
-              (keyup.enter)="addRobotId(robotIdInput)"
-            />
-            <mat-icon matPrefix>pin</mat-icon>
-            <mat-hint>Press Enter to add</mat-hint>
-          </mat-form-field>
+          <!-- Robot IDs -->
+          <div class="chip-input-container">
+            <label class="chip-label">Robot IDs</label>
+            <div class="chips-display">
+              <mat-chip-set>
+                <mat-chip
+                  *ngFor="let id of missionTemplate.get('robotIds')?.value"
+                  (removed)="removeRobotId(id)"
+                >
+                  {{ id }}
+                  <button matChipRemove [attr.aria-label]="'Remove ' + id">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Add Robot ID</mat-label>
+              <input
+                matInput
+                placeholder="Enter robot ID and press Enter"
+                #robotIdInput
+                (keyup.enter)="addRobotId(robotIdInput); $event.preventDefault()"
+              />
+              <mat-icon matPrefix>pin</mat-icon>
+              <mat-hint>Press Enter to add</mat-hint>
+            </mat-form-field>
+          </div>
         </section>
 
         <mat-divider></mat-divider>
 
         <!-- Mission Steps -->
-        <section class="form-section">
+        <section class="form-section" [formGroup]="missionTemplate">
           <div class="section-header">
             <h3>Mission Steps</h3>
             <button mat-mini-fab color="primary" type="button" (click)="addMissionStep()">
@@ -327,9 +343,45 @@ export interface WorkflowTemplateDialogData {
       margin: 20px 0;
     }
 
-    mat-chip-row {
-      background-color: #ff6f00;
-      color: white;
+    .chip-input-container {
+      margin-bottom: 16px;
+
+      .chip-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 8px;
+      }
+
+      .chips-display {
+        margin-bottom: 8px;
+        min-height: 40px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fafafa;
+
+        mat-chip-set {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        mat-chip {
+          background-color: #ff6f00;
+          color: white;
+
+          button[matChipRemove] {
+            color: white;
+            opacity: 0.8;
+
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
+      }
     }
 
     @media (max-width: 768px) {
