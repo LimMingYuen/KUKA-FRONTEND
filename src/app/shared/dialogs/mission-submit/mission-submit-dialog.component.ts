@@ -117,7 +117,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       robotModels: [['KMP600I']],
       robotIds: [['14']],
       robotType: ['LIFT', Validators.required],
-      priority: [1, Validators.required],
+      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
       containerModelCode: [''],
       containerCode: [''],
       templateCode: ['', Validators.required],
@@ -135,7 +135,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       robotModels: [['KMP600I']],
       robotIds: [['14']],
       robotType: ['LIFT', Validators.required],
-      priority: [1, Validators.required],
+      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
       containerModelCode: [''],
       containerCode: [''],
       lockRobotAfterFinish: [false],

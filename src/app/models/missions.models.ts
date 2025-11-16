@@ -18,7 +18,7 @@ export interface MissionTemplate {
   robotModels: string[];
   robotIds: string[];
   robotType: string;
-  priority: number; // 1=LOW, 2=MEDIUM, 3=HIGH, 4=CRITICAL
+  priority: number; // Priority range: 0-100 (higher = more urgent)
   containerModelCode: string | null;
   containerCode: string | null;
   templateCode: string | null;
