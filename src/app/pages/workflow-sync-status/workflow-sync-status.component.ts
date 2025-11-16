@@ -114,7 +114,7 @@ export class WorkflowSyncStatusComponent implements OnInit, OnDestroy {
       column: 'id',
       direction: 'desc'
     },
-    emptyState: {
+    empty: {
       message: 'No sync history available. Click "Sync Now" to perform your first sync.',
       icon: 'history'
     }
