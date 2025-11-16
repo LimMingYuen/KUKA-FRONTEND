@@ -104,12 +104,32 @@ export interface JobQueryRequest {
 }
 
 export interface JobData {
-  missionCode: string;
-  status: string;
-  robotId?: string;
-  progress?: number;
-  currentLocation?: string;
-  updatedAt?: string;
+  jobCode: string;              // Job code (same as mission code)
+  missionCode?: string;         // For backward compatibility
+  workflowId?: number;          // Workflow id
+  containerCode?: string;       // Container code
+  robotId?: string;             // Robot id
+  status: number | string;      // Job status (10=Created, 20=Executing, 25=Waiting, 28=Cancelling, 30=Complete, 31=Cancelled, 35=Manual complete, 50=Warning, 60=Startup error)
+  workflowName?: string;        // Name of the workflow configuration
+  workflowCode?: string;        // Workflow code of the workflow configuration
+  workflowPriority?: number;    // Workflow priority
+  mapCode?: string;             // Map code
+  targetCellCode?: string;      // Target node code of the running task
+  beginCellCode?: string;       // Begin node code of the running task
+  targetCellCodeForeign?: string; // Foreign code of target node
+  beginCellCodeForeign?: string;  // Foreign code of begin node
+  finalNodeCode?: string;       // End node of the workflow
+  warnFlag?: number;            // Warn flag (0=Normal, 1=Warning)
+  warnCode?: string;            // Warn code
+  completeTime?: string;        // Workflow complete time (yyyy-MM-dd HH:mm:ss)
+  spendTime?: number;           // Workflow spend time (seconds)
+  createUsername?: string;      // Operator
+  createTime?: string;          // Workflow create time (yyyy-MM-dd HH:mm:ss)
+  source?: string;              // Source: INTERFACE, PDA, DEVICE, MLS, SELF, EVENT
+  materialsInfo?: string;       // Materials info
+  progress?: number;            // Progress percentage (for compatibility)
+  currentLocation?: string;     // Current location (for compatibility)
+  updatedAt?: string;           // Updated at timestamp (for compatibility)
 }
 
 export interface JobQueryResponse {
@@ -380,6 +400,82 @@ export class MissionsUtils {
       });
     } catch {
       return dateString;
+    }
+  }
+
+  /**
+   * Convert numeric job status to readable string
+   */
+  static getJobStatusText(status: number | string): string {
+    if (typeof status === 'string') return status;
+
+    switch (status) {
+      case 10: return 'Created';
+      case 20: return 'Executing';
+      case 25: return 'Waiting';
+      case 28: return 'Cancelling';
+      case 30: return 'Complete';
+      case 31: return 'Cancelled';
+      case 35: return 'Manual Complete';
+      case 50: return 'Warning';
+      case 60: return 'Startup Error';
+      default: return `Status ${status}`;
+    }
+  }
+
+  /**
+   * Get color for job status
+   */
+  static getJobStatusColor(status: number | string): string {
+    const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
+
+    switch (numStatus) {
+      case 10: // Created
+        return '';
+      case 20: // Executing
+        return 'primary';
+      case 25: // Waiting
+        return 'accent';
+      case 28: // Cancelling
+        return 'warn';
+      case 30: // Complete
+      case 35: // Manual Complete
+        return 'accent';
+      case 31: // Cancelled
+        return '';
+      case 50: // Warning
+        return 'warn';
+      case 60: // Startup Error
+        return 'warn';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Check if job is in terminal state (completed, cancelled, or error)
+   */
+  static isJobTerminal(status: number | string): boolean {
+    const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
+    return numStatus === 30 || numStatus === 31 || numStatus === 35 || numStatus === 60;
+  }
+
+  /**
+   * Format spend time from seconds to readable format
+   */
+  static formatSpendTime(seconds: number | undefined): string {
+    if (!seconds) return '-';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
     }
   }
 }

@@ -183,7 +183,7 @@
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>work</mat-icon>
-                {{ job.missionCode }}
+                {{ job.jobData.jobCode || job.missionCode }}
               </mat-card-title>
               <button mat-icon-button (click)="clearJob(job.missionCode)" matTooltip="Clear">
                 <mat-icon>close</mat-icon>
@@ -191,27 +191,122 @@
             </mat-card-header>
             <mat-card-content>
               <div class="job-details">
-                <div class="detail-row">
-                  <span class="label">Status:</span>
-                  <mat-chip [color]="getStatusColor(job.jobData.status || '')" selected>
-                    {{ job.jobData.status }}
-                  </mat-chip>
+                <!-- Status Section -->
+                <div class="detail-section">
+                  <h4>Job Status</h4>
+                  <div class="detail-row">
+                    <span class="label">Status:</span>
+                    <mat-chip [color]="MissionsUtils.getJobStatusColor(job.jobData.status)" selected>
+                      {{ MissionsUtils.getJobStatusText(job.jobData.status) }}
+                    </mat-chip>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.workflowName">
+                    <span class="label">Workflow:</span>
+                    <span class="value">{{ job.jobData.workflowName }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.workflowCode">
+                    <span class="label">Workflow Code:</span>
+                    <span class="value">{{ job.jobData.workflowCode }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.workflowPriority">
+                    <span class="label">Priority:</span>
+                    <span class="value">{{ job.jobData.workflowPriority }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.source">
+                    <span class="label">Source:</span>
+                    <span class="value">{{ job.jobData.source }}</span>
+                  </div>
                 </div>
-                <div class="detail-row" *ngIf="job.jobData.robotId">
-                  <span class="label">Robot ID:</span>
-                  <span class="value">{{ job.jobData.robotId }}</span>
+
+                <mat-divider></mat-divider>
+
+                <!-- Robot & Location Section -->
+                <div class="detail-section">
+                  <h4>Robot & Location</h4>
+                  <div class="detail-row" *ngIf="job.jobData.robotId">
+                    <span class="label">Robot ID:</span>
+                    <span class="value">{{ job.jobData.robotId }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="getRobotForJob(job.jobData) as robot">
+                    <span class="label">Robot Current Node:</span>
+                    <span class="value highlight">{{ robot.currentLocation || '-' }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.mapCode">
+                    <span class="label">Map Code:</span>
+                    <span class="value">{{ job.jobData.mapCode }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.containerCode">
+                    <span class="label">Container:</span>
+                    <span class="value">{{ job.jobData.containerCode }}</span>
+                  </div>
                 </div>
-                <div class="detail-row" *ngIf="job.jobData.progress !== undefined">
-                  <span class="label">Progress:</span>
-                  <span class="value">{{ job.jobData.progress }}%</span>
+
+                <mat-divider></mat-divider>
+
+                <!-- Task Progress Section -->
+                <div class="detail-section">
+                  <h4>Task Progress</h4>
+                  <div class="detail-row" *ngIf="job.jobData.beginCellCode">
+                    <span class="label">Begin Node:</span>
+                    <span class="value">{{ job.jobData.beginCellCode }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.targetCellCode">
+                    <span class="label">Target Node:</span>
+                    <span class="value">{{ job.jobData.targetCellCode }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.finalNodeCode">
+                    <span class="label">Final Node:</span>
+                    <span class="value">{{ job.jobData.finalNodeCode }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.targetCellCodeForeign">
+                    <span class="label">Target Foreign Code:</span>
+                    <span class="value">{{ job.jobData.targetCellCodeForeign }}</span>
+                  </div>
                 </div>
-                <div class="detail-row" *ngIf="job.jobData.currentLocation">
-                  <span class="label">Location:</span>
-                  <span class="value">{{ job.jobData.currentLocation }}</span>
+
+                <mat-divider></mat-divider>
+
+                <!-- Timing Section -->
+                <div class="detail-section">
+                  <h4>Timing</h4>
+                  <div class="detail-row" *ngIf="job.jobData.createTime">
+                    <span class="label">Created:</span>
+                    <span class="value">{{ job.jobData.createTime }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.completeTime">
+                    <span class="label">Completed:</span>
+                    <span class="value">{{ job.jobData.completeTime }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.spendTime">
+                    <span class="label">Duration:</span>
+                    <span class="value">{{ MissionsUtils.formatSpendTime(job.jobData.spendTime) }}</span>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.createUsername">
+                    <span class="label">Created By:</span>
+                    <span class="value">{{ job.jobData.createUsername }}</span>
+                  </div>
                 </div>
-                <div class="detail-row" *ngIf="job.jobData.updatedAt">
-                  <span class="label">Updated:</span>
-                  <span class="value">{{ job.jobData.updatedAt }}</span>
+
+                <!-- Warnings Section -->
+                <div class="detail-section" *ngIf="job.jobData.warnFlag === 1">
+                  <h4>Warnings</h4>
+                  <div class="detail-row">
+                    <span class="label">Warning Status:</span>
+                    <mat-chip color="warn" selected>Active Warning</mat-chip>
+                  </div>
+                  <div class="detail-row" *ngIf="job.jobData.warnCode">
+                    <span class="label">Warning Code:</span>
+                    <span class="value">{{ job.jobData.warnCode }}</span>
+                  </div>
+                </div>
+
+                <!-- Materials Section -->
+                <div class="detail-section" *ngIf="job.jobData.materialsInfo">
+                  <h4>Materials</h4>
+                  <div class="detail-row">
+                    <span class="label">Materials Info:</span>
+                    <span class="value">{{ job.jobData.materialsInfo }}</span>
+                  </div>
                 </div>
               </div>
             </mat-card-content>
