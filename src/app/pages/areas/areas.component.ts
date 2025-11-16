@@ -27,6 +27,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { AREAS_TABLE_CONFIG } from './areas-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { AreaDialogComponent } from './area-dialog.component';
 
 @Component({
   selector: 'app-areas',
@@ -202,8 +203,21 @@ export class AreasComponent implements OnInit, OnDestroy {
    * Edit area
    */
   private editArea(area: AreaDisplayData): void {
-    // TODO: Implement edit dialog
-    console.log('Edit area:', area);
+    const dialogRef = this.dialog.open(AreaDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'edit',
+        area: area
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateArea(area.id, result);
+      }
+    });
   }
 
   /**
@@ -245,9 +259,20 @@ export class AreasComponent implements OnInit, OnDestroy {
    * Open create dialog
    */
   public openCreateDialog(): void {
-    this.resetForm();
-    // TODO: Implement create dialog
-    console.log('Open create dialog');
+    const dialogRef = this.dialog.open(AreaDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'create'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createArea(result);
+      }
+    });
   }
 
   /**
@@ -269,33 +294,25 @@ export class AreasComponent implements OnInit, OnDestroy {
   /**
    * Create new area
    */
-  createArea(): void {
-    if (this.areaForm.invalid) {
-      this.markFormGroupTouched(this.areaForm);
-      return;
-    }
-
-    const formValue = this.areaForm.value;
-
-    if (!this.validateAreaData(formValue.displayName, formValue.actualValue, formValue.description)) {
-      return;
-    }
-
-    const request: AreaCreateRequest = {
-      displayName: formValue.displayName.trim(),
-      actualValue: formValue.actualValue.trim(),
-      description: formValue.description?.trim() || '',
-      isActive: formValue.isActive
-    };
-
+  private createArea(request: AreaCreateRequest): void {
     this.areasService.createArea(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.resetForm();
-        },
         error: (error) => {
           console.error('Error creating area:', error);
+        }
+      });
+  }
+
+  /**
+   * Update area
+   */
+  private updateArea(id: number, request: AreaUpdateRequest): void {
+    this.areasService.updateArea(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error updating area:', error);
         }
       });
   }
