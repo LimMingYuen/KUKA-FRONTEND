@@ -312,46 +312,10 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Clear job from active jobs
-   */
-  clearJob(missionCode: string): void {
-    const job = this.activeJobs.get(missionCode);
-    this.activeJobs.delete(missionCode);
-    this.stopJobPolling(missionCode);
-
-    // Clear robot data if no other jobs are using it
-    if (job?.robotId) {
-      const robotStillInUse = Array.from(this.activeJobs.values())
-        .some(j => j.robotId === job.robotId);
-      if (!robotStillInUse) {
-        this.activeRobots.delete(job.robotId);
-      }
-    }
-  }
-
-  /**
    * Check if workflow is being triggered
    */
   isTriggering(id: number): boolean {
     return this.triggeringMissions.has(id);
-  }
-
-  /**
-   * Get robot data for a job
-   */
-  getRobotForJob(job: JobData): RobotData | undefined {
-    if (!job.robotId) return undefined;
-    return this.activeRobots.get(job.robotId);
-  }
-
-  /**
-   * Get active jobs as array
-   */
-  getActiveJobsArray(): Array<{ missionCode: string; jobData: JobData }> {
-    return Array.from(this.activeJobs.entries()).map(([missionCode, jobData]) => ({
-      missionCode,
-      jobData
-    }));
   }
 
   /**
