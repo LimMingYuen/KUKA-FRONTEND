@@ -39,7 +39,8 @@
   padding: 16px;
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   background-color: var(--mat-sys-surface-bright);
-  min-height: 64px;
+  height: 64px; // Match toolbar height exactly
+  box-sizing: border-box;
 
   .logo-container {
     display: flex;
@@ -298,6 +299,8 @@
   top: 0;
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 64px; // Match sidebar header height exactly
+  box-sizing: border-box;
 
   .menu-toggle {
     margin-right: 16px;
