@@ -134,6 +134,26 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
     } as ActionConfig
   ],
 
+  // Header actions
+  headerActions: [
+    {
+      action: 'refresh',
+      label: 'Refresh',
+      icon: 'refresh',
+      type: 'icon',
+      tooltip: 'Refresh areas'
+    },
+    {
+      action: 'create-area',
+      label: 'Create Area',
+      icon: 'add',
+      type: 'raised',
+      color: 'primary',
+      tooltip: 'Create new area',
+      loading: false
+    }
+  ],
+
   // Pagination configuration
   pagination: {
     pageSize: 10,

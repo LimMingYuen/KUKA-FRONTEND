@@ -134,6 +134,26 @@ export const RESUME_STRATEGIES_TABLE_CONFIG: TableConfig<ResumeStrategyDisplayDa
     } as ActionConfig
   ],
 
+  // Header actions
+  headerActions: [
+    {
+      action: 'refresh',
+      label: 'Refresh',
+      icon: 'refresh',
+      type: 'icon',
+      tooltip: 'Refresh resume strategies'
+    },
+    {
+      action: 'create-resume-strategy',
+      label: 'Create Resume Strategy',
+      icon: 'add',
+      type: 'raised',
+      color: 'primary',
+      tooltip: 'Create new resume strategy',
+      loading: false
+    }
+  ],
+
   // Pagination configuration
   pagination: {
     pageSize: 10,

@@ -130,6 +130,26 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
     } as ActionConfig
   ],
 
+  // Header actions
+  headerActions: [
+    {
+      action: 'refresh',
+      label: 'Refresh',
+      icon: 'refresh',
+      type: 'icon',
+      tooltip: 'Refresh mission types'
+    },
+    {
+      action: 'create-mission-type',
+      label: 'Create Mission Type',
+      icon: 'add',
+      type: 'raised',
+      color: 'primary',
+      tooltip: 'Create new mission type',
+      loading: false
+    }
+  ],
+
   // Empty state configuration
   empty: {
     message: 'No Mission Types Found. Get started by creating your first mission type configuration.',
