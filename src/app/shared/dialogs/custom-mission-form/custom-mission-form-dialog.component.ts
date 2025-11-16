@@ -405,6 +405,8 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
       missionStepsJson
     };
 
+    console.log('Creating mission with request payload:', request);
+
     this.savedCustomMissionsService.createSavedCustomMission(request).subscribe({
       next: (result) => {
         this.isSubmitting = false;
@@ -413,8 +415,34 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error creating mission:', error);
-        this.snackBar.open('Failed to create custom mission', 'Close', { duration: 5000 });
+        console.error('=== ERROR CREATING MISSION ===');
+        console.error('Full error object:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.error?.msg || error.message);
+
+        // Log validation errors if present
+        if (error.error?.errors) {
+          console.error('Validation errors:', error.error.errors);
+          console.error('Validation errors (stringified):', JSON.stringify(error.error.errors, null, 2));
+        }
+
+        // Log the request that failed
+        console.error('Request that failed:', request);
+        console.error('Request (stringified):', JSON.stringify(request, null, 2));
+        console.error('=== END ERROR ===');
+
+        // Show more specific error message if available
+        let errorMessage = 'Failed to create custom mission';
+        if (error.error?.errors) {
+          const validationErrors = Object.values(error.error.errors).flat();
+          if (validationErrors.length > 0) {
+            errorMessage = `Validation error: ${validationErrors[0]}`;
+          }
+        } else if (error.error?.msg) {
+          errorMessage = error.error.msg;
+        }
+
+        this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
       }
     });
   }
@@ -448,6 +476,8 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
       missionStepsJson
     };
 
+    console.log('Updating mission with request payload:', request);
+
     this.savedCustomMissionsService.updateSavedCustomMission(this.data.mission.id, request).subscribe({
       next: (result) => {
         this.isSubmitting = false;
@@ -456,8 +486,34 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isSubmitting = false;
-        console.error('Error updating mission:', error);
-        this.snackBar.open('Failed to update custom mission', 'Close', { duration: 5000 });
+        console.error('=== ERROR UPDATING MISSION ===');
+        console.error('Full error object:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.error?.msg || error.message);
+
+        // Log validation errors if present
+        if (error.error?.errors) {
+          console.error('Validation errors:', error.error.errors);
+          console.error('Validation errors (stringified):', JSON.stringify(error.error.errors, null, 2));
+        }
+
+        // Log the request that failed
+        console.error('Request that failed:', request);
+        console.error('Request (stringified):', JSON.stringify(request, null, 2));
+        console.error('=== END ERROR ===');
+
+        // Show more specific error message if available
+        let errorMessage = 'Failed to update custom mission';
+        if (error.error?.errors) {
+          const validationErrors = Object.values(error.error.errors).flat();
+          if (validationErrors.length > 0) {
+            errorMessage = `Validation error: ${validationErrors[0]}`;
+          }
+        } else if (error.error?.msg) {
+          errorMessage = error.error.msg;
+        }
+
+        this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
       }
     });
   }
