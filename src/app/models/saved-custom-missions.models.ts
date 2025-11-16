@@ -42,6 +42,12 @@ export interface SavedCustomMissionCreateRequest {
   containerModelCode: string | null;
   containerCode: string | null;
   idleNode: string | null;
+  orgId?: string | null;
+  viewBoardType?: string | null;
+  templateCode?: string | null;
+  lockRobotAfterFinish?: boolean;
+  unlockRobotId?: string | null;
+  unlockMissionCode?: string | null;
   missionStepsJson: string;
 }
 
