@@ -41,8 +41,8 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Mission Type *</mat-label>
             <mat-select formControlName="missionType">
-              <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.name">
-                {{ type.name }}
+              <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.actualValue">
+                {{ type.displayName }}
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="activeMissionTypes().length === 0" class="warning-hint">
@@ -56,8 +56,8 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Robot Type *</mat-label>
             <mat-select formControlName="robotType">
-              <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.name">
-                {{ type.name }}
+              <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.actualValue">
+                {{ type.displayName }}
               </mat-option>
             </mat-select>
             <mat-hint *ngIf="activeRobotTypes().length === 0" class="warning-hint">
@@ -205,7 +205,7 @@
             <mat-card
               *ngFor="let step of missionSteps.controls; let i = index"
               class="step-card"
-              [formGroup]="step">
+              [formGroup]="$any(step)">
 
               <mat-card-header>
                 <mat-card-title>
@@ -272,8 +272,8 @@
                     <mat-select formControlName="passStrategy">
                       <mat-option
                         *ngFor="let strategy of activeResumeStrategies()"
-                        [value]="strategy.name">
-                        {{ strategy.name }}
+                        [value]="strategy.actualValue">
+                        {{ strategy.displayName }}
                       </mat-option>
                     </mat-select>
                     <mat-hint *ngIf="activeResumeStrategies().length === 0" class="warning-hint">
