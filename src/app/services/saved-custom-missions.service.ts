@@ -225,6 +225,18 @@ export class SavedCustomMissionsService {
   saveMissionAsTemplate(request: SaveMissionAsTemplateRequest): Observable<SaveMissionAsTemplateResponse> {
     this.isCreating.set(true);
 
+    // Debug logging to see what we're sending
+    console.log('=== Save Mission as Template Request ===');
+    console.log('Endpoint:', `${this.API_URL}/missions/save-as-template`);
+    console.log('Request Payload:', JSON.stringify(request, null, 2));
+    console.log('missionName:', request.missionName, '(type:', typeof request.missionName, ')');
+    console.log('description:', request.description, '(type:', typeof request.description, ')');
+    console.log('missionTemplate.missionType:', request.missionTemplate?.missionType, '(type:', typeof request.missionTemplate?.missionType, ')');
+    console.log('missionTemplate.robotType:', request.missionTemplate?.robotType, '(type:', typeof request.missionTemplate?.robotType, ')');
+    console.log('missionTemplate.missionData length:', request.missionTemplate?.missionData?.length);
+    console.log('missionTemplate.missionData:', JSON.stringify(request.missionTemplate?.missionData, null, 2));
+    console.log('=====================================');
+
     return this.http.post<SaveMissionAsTemplateResponse>(
       `${this.API_URL}/missions/save-as-template`,
       request,
@@ -356,7 +368,41 @@ export class SavedCustomMissionsService {
   private handleError(error: any, defaultMessage: string): void {
     let errorMessage = defaultMessage;
 
-    if (error.status === 401) {
+    // Log full error details for debugging
+    console.error('=== HTTP Error Details ===');
+    console.error('Status:', error.status);
+    console.error('Status Text:', error.statusText);
+    console.error('Error Object:', error);
+    console.error('Error Response Body:', error.error);
+
+    // Check if there are validation errors
+    if (error.error?.errors) {
+      console.error('Validation Errors:', JSON.stringify(error.error.errors, null, 2));
+    }
+
+    if (error.error?.title) {
+      console.error('Error Title:', error.error.title);
+    }
+
+    console.error('==========================');
+
+    if (error.status === 400) {
+      // Bad Request - likely validation errors
+      if (error.error?.errors) {
+        // Format validation errors for display
+        const validationErrors = Object.entries(error.error.errors)
+          .map(([field, messages]: [string, any]) => {
+            const msgArray = Array.isArray(messages) ? messages : [messages];
+            return `${field}: ${msgArray.join(', ')}`;
+          })
+          .join('\n');
+        errorMessage = `Validation failed:\n${validationErrors}`;
+      } else if (error.error?.title) {
+        errorMessage = error.error.title;
+      } else if (error.error?.message) {
+        errorMessage = error.error.message;
+      }
+    } else if (error.status === 401) {
       errorMessage = 'Authentication failed. Please log in again.';
       localStorage.removeItem('auth_token');
     } else if (error.status === 403) {
