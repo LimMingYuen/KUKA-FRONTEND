@@ -6,27 +6,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { MissionTypesService } from '../../services/mission-types.service';
 import {
   MissionTypeDisplayData,
-  MissionTypeCreateRequest,
-  MissionTypeUpdateRequest,
   getStatusClass,
-  getActualValueClass,
-  isValidDisplayName,
-  isValidActualValue,
-  isValidDescription
+  getActualValueClass
 } from '../../models/mission-types.models';
 import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { MISSION_TYPES_TABLE_CONFIG } from './mission-types-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { MissionTypeDialogComponent, MissionTypeDialogData } from './mission-type-dialog.component';
 
 @Component({
   selector: 'app-mission-types',
@@ -39,11 +30,6 @@ import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/mod
     MatTooltipModule,
     MatButtonModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatSelectModule,
-    ReactiveFormsModule,
     GenericTableComponent
   ],
   templateUrl: './mission-types.component.html',
@@ -65,17 +51,10 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
   // Cleanup subject
   private destroy$ = new Subject<void>();
 
-  // Form for create/edit
-  public missionTypeForm!: FormGroup;
-
   constructor(
     public missionTypesService: MissionTypesService,
-    private dialog: MatDialog,
-    private fb: FormBuilder
+    private dialog: MatDialog
   ) {
-    // Initialize form
-    this.initializeForm();
-
     // Configure empty state action
     if (this.tableConfig.empty) {
       this.tableConfig.empty.action = () => this.openCreateDialog();
@@ -112,19 +91,7 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Initialize the form
-   */
-  private initializeForm(): void {
-    this.missionTypeForm = this.fb.group({
-      displayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      actualValue: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
-      description: ['', [Validators.maxLength(500)]],
-      isActive: [true]
-    });
-  }
-
-  /**
+/**
    * Load mission types from the service
    */
   private loadMissionTypes(): void {
@@ -201,8 +168,7 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
    * Edit mission type
    */
   private editMissionType(missionType: MissionTypeDisplayData): void {
-    // TODO: Implement edit dialog
-    console.log('Edit mission type:', missionType);
+    this.openEditDialog(missionType);
   }
 
   /**
@@ -244,9 +210,45 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
    * Open create dialog
    */
   private openCreateDialog(): void {
-    this.resetForm();
-    // TODO: Implement create dialog
-    console.log('Open create dialog');
+    const dialogData: MissionTypeDialogData = {
+      mode: 'create'
+    };
+
+    const dialogRef = this.dialog.open(MissionTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createMissionType(result);
+      }
+    });
+  }
+
+  /**
+   * Open edit dialog
+   */
+  private openEditDialog(missionType: MissionTypeDisplayData): void {
+    const dialogData: MissionTypeDialogData = {
+      mode: 'edit',
+      missionType: missionType
+    };
+
+    const dialogRef = this.dialog.open(MissionTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateMissionType(missionType.id, result);
+      }
+    });
   }
 
   /**
@@ -268,30 +270,12 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
   /**
    * Create new mission type
    */
-  createMissionType(): void {
-    if (this.missionTypeForm.invalid) {
-      this.markFormGroupTouched(this.missionTypeForm);
-      return;
-    }
-
-    const formValue = this.missionTypeForm.value;
-
-    if (!this.validateMissionTypeData(formValue.displayName, formValue.actualValue, formValue.description)) {
-      return;
-    }
-
-    const request: MissionTypeCreateRequest = {
-      displayName: formValue.displayName.trim(),
-      actualValue: formValue.actualValue.trim(),
-      description: formValue.description?.trim() || '',
-      isActive: formValue.isActive
-    };
-
+  private createMissionType(request: any): void {
     this.missionTypesService.createMissionType(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.resetForm();
+          // Mission type created successfully
         },
         error: (error) => {
           console.error('Error creating mission type:', error);
@@ -300,46 +284,19 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Validate mission type data
+   * Update existing mission type
    */
-  private validateMissionTypeData(displayName: string, actualValue: string, description: string): boolean {
-    if (!isValidDisplayName(displayName)) {
-      this.showErrorMessage('Display name must be between 3 and 100 characters');
-      return false;
-    }
-
-    if (!isValidActualValue(actualValue)) {
-      this.showErrorMessage('Actual value must be between 1 and 50 characters');
-      return false;
-    }
-
-    if (!isValidDescription(description)) {
-      this.showErrorMessage('Description must be less than 500 characters');
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Reset form
-   */
-  resetForm(): void {
-    this.missionTypeForm.reset({
-      displayName: '',
-      actualValue: '',
-      description: '',
-      isActive: true
-    });
-  }
-
-  /**
-   * Mark all form controls as touched
-   */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      formGroup.get(key)?.markAsTouched();
-    });
+  private updateMissionType(id: number, request: any): void {
+    this.missionTypesService.updateMissionType(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Mission type updated successfully
+        },
+        error: (error) => {
+          console.error('Error updating mission type:', error);
+        }
+      });
   }
 
   /**
@@ -354,14 +311,6 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  }
-
-  /**
-   * Show error message (temporary, service handles this)
-   */
-  private showErrorMessage(message: string): void {
-    // This is handled by the service, keeping as fallback
-    console.error(message);
   }
 
   /**

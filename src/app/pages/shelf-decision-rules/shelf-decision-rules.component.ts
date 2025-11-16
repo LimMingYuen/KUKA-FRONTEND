@@ -6,27 +6,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { ShelfDecisionRulesService } from '../../services/shelf-decision-rules.service';
 import {
   ShelfDecisionRuleDisplayData,
-  ShelfDecisionRuleCreateRequest,
-  ShelfDecisionRuleUpdateRequest,
   getStatusClass,
-  getValueClass,
-  isValidDisplayName,
-  isValidActualValue,
-  isValidDescription
+  getValueClass
 } from '../../models/shelf-decision-rules.models';
 import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { SHELF_DECISION_RULES_TABLE_CONFIG } from './shelf-decision-rules-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { ShelfDecisionRuleDialogComponent, ShelfDecisionRuleDialogData } from './shelf-decision-rule-dialog.component';
 
 @Component({
   selector: 'app-shelf-decision-rules',
@@ -39,11 +30,6 @@ import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/mod
     MatTooltipModule,
     MatButtonModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatSelectModule,
-    ReactiveFormsModule,
     GenericTableComponent
   ],
   templateUrl: './shelf-decision-rules.component.html',
@@ -65,17 +51,10 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   // Cleanup subject
   private destroy$ = new Subject<void>();
 
-  // Form for create/edit
-  public ruleForm!: FormGroup;
-
   constructor(
     public shelfDecisionRulesService: ShelfDecisionRulesService,
-    private dialog: MatDialog,
-    private fb: FormBuilder
+    private dialog: MatDialog
   ) {
-    // Initialize form
-    this.initializeForm();
-
     // Configure empty state action
     this.tableConfig.empty!.action = () => this.openCreateDialog();
 
@@ -115,19 +94,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Initialize the form
-   */
-  private initializeForm(): void {
-    this.ruleForm = this.fb.group({
-      displayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      actualValue: [0, [Validators.required, Validators.min(-999999), Validators.max(999999)]],
-      description: ['', [Validators.maxLength(500)]],
-      isActive: [true]
-    });
-  }
-
-  
   /**
    * Load shelf decision rules from the service
    */
@@ -205,8 +171,7 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    * Edit rule
    */
   private editRule(rule: ShelfDecisionRuleDisplayData): void {
-    // TODO: Implement edit dialog
-    console.log('Edit rule:', rule);
+    this.openEditDialog(rule);
   }
 
   /**
@@ -248,9 +213,45 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    * Open create dialog
    */
   private openCreateDialog(): void {
-    this.resetForm();
-    // TODO: Implement create dialog
-    console.log('Open create dialog');
+    const dialogData: ShelfDecisionRuleDialogData = {
+      mode: 'create'
+    };
+
+    const dialogRef = this.dialog.open(ShelfDecisionRuleDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createRule(result);
+      }
+    });
+  }
+
+  /**
+   * Open edit dialog
+   */
+  private openEditDialog(rule: ShelfDecisionRuleDisplayData): void {
+    const dialogData: ShelfDecisionRuleDialogData = {
+      mode: 'edit',
+      rule: rule
+    };
+
+    const dialogRef = this.dialog.open(ShelfDecisionRuleDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateRule(rule.id, result);
+      }
+    });
   }
 
   /**
@@ -272,30 +273,12 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   /**
    * Create new rule
    */
-  createRule(): void {
-    if (this.ruleForm.invalid) {
-      this.markFormGroupTouched(this.ruleForm);
-      return;
-    }
-
-    const formValue = this.ruleForm.value;
-
-    if (!this.validateRuleData(formValue.displayName, formValue.actualValue, formValue.description)) {
-      return;
-    }
-
-    const request: ShelfDecisionRuleCreateRequest = {
-      displayName: formValue.displayName.trim(),
-      actualValue: formValue.actualValue,
-      description: formValue.description?.trim() || '',
-      isActive: formValue.isActive
-    };
-
+  private createRule(request: any): void {
     this.shelfDecisionRulesService.createShelfDecisionRule(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.resetForm();
+          // Rule created successfully
         },
         error: (error) => {
           console.error('Error creating rule:', error);
@@ -304,46 +287,19 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Validate rule data
+   * Update existing rule
    */
-  private validateRuleData(displayName: string, actualValue: number, description: string): boolean {
-    if (!isValidDisplayName(displayName)) {
-      this.showErrorMessage('Display name must be between 3 and 100 characters');
-      return false;
-    }
-
-    if (!isValidActualValue(actualValue)) {
-      this.showErrorMessage('Actual value must be a valid number');
-      return false;
-    }
-
-    if (!isValidDescription(description)) {
-      this.showErrorMessage('Description must be less than 500 characters');
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Reset form
-   */
-  resetForm(): void {
-    this.ruleForm.reset({
-      displayName: '',
-      actualValue: 0,
-      description: '',
-      isActive: true
-    });
-  }
-
-  /**
-   * Mark all form controls as touched
-   */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      formGroup.get(key)?.markAsTouched();
-    });
+  private updateRule(id: number, request: any): void {
+    this.shelfDecisionRulesService.updateShelfDecisionRule(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Rule updated successfully
+        },
+        error: (error) => {
+          console.error('Error updating rule:', error);
+        }
+      });
   }
 
   /**
@@ -358,14 +314,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  }
-
-  /**
-   * Show error message (temporary, service handles this)
-   */
-  private showErrorMessage(message: string): void {
-    // This is handled by the service, keeping as fallback
-    console.error(message);
   }
 
   /**
