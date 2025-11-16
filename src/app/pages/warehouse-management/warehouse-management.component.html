@@ -1,9 +1,162 @@
-<div class="workflow-template-container">
-  <app-generic-table
-    [data]="workflowTemplates"
-    [config]="tableConfig"
-    [loading]="isLoading"
-    (action)="onTableAction($event)"
-  >
-  </app-generic-table>
+<!-- Loading State -->
+<div class="loading-container" *ngIf="isLoading">
+  <mat-card class="loading-card">
+    <div class="loading-content">
+      <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      <p class="loading-text">Loading Workflow Template Configuration...</p>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Main Content -->
+<div class="warehouse-management-container" *ngIf="!isLoading">
+  <!-- Header Card -->
+  <mat-card class="header-card">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">settings</mat-icon>
+          Workflow Template Configuration
+        </h1>
+        <p class="page-subtitle">Configure workflow templates with decision rules, mission types, robot types, and strategies</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ getConfigurationStats().totalRules }}</span>
+          <span class="stat-label">Rules</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ getConfigurationStats().totalMissionTypes }}</span>
+          <span class="stat-label">Mission Types</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ getConfigurationStats().totalRobotTypes }}</span>
+          <span class="stat-label">Robot Types</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ getConfigurationStats().totalAreas }}</span>
+          <span class="stat-label">Areas</span>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Tab Navigation -->
+  <mat-card class="tabs-card">
+    <div class="tabs-content">
+      <mat-tab-group
+        [selectedIndex]="selectedTabIndex"
+        (selectedIndexChange)="onTabChange($event)"
+        class="warehouse-tabs"
+        mat-stretch-tabs="false"
+        animationDuration="0ms">
+
+        <!-- Shelf Decision Rules Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">rule</mat-icon>
+            <span class="tab-label">Shelf Decision Rules</span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="tab-description">
+              <mat-icon class="description-icon">info</mat-icon>
+              <span>Manage workflow template shelf decision rules and configurations</span>
+            </div>
+            <app-shelf-decision-rules></app-shelf-decision-rules>
+          </div>
+        </mat-tab>
+
+        <!-- Mission Types Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">assignment</mat-icon>
+            <span class="tab-label">Mission Types</span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="tab-description">
+              <mat-icon class="description-icon">info</mat-icon>
+              <span>Manage workflow template mission type configurations and settings</span>
+            </div>
+            <app-mission-types></app-mission-types>
+          </div>
+        </mat-tab>
+
+        <!-- Robot Types Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">smart_toy</mat-icon>
+            <span class="tab-label">Robot Types</span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="tab-description">
+              <mat-icon class="description-icon">info</mat-icon>
+              <span>Manage workflow template robot type configurations and settings</span>
+            </div>
+            <app-robot-types></app-robot-types>
+          </div>
+        </mat-tab>
+
+        <!-- Resume Strategies Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">restart_alt</mat-icon>
+            <span class="tab-label">Resume Strategies</span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="tab-description">
+              <mat-icon class="description-icon">info</mat-icon>
+              <span>Manage workflow template resume strategy configurations and settings</span>
+            </div>
+            <app-resume-strategies></app-resume-strategies>
+          </div>
+        </mat-tab>
+
+        <!-- Areas Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">location_on</mat-icon>
+            <span class="tab-label">Areas</span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="tab-description">
+              <mat-icon class="description-icon">info</mat-icon>
+              <span>Manage workflow template area configurations and settings</span>
+            </div>
+            <app-areas></app-areas>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Quick Navigation -->
+<div class="quick-navigation" *ngIf="!isLoading">
+  <mat-card class="nav-card">
+    <div class="nav-content">
+      <h3>Quick Access</h3>
+      <div class="nav-links">
+        <button mat-button class="nav-button" (click)="navigateToTab(0)">
+          <mat-icon>rule</mat-icon>
+          <span>Shelf Rules</span>
+        </button>
+        <button mat-button class="nav-button" (click)="navigateToTab(1)">
+          <mat-icon>assignment</mat-icon>
+          <span>Mission Types</span>
+        </button>
+        <button mat-button class="nav-button" (click)="navigateToTab(2)">
+          <mat-icon>smart_toy</mat-icon>
+          <span>Robot Types</span>
+        </button>
+        <button mat-button class="nav-button" (click)="navigateToTab(3)">
+          <mat-icon>restart_alt</mat-icon>
+          <span>Resume Strategies</span>
+        </button>
+        <button mat-button class="nav-button" (click)="navigateToTab(4)">
+          <mat-icon>location_on</mat-icon>
+          <span>Areas</span>
+        </button>
+        </div>
+    </div>
+  </mat-card>
 </div>
