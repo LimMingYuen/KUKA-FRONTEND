@@ -1,91 +1,10 @@
-<div class="areas-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-title">
-        <mat-icon class="header-icon">location_on</mat-icon>
-        <h1>Areas</h1>
-      </div>
-      <div class="header-actions">
-        <button mat-raised-button
-                color="primary"
-                (click)="openCreateDialog()"
-                [disabled]="isCreating">
-          <mat-icon>add</mat-icon>
-          Add Area
-        </button>
-        <button mat-stroked-button
-                (click)="exportAreas()"
-                [disabled]="isLoading || areas.length === 0">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
-        <button mat-stroked-button
-                (click)="refreshAreas()"
-                [disabled]="isLoading">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Statistics Cards -->
-  <div class="stats-container">
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon total">
-          <mat-icon>location_on</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getAreasCount().total }}</div>
-          <div class="stat-label">Total Areas</div>
-        </div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon active">
-          <mat-icon>check_circle</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getAreasCount().active }}</div>
-          <div class="stat-label">Active</div>
-        </div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon inactive">
-          <mat-icon>pause_circle</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getAreasCount().inactive }}</div>
-          <div class="stat-label">Inactive</div>
-        </div>
-      </div>
-    </mat-card>
-  </div>
-
-  <!-- Main Content -->
-  <mat-card class="main-content-card">
-    <mat-card-header>
-      <mat-card-title>Areas Management</mat-card-title>
-      <mat-card-subtitle>Configure and manage warehouse area settings</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <!-- Table Component -->
-      <app-generic-table
-        [config]="tableConfig"
-        [data]="areas"
-        [loading]="isLoading"
-        (action)="onTableAction($event)"
-        (sortChange)="onSortChange($event)"
-        (pageChange)="onPageChange($event)"
-        (filterChange)="onFilterChange($event)">
-      </app-generic-table>
-    </mat-card-content>
-  </mat-card>
-</div>
+<!-- Table Component -->
+<app-generic-table
+  [config]="tableConfig"
+  [data]="areas"
+  [loading]="isLoading"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>

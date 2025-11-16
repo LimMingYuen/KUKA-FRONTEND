@@ -1,32 +1,3 @@
-<!-- Rules Summary Card -->
-<mat-card class="rules-summary-card" *ngIf="!isLoading">
-  <div class="summary-content">
-    <div class="summary-stats">
-      <div class="stat-item">
-        <mat-icon class="stat-icon active-icon">check_circle</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getRulesCount().active }}</span>
-          <span class="stat-label">Active Rules</span>
-        </div>
-      </div>
-      <div class="stat-item">
-        <mat-icon class="stat-icon inactive-icon">pause_circle</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getRulesCount().inactive }}</span>
-          <span class="stat-label">Inactive Rules</span>
-        </div>
-      </div>
-      <div class="stat-item">
-        <mat-icon class="stat-icon total-icon">rule</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getRulesCount().total }}</span>
-          <span class="stat-label">Total Rules</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</mat-card>
-
 <!-- Generic Table Component -->
 <app-generic-table class="shelf-decision-rules-table"
   [data]="shelfDecisionRules"
