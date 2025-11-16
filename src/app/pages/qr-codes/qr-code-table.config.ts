@@ -41,40 +41,31 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
       cellClass: 'map-code-cell'
     },
     {
-      key: 'floorDisplay',
+      key: 'floorNumber',
       header: 'Floor',
       sortable: true,
       filterable: true,
       width: '120px',
       headerClass: 'floor-header',
-      cellClass: 'floor-cell',
-      transform: (value: string, row: QrCodeDisplayData) => {
-        return value || 'N/A';
-      }
+      cellClass: 'floor-cell'
     },
     {
-      key: 'nodeDisplay',
+      key: 'nodeNumber',
       header: 'Node',
       sortable: true,
       filterable: true,
       width: '120px',
       headerClass: 'node-header',
-      cellClass: 'node-cell',
-      transform: (value: string, row: QrCodeDisplayData) => {
-        return value || 'N/A';
-      }
+      cellClass: 'node-cell'
     },
     {
-      key: 'reliabilityText',
+      key: 'reliability',
       header: 'Reliability',
       sortable: true,
       filterable: true,
       width: '120px',
       headerClass: 'reliability-header',
-      cellClass: 'reliability-cell',
-      transform: (value: string, row: QrCodeDisplayData) => {
-        return `${row.reliability.toFixed(1)}% (${value})`;
-      }
+      cellClass: 'reliability-cell'
     },
     {
       key: 'reportTimes',
@@ -89,16 +80,13 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
       }
     },
     {
-      key: 'lastUpdatedDate',
+      key: 'lastUpdateTime',
       header: 'Last Updated',
       sortable: true,
       filterable: true,
       width: '180px',
       headerClass: 'last-updated-header',
-      cellClass: 'last-updated-cell',
-      transform: (value: string) => {
-        return value || 'Never';
-      }
+      cellClass: 'last-updated-cell'
     }
   ],
 
