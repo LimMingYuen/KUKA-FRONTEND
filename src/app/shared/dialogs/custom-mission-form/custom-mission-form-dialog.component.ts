@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 
 import { SavedCustomMissionsService } from '../../../services/saved-custom-missions.service';
@@ -54,7 +55,8 @@ export interface CustomMissionFormDialogData {
     MatIconModule,
     MatTabsModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatCardModule
   ],
   templateUrl: './custom-mission-form-dialog.component.html',
   styleUrl: './custom-mission-form-dialog.component.scss'
@@ -167,27 +169,29 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
         next: (data) => {
           // Set mission types (active only)
           this.activeMissionTypes.set(
-            data.missionTypes.filter(mt => mt.status === 'Active')
+            data.missionTypes.filter(mt => mt.isActive)
           );
 
           // Set robot types (active only)
           this.activeRobotTypes.set(
-            data.robotTypes.filter(rt => rt.status === 'Active')
+            data.robotTypes.filter(rt => rt.isActive)
           );
 
           // Set resume strategies (active only)
           this.activeResumeStrategies.set(
-            data.resumeStrategies.filter(rs => rs.status === 'Active')
+            data.resumeStrategies.filter(rs => rs.isActive)
           );
 
-          // Extract unique robot models and IDs
-          const uniqueModels = [...new Set(data.robots.map(r => r.model).filter(Boolean))];
+          // Extract unique robot models (robotTypeCode) and IDs
+          const uniqueModels = [...new Set(data.robots.map(r => r.robotTypeCode).filter(Boolean))];
           const uniqueIds = [...new Set(data.robots.map(r => r.robotId).filter(Boolean))];
           this.availableRobotModels.set(uniqueModels);
           this.availableRobotIds.set(uniqueIds);
 
-          // Set QR code positions
-          this.qrCodePositions.set(data.qrCodes.map(qr => qr.code));
+          // Set QR code positions - use unique ID format (mapCode-floor-node)
+          this.qrCodePositions.set(data.qrCodes.map(qr =>
+            `${qr.mapCode}-${qr.floorNumber}-${qr.nodeNumber}`
+          ));
 
           // Set map zone positions
           this.mapZonePositions.set(
