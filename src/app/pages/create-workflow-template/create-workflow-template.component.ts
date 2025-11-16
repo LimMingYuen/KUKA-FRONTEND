@@ -167,10 +167,16 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    * Update existing template
    */
   private updateTemplate(id: number, request: any): void {
-    // TODO: Implement update when API is available
-    console.log('Update template:', id, request);
-    // For now, just refresh to show the message
-    this.refreshTemplates();
+    this.savedCustomMissionsService.updateWorkflowTemplate(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.refreshTemplates();
+        },
+        error: (error) => {
+          console.error('Error updating template:', error);
+        }
+      });
   }
 
   /**

@@ -402,15 +402,24 @@ export class WorkflowTemplateDialogComponent implements OnInit {
 
       this.templateForm.patchValue({
         missionName: template.missionName,
-        description: template.description
+        description: template.description !== '-' ? template.description : ''
       });
 
       this.missionTemplate.patchValue({
+        orgId: template.orgId !== '-' ? template.orgId : '',
         missionType: template.missionType,
+        viewBoardType: template.viewBoardType !== '-' ? template.viewBoardType : '',
         robotType: template.robotType,
         priority: this.parsePriority(template.priority),
         robotModels,
-        robotIds
+        robotIds,
+        containerModelCode: template.containerModelCode !== '-' ? template.containerModelCode : '',
+        containerCode: template.containerCode !== '-' ? template.containerCode : '',
+        templateCode: template.templateCode !== '-' ? template.templateCode : '',
+        lockRobotAfterFinish: template.lockRobotAfterFinish,
+        unlockRobotId: template.unlockRobotId !== '-' ? template.unlockRobotId : '',
+        unlockMissionCode: template.unlockMissionCode !== '-' ? template.unlockMissionCode : '',
+        idleNode: template.idleNode !== '-' ? template.idleNode : ''
       });
 
       // Clear existing steps

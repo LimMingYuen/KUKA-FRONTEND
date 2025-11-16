@@ -10,6 +10,12 @@ export interface SavedCustomMissionDto {
   containerModelCode: string | null;
   containerCode: string | null;
   idleNode: string | null;
+  orgId: string | null;
+  viewBoardType: string | null;
+  templateCode: string | null;
+  lockRobotAfterFinish: boolean;
+  unlockRobotId: string | null;
+  unlockMissionCode: string | null;
   missionStepsJson: string;
   createdBy: string;
   createdUtc: string;
@@ -50,6 +56,12 @@ export interface SavedCustomMissionUpdateRequest {
   containerModelCode: string | null;
   containerCode: string | null;
   idleNode: string | null;
+  orgId?: string | null;
+  viewBoardType?: string | null;
+  templateCode?: string | null;
+  lockRobotAfterFinish?: boolean;
+  unlockRobotId?: string | null;
+  unlockMissionCode?: string | null;
   missionStepsJson: string;
 }
 
@@ -119,6 +131,12 @@ export interface SavedCustomMissionsDisplayData {
   containerModelCode: string;
   containerCode: string;
   idleNode: string;
+  orgId: string;
+  viewBoardType: string;
+  templateCode: string;
+  lockRobotAfterFinish: boolean;
+  unlockRobotId: string;
+  unlockMissionCode: string;
   createdBy: string;
   createdUtc: string;
   updatedUtc: string;
@@ -167,6 +185,12 @@ export class SavedCustomMissionsUtils {
       containerModelCode: dto.containerModelCode || '-',
       containerCode: dto.containerCode || '-',
       idleNode: dto.idleNode || '-',
+      orgId: dto.orgId || '-',
+      viewBoardType: dto.viewBoardType || '-',
+      templateCode: dto.templateCode || '-',
+      lockRobotAfterFinish: dto.lockRobotAfterFinish || false,
+      unlockRobotId: dto.unlockRobotId || '-',
+      unlockMissionCode: dto.unlockMissionCode || '-',
       createdBy: dto.createdBy,
       createdUtc: formatDateTime(dto.createdUtc),
       updatedUtc: dto.updatedUtc ? formatDateTime(dto.updatedUtc) : '-',
