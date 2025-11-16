@@ -60,6 +60,54 @@
                   </mat-chip>
                 </div>
               </div>
+
+              <!-- Job Status Section (shown when workflow is triggered) -->
+              <div *ngIf="workflowJobs.get(workflow.id) as job" class="job-status-section">
+                <mat-divider></mat-divider>
+                <h4 class="section-title">
+                  <mat-icon>work</mat-icon>
+                  Job Status
+                </h4>
+
+                <!-- Job Information -->
+                <div class="info-row" *ngIf="job.jobData">
+                  <span class="label">Job Status:</span>
+                  <mat-chip [color]="MissionsUtils.getJobStatusColor(job.jobData.status)" selected>
+                    {{ MissionsUtils.getJobStatusText(job.jobData.status) }}
+                  </mat-chip>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.robotId">
+                  <span class="label">Robot ID:</span>
+                  <span class="value highlight">{{ job.jobData.robotId }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.robotData?.nodeCode">
+                  <span class="label">Current Node:</span>
+                  <span class="value highlight">{{ job.robotData.nodeCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.mapCode">
+                  <span class="label">Map Code:</span>
+                  <span class="value">{{ job.jobData.mapCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.targetCellCode">
+                  <span class="label">Target Node:</span>
+                  <span class="value">{{ job.jobData.targetCellCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.robotData?.batteryLevel !== undefined">
+                  <span class="label">Battery:</span>
+                  <span class="value">{{ job.robotData.batteryLevel }}%</span>
+                </div>
+
+                <div class="info-row" *ngIf="!job.jobData">
+                  <span class="label">Mission Code:</span>
+                  <span class="value">{{ job.missionCode }}</span>
+                  <mat-chip color="accent">Querying...</mat-chip>
+                </div>
+              </div>
             </mat-card-content>
             <mat-card-actions>
               <button
@@ -136,6 +184,54 @@
                 <div class="info-row" *ngIf="mission.robotIds && mission.robotIds !== '-'">
                   <span class="label">Robot IDs:</span>
                   <span class="value">{{ mission.robotIds }}</span>
+                </div>
+              </div>
+
+              <!-- Job Status Section (shown when custom mission is triggered) -->
+              <div *ngIf="customMissionJobs.get(mission.id) as job" class="job-status-section">
+                <mat-divider></mat-divider>
+                <h4 class="section-title">
+                  <mat-icon>work</mat-icon>
+                  Job Status
+                </h4>
+
+                <!-- Job Information -->
+                <div class="info-row" *ngIf="job.jobData">
+                  <span class="label">Job Status:</span>
+                  <mat-chip [color]="MissionsUtils.getJobStatusColor(job.jobData.status)" selected>
+                    {{ MissionsUtils.getJobStatusText(job.jobData.status) }}
+                  </mat-chip>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.robotId">
+                  <span class="label">Robot ID:</span>
+                  <span class="value highlight">{{ job.jobData.robotId }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.robotData?.nodeCode">
+                  <span class="label">Current Node:</span>
+                  <span class="value highlight">{{ job.robotData.nodeCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.mapCode">
+                  <span class="label">Map Code:</span>
+                  <span class="value">{{ job.jobData.mapCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.jobData?.targetCellCode">
+                  <span class="label">Target Node:</span>
+                  <span class="value">{{ job.jobData.targetCellCode }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.robotData?.batteryLevel !== undefined">
+                  <span class="label">Battery:</span>
+                  <span class="value">{{ job.robotData.batteryLevel }}%</span>
+                </div>
+
+                <div class="info-row" *ngIf="!job.jobData">
+                  <span class="label">Mission Code:</span>
+                  <span class="value">{{ job.missionCode }}</span>
+                  <mat-chip color="accent">Querying...</mat-chip>
                 </div>
               </div>
             </mat-card-content>

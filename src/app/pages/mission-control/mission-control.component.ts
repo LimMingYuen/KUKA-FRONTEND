@@ -46,8 +46,19 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Data
   public workflows: WorkflowDisplayData[] = [];
   public customMissions: SavedCustomMissionsDisplayData[] = [];
-  public activeJobs: Map<string, JobData> = new Map();
-  public activeRobots: Map<string, RobotData> = new Map(); // robotId -> RobotData
+
+  // Store job execution state for each workflow/mission
+  public workflowJobs: Map<number, {
+    missionCode: string;
+    jobData?: JobData;
+    robotData?: RobotData;
+  }> = new Map();
+
+  public customMissionJobs: Map<number, {
+    missionCode: string;
+    jobData?: JobData;
+    robotData?: RobotData;
+  }> = new Map();
 
   // Loading states
   public isLoadingWorkflows = false;
@@ -153,7 +164,14 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         this.triggeringMissions.delete(id);
         if (response.success) {
           this.snackBar.open(`Workflow "${workflow.name}" triggered successfully!`, 'Close', { duration: 3000 });
-          this.startJobPolling(request.missionCode);
+
+          // Initialize job tracking for this workflow
+          this.workflowJobs.set(id, {
+            missionCode: request.missionCode
+          });
+
+          // Start polling job status
+          this.startJobPolling(id, request.missionCode, 'workflow');
         } else {
           this.snackBar.open(`Failed to trigger workflow: ${response.message}`, 'Close', { duration: 5000 });
         }
@@ -183,7 +201,15 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           this.snackBar.open(`Custom mission "${mission.missionName}" triggered successfully!`, 'Close', { duration: 3000 });
           // If response contains missionCode, start polling
           if (response && (response as any).missionCode) {
-            this.startJobPolling((response as any).missionCode);
+            const missionCode = (response as any).missionCode;
+
+            // Initialize job tracking for this custom mission
+            this.customMissionJobs.set(id, {
+              missionCode: missionCode
+            });
+
+            // Start polling job status
+            this.startJobPolling(id, missionCode, 'custom');
           }
         },
         error: (error) => {
@@ -196,8 +222,11 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Start polling for job and robot status
+   * @param id - Workflow ID or Custom Mission ID
+   * @param missionCode - Mission code to query
+   * @param type - 'workflow' or 'custom'
    */
-  startJobPolling(missionCode: string): void {
+  startJobPolling(id: number, missionCode: string, type: 'workflow' | 'custom'): void {
     // Don't start if already polling
     if (this.pollingSubscriptions.has(missionCode)) {
       return;
@@ -215,11 +244,17 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           next: (response) => {
             if (response.success && response.data && response.data.length > 0) {
               const jobData = response.data[0];
-              this.activeJobs.set(missionCode, jobData);
+
+              // Update the appropriate job map
+              const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+              const currentJob = jobsMap.get(id);
+              if (currentJob) {
+                currentJob.jobData = jobData;
+              }
 
               // Query robot status if robotId is available
               if (jobData.robotId) {
-                this.queryRobotStatus(jobData.robotId);
+                this.queryRobotStatus(id, jobData.robotId, type);
               }
 
               // Stop polling if job is in terminal state
@@ -239,15 +274,24 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Query robot status
+   * @param id - Workflow ID or Custom Mission ID
+   * @param robotId - Robot ID to query
+   * @param type - 'workflow' or 'custom'
    */
-  private queryRobotStatus(robotId: string): void {
+  private queryRobotStatus(id: number, robotId: string, type: 'workflow' | 'custom'): void {
     this.missionsService.queryRobots({
       robotId: robotId
     }).subscribe({
       next: (response) => {
         if (response.success && response.data && response.data.length > 0) {
           const robotData = response.data[0];
-          this.activeRobots.set(robotId, robotData);
+
+          // Update the appropriate job map
+          const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+          const currentJob = jobsMap.get(id);
+          if (currentJob) {
+            currentJob.robotData = robotData;
+          }
         }
       },
       error: (error) => {
