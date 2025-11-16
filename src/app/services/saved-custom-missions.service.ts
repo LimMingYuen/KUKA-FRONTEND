@@ -10,7 +10,9 @@ import {
   SavedCustomMissionUpdateRequest,
   TriggerMissionResponse,
   ApiResponse,
-  SavedCustomMissionsUtils
+  SavedCustomMissionsUtils,
+  SaveMissionAsTemplateRequest,
+  SaveMissionAsTemplateResponse
 } from '../models/saved-custom-missions.models';
 
 @Injectable({
@@ -211,6 +213,35 @@ export class SavedCustomMissionsService {
       catchError(error => {
         this.isTriggering.set(false);
         this.handleError(error, `Failed to trigger saved custom mission #${id}`);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Save mission as template (workflow template creation)
+   */
+  saveMissionAsTemplate(request: SaveMissionAsTemplateRequest): Observable<SaveMissionAsTemplateResponse> {
+    this.isCreating.set(true);
+
+    return this.http.post<SaveMissionAsTemplateResponse>(
+      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}/save-as-template`,
+      request,
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to save mission as template');
+        }
+        return response;
+      }),
+      tap(() => {
+        this.isCreating.set(false);
+        this.showSuccessMessage('Mission saved as template successfully');
+      }),
+      catchError(error => {
+        this.isCreating.set(false);
+        this.handleError(error, 'Failed to save mission as template');
         return throwError(() => error);
       })
     );

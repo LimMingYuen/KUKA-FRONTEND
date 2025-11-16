@@ -87,6 +87,12 @@ export const routes: Routes = [
     title: 'Workflow Classification - KUKA GUI'
   },
   {
+    path: 'create-workflow-template',
+    loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
+    canActivate: [authGuard],
+    title: 'Create Workflow Template - KUKA GUI'
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'
