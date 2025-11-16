@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import cytoscape, { Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import cytoscape, { Core, ElementDefinition, NodeSingular, EventObject } from 'cytoscape';
 
 export interface MissionStepFlowData {
   sequence: number;
@@ -298,7 +298,7 @@ export class MissionFlowchartComponent implements OnInit, AfterViewInit, OnDestr
   private addTooltips(): void {
     if (!this.cy) return;
 
-    this.cy.nodes('.step, .qr-code, .zone').on('mouseover', (event) => {
+    this.cy.nodes('.step, .qr-code, .zone').on('mouseover', (event: EventObject) => {
       const node = event.target as NodeSingular;
       const step = node.data('step') as MissionStepFlowData;
 
@@ -308,7 +308,7 @@ export class MissionFlowchartComponent implements OnInit, AfterViewInit, OnDestr
       }
     });
 
-    this.cy.nodes('.step, .qr-code, .zone').on('mouseout', (event) => {
+    this.cy.nodes('.step, .qr-code, .zone').on('mouseout', (event: EventObject) => {
       const node = event.target as NodeSingular;
       const step = node.data('step') as MissionStepFlowData;
 
