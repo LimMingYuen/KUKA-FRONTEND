@@ -81,25 +81,19 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
 
   actions: [
     {
+      action: 'trigger',
+      label: 'Trigger',
+      icon: 'play_arrow',
+      type: 'icon',
+      tooltip: 'Trigger workflow mission',
+      color: 'primary'
+    },
+    {
       action: 'view',
       label: 'View',
       icon: 'visibility',
       type: 'icon',
       tooltip: 'View details'
-    },
-    {
-      action: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      type: 'icon',
-      tooltip: 'Edit workflow'
-    },
-    {
-      action: 'start',
-      label: 'Start',
-      icon: 'play_arrow',
-      type: 'menu-item',
-      tooltip: 'Start workflow'
     },
     {
       action: 'stop',

@@ -1,265 +1,320 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog } from '@angular/material/dialog';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { MissionsService } from '../../services/missions.service';
-import { MissionSubmitDialogComponent } from '../../shared/dialogs/mission-submit/mission-submit-dialog.component';
-import {
-  JobQueryRequest,
-  JobData,
-  RobotQueryRequest,
-  RobotData,
-  MissionPriority,
-  MissionsUtils
-} from '../../models/missions.models';
+import { WorkflowService } from '../../services/workflow.service';
+import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { WorkflowDisplayData } from '../../models/workflow.models';
+import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
+import { JobData } from '../../models/missions.models';
+import { Subject, takeUntil, interval } from 'rxjs';
 
 @Component({
   selector: 'app-mission-control',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
     MatTabsModule,
     MatProgressSpinnerModule,
-    MatTableModule,
-    MatChipsModule
+    MatChipsModule,
+    MatBadgeModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    MatDialogModule
   ],
   templateUrl: './mission-control.component.html',
   styleUrl: './mission-control.component.scss'
 })
-export class MissionControlComponent implements OnInit {
-  // Forms
-  public cancelMissionForm: FormGroup;
-  public queryJobsForm: FormGroup;
-  public queryRobotsForm: FormGroup;
-
+export class MissionControlComponent implements OnInit, OnDestroy {
   // Data
-  public jobResults: JobData[] = [];
-  public robotResults: RobotData[] = [];
-
-  // Table columns
-  public jobColumns: string[] = ['missionCode', 'status', 'robotId', 'progress', 'currentLocation', 'updatedAt'];
-  public robotColumns: string[] = ['robotId', 'robotName', 'status', 'batteryLevel', 'currentLocation', 'currentMission'];
+  public workflows: WorkflowDisplayData[] = [];
+  public customMissions: SavedCustomMissionsDisplayData[] = [];
+  public activeJobs: Map<string, JobData> = new Map();
 
   // Loading states
-  public isCancelling = false;
-  public isQueryingJobs = false;
-  public isQueryingRobots = false;
+  public isLoadingWorkflows = false;
+  public isLoadingCustomMissions = false;
+  public triggeringMissions: Set<number> = new Set();
+
+  // Cleanup
+  private destroy$ = new Subject<void>();
+  private pollingSubscriptions: Map<string, any> = new Map();
 
   constructor(
-    private fb: FormBuilder,
-    public missionsService: MissionsService,
+    private missionsService: MissionsService,
+    private workflowService: WorkflowService,
+    private customMissionsService: SavedCustomMissionsService,
+    private snackBar: MatSnackBar,
     private dialog: MatDialog
-  ) {
-    // Cancel Mission Form
-    this.cancelMissionForm = this.fb.group({
-      missionCode: ['', Validators.required],
-      reason: ['']
-    });
+  ) {}
 
-    // Query Jobs Form
-    this.queryJobsForm = this.fb.group({
-      missionCodes: [''],
-      queueItemIds: [''],
-      robotId: [''],
-      status: [''],
-      limit: [10, [Validators.min(1), Validators.max(100)]]
-    });
-
-    // Query Robots Form
-    this.queryRobotsForm = this.fb.group({
-      robotId: [''],
-      robotType: [''],
-      mapCode: [''],
-      floorNumber: [''],
-      includeCurrentMission: [true]
-    });
+  ngOnInit(): void {
+    this.loadWorkflows();
+    this.loadCustomMissions();
   }
 
-  ngOnInit(): void {}
-
-  /**
-   * Open mission submit dialog
-   */
-  openSubmitMissionDialog(): void {
-    const dialogRef = this.dialog.open(MissionSubmitDialogComponent, {
-      width: '600px',
-      disableClose: false
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('Mission submitted:', result);
-        // Optionally refresh job query
-        this.onQueryJobs();
-      }
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    // Stop all polling
+    this.pollingSubscriptions.forEach(sub => sub.unsubscribe());
+    this.pollingSubscriptions.clear();
   }
 
   /**
-   * Cancel a mission
+   * Load workflows from workflow service
    */
-  onCancelMission(): void {
-    if (this.cancelMissionForm.invalid) {
-      this.cancelMissionForm.markAllAsTouched();
-      return;
-    }
-
-    const formValue = this.cancelMissionForm.value;
-    this.isCancelling = true;
-
-    this.missionsService.cancelMission({
-      missionCode: formValue.missionCode,
-      reason: formValue.reason || undefined
-    }).subscribe({
-      next: (response) => {
-        this.isCancelling = false;
-        this.cancelMissionForm.reset();
-        console.log('Mission cancelled:', response);
-      },
-      error: () => {
-        this.isCancelling = false;
-      }
-    });
+  loadWorkflows(): void {
+    this.isLoadingWorkflows = true;
+    this.workflowService.getWorkflows()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (workflows) => {
+          this.workflows = workflows;
+          this.isLoadingWorkflows = false;
+        },
+        error: (error) => {
+          console.error('Error loading workflows:', error);
+          this.isLoadingWorkflows = false;
+          this.snackBar.open('Failed to load workflows', 'Close', { duration: 3000 });
+        }
+      });
   }
 
   /**
-   * Query jobs
+   * Load custom missions
    */
-  onQueryJobs(): void {
-    if (this.queryJobsForm.invalid) {
-      this.queryJobsForm.markAllAsTouched();
-      return;
-    }
+  loadCustomMissions(): void {
+    this.isLoadingCustomMissions = true;
+    this.customMissionsService.getAllSavedCustomMissions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (missions) => {
+          this.customMissions = missions;
+          this.isLoadingCustomMissions = false;
+        },
+        error: (error) => {
+          console.error('Error loading custom missions:', error);
+          this.isLoadingCustomMissions = false;
+          this.snackBar.open('Failed to load custom missions', 'Close', { duration: 3000 });
+        }
+      });
+  }
 
-    const formValue = this.queryJobsForm.value;
+  /**
+   * Trigger sync workflow mission
+   */
+  triggerWorkflow(workflow: WorkflowDisplayData): void {
+    const id = workflow.id;
+    this.triggeringMissions.add(id);
 
-    // Parse comma-separated values
-    const missionCodes = formValue.missionCodes
-      ? formValue.missionCodes.split(',').map((s: string) => s.trim()).filter((s: string) => s)
-      : undefined;
-
-    const queueItemIds = formValue.queueItemIds
-      ? formValue.queueItemIds.split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n))
-      : undefined;
-
-    const request: JobQueryRequest = {
-      missionCodes,
-      queueItemIds,
-      robotId: formValue.robotId || undefined,
-      status: formValue.status || undefined,
-      limit: formValue.limit
+    const request = {
+      orgId: 'UNIVERSAL',
+      requestId: this.generateRequestId(),
+      missionCode: this.generateMissionCode(),
+      missionType: 'RACK_MOVE',
+      viewBoardType: '',
+      robotModels: ['KMP600I'],
+      robotIds: ['14'],
+      robotType: 'LIFT',
+      priority: 1,
+      containerModelCode: '',
+      containerCode: '',
+      templateCode: workflow.code,
+      lockRobotAfterFinish: false,
+      unlockRobotId: '',
+      unlockMissionCode: '',
+      idleNode: ''
     };
 
-    this.isQueryingJobs = true;
-
-    this.missionsService.queryJobs(request).subscribe({
+    this.missionsService.submitMission(request).subscribe({
       next: (response) => {
-        this.isQueryingJobs = false;
-        if (response.success && response.data) {
-          this.jobResults = response.data;
+        this.triggeringMissions.delete(id);
+        if (response.success) {
+          this.snackBar.open(`Workflow "${workflow.name}" triggered successfully!`, 'Close', { duration: 3000 });
+          this.startJobPolling(request.missionCode);
         } else {
-          this.jobResults = [];
+          this.snackBar.open(`Failed to trigger workflow: ${response.message}`, 'Close', { duration: 5000 });
         }
       },
-      error: () => {
-        this.isQueryingJobs = false;
-        this.jobResults = [];
+      error: (error) => {
+        this.triggeringMissions.delete(id);
+        this.snackBar.open('Failed to trigger workflow', 'Close', { duration: 5000 });
+        console.error('Error triggering workflow:', error);
       }
     });
   }
 
   /**
-   * Query robots
+   * Trigger custom mission
    */
-  onQueryRobots(): void {
-    if (this.queryRobotsForm.invalid) {
-      this.queryRobotsForm.markAllAsTouched();
+  triggerCustomMission(mission: SavedCustomMissionsDisplayData): void {
+    const id = mission.id;
+    this.triggeringMissions.add(id);
+
+    // You would need to get the full mission data with missionData array
+    // For now, using the trigger endpoint from the service
+    this.customMissionsService.triggerSavedCustomMission(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.triggeringMissions.delete(id);
+          this.snackBar.open(`Custom mission "${mission.missionName}" triggered successfully!`, 'Close', { duration: 3000 });
+          // If response contains missionCode, start polling
+          if (response && (response as any).missionCode) {
+            this.startJobPolling((response as any).missionCode);
+          }
+        },
+        error: (error) => {
+          this.triggeringMissions.delete(id);
+          this.snackBar.open('Failed to trigger custom mission', 'Close', { duration: 5000 });
+          console.error('Error triggering custom mission:', error);
+        }
+      });
+  }
+
+  /**
+   * Start polling for job status
+   */
+  startJobPolling(missionCode: string): void {
+    // Don't start if already polling
+    if (this.pollingSubscriptions.has(missionCode)) {
       return;
     }
 
-    const formValue = this.queryRobotsForm.value;
+    // Poll every 2 seconds
+    const subscription = interval(2000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.missionsService.queryJobs({
+          missionCodes: [missionCode],
+          limit: 1
+        }).subscribe({
+          next: (response) => {
+            if (response.success && response.data && response.data.length > 0) {
+              const jobData = response.data[0];
+              this.activeJobs.set(missionCode, jobData);
 
-    const request: RobotQueryRequest = {
-      robotId: formValue.robotId || undefined,
-      robotType: formValue.robotType || undefined,
-      mapCode: formValue.mapCode || undefined,
-      floorNumber: formValue.floorNumber || undefined,
-      includeCurrentMission: formValue.includeCurrentMission
-    };
+              // Stop polling if job is completed, failed, or cancelled
+              if (jobData.status?.toUpperCase().includes('COMPLETED') ||
+                  jobData.status?.toUpperCase().includes('FAILED') ||
+                  jobData.status?.toUpperCase().includes('CANCELLED')) {
+                this.stopJobPolling(missionCode);
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error polling job status:', error);
+          }
+        });
+      });
 
-    this.isQueryingRobots = true;
-
-    this.missionsService.queryRobots(request).subscribe({
-      next: (response) => {
-        this.isQueryingRobots = false;
-        if (response.success && response.data) {
-          this.robotResults = response.data;
-        } else {
-          this.robotResults = [];
-        }
-      },
-      error: () => {
-        this.isQueryingRobots = false;
-        this.robotResults = [];
-      }
-    });
+    this.pollingSubscriptions.set(missionCode, subscription);
   }
 
   /**
-   * Clear job results
+   * Stop job polling
    */
-  clearJobResults(): void {
-    this.jobResults = [];
-    this.queryJobsForm.reset({ limit: 10, includeCurrentMission: true });
+  stopJobPolling(missionCode: string): void {
+    const subscription = this.pollingSubscriptions.get(missionCode);
+    if (subscription) {
+      subscription.unsubscribe();
+      this.pollingSubscriptions.delete(missionCode);
+    }
   }
 
   /**
-   * Clear robot results
+   * Clear job from active jobs
    */
-  clearRobotResults(): void {
-    this.robotResults = [];
-    this.queryRobotsForm.reset({ includeCurrentMission: true });
+  clearJob(missionCode: string): void {
+    this.activeJobs.delete(missionCode);
+    this.stopJobPolling(missionCode);
   }
 
   /**
-   * Get status color for chips
+   * Check if workflow is being triggered
+   */
+  isTriggering(id: number): boolean {
+    return this.triggeringMissions.has(id);
+  }
+
+  /**
+   * Get job status color
    */
   getStatusColor(status: string): string {
-    return MissionsUtils.getStatusColor(status);
+    const statusUpper = status?.toUpperCase();
+    if (statusUpper?.includes('EXECUTING') || statusUpper?.includes('PROGRESS')) {
+      return 'primary';
+    }
+    if (statusUpper?.includes('COMPLETED') || statusUpper?.includes('SUCCESS')) {
+      return 'accent';
+    }
+    if (statusUpper?.includes('FAILED') || statusUpper?.includes('ERROR')) {
+      return 'warn';
+    }
+    return '';
   }
 
   /**
-   * Format date/time
+   * Get active jobs as array
    */
-  formatDateTime(dateString: string | undefined): string {
-    return MissionsUtils.formatDateTime(dateString);
+  getActiveJobsArray(): Array<{ missionCode: string; jobData: JobData }> {
+    return Array.from(this.activeJobs.entries()).map(([missionCode, jobData]) => ({
+      missionCode,
+      jobData
+    }));
   }
 
   /**
-   * Get battery level color
+   * Refresh all data
    */
-  getBatteryColor(level: number | undefined): string {
-    if (!level) return '';
-    if (level >= 70) return 'accent';
-    if (level >= 30) return 'primary';
-    return 'warn';
+  refresh(): void {
+    this.loadWorkflows();
+    this.loadCustomMissions();
+  }
+
+  /**
+   * Generate unique request ID
+   */
+  private generateRequestId(): string {
+    const now = new Date();
+    const timestamp = now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0') +
+      now.getSeconds().toString().padStart(2, '0') +
+      now.getMilliseconds().toString().padStart(3, '0');
+    return `request${timestamp}`;
+  }
+
+  /**
+   * Generate unique mission code
+   */
+  private generateMissionCode(): string {
+    const now = new Date();
+    const timestamp = now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0') +
+      now.getSeconds().toString().padStart(2, '0') +
+      now.getMilliseconds().toString().padStart(3, '0');
+    return `mission${timestamp}`;
   }
 }
