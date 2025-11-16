@@ -152,12 +152,12 @@ export function getFloorClass(floorNumber: string): string {
  * This format is used for mission step positions in workflow templates
  *
  * @param qrCode QR code data object
- * @returns Unique identifier in format "mapCode-floorNumber-nodeLabel" (e.g., "MAP1-1-A001")
+ * @returns Unique identifier in format "mapCode-floorNumber-nodeNumber" (e.g., "MAP1-1-123")
  */
 export function createQrCodeUniqueId(qrCode: QrCodeSummaryDto): string {
   const mapCode = qrCode.mapCode || '';
   const floor = qrCode.floorNumber || '';
-  const node = qrCode.nodeLabel || '';
+  const node = qrCode.nodeNumber !== null && qrCode.nodeNumber !== undefined ? qrCode.nodeNumber.toString() : '';
 
   // Return combined unique identifier
   return `${mapCode}-${floor}-${node}`;
