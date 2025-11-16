@@ -21,6 +21,7 @@ import {
 import { MissionTypesService } from '../../services/mission-types.service';
 import { RobotTypesService } from '../../services/robot-types.service';
 import { ResumeStrategiesService } from '../../services/resume-strategies.service';
+import { MobileRobotsService } from '../../services/mobile-robots.service';
 import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
@@ -136,73 +137,46 @@ export interface WorkflowTemplateDialogData {
 
             <mat-form-field appearance="outline">
               <mat-label>Priority</mat-label>
-              <mat-select formControlName="priority">
-                <mat-option [value]="1">Low</mat-option>
-                <mat-option [value]="2">Medium</mat-option>
-                <mat-option [value]="3">High</mat-option>
-                <mat-option [value]="4">Critical</mat-option>
-              </mat-select>
+              <input matInput type="number" formControlName="priority" min="1" max="10" placeholder="Enter priority (1-10)" />
               <mat-icon matPrefix>flag</mat-icon>
+              <mat-hint>Enter a number between 1-10</mat-hint>
+              <mat-error>Priority is required</mat-error>
             </mat-form-field>
           </div>
 
           <!-- Robot Models -->
-          <div class="chip-input-container">
-            <label class="chip-label">Robot Models</label>
-            <div class="chips-display">
-              <mat-chip-set>
-                <mat-chip
-                  *ngFor="let model of missionTemplate.get('robotModels')?.value"
-                  (removed)="removeRobotModel(model)"
-                >
-                  {{ model }}
-                  <button matChipRemove [attr.aria-label]="'Remove ' + model">
-                    <mat-icon>cancel</mat-icon>
-                  </button>
-                </mat-chip>
-              </mat-chip-set>
-            </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Add Robot Model</mat-label>
-              <input
-                matInput
-                placeholder="Enter robot model and press Enter"
-                #robotModelInput
-                (keyup.enter)="addRobotModel(robotModelInput); $event.preventDefault()"
-              />
-              <mat-icon matPrefix>smart_toy</mat-icon>
-              <mat-hint>Press Enter to add</mat-hint>
-            </mat-form-field>
-          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Robot Models</mat-label>
+            <mat-select formControlName="robotModels" multiple>
+              <mat-option *ngFor="let model of availableRobotModels()" [value]="model">
+                {{ model }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>smart_toy</mat-icon>
+            <mat-hint *ngIf="availableRobotModels().length === 0" class="warning-hint">
+              No robot models available from mobile robots
+            </mat-hint>
+            <mat-hint *ngIf="availableRobotModels().length > 0">
+              Select one or more robot models
+            </mat-hint>
+          </mat-form-field>
 
           <!-- Robot IDs -->
-          <div class="chip-input-container">
-            <label class="chip-label">Robot IDs</label>
-            <div class="chips-display">
-              <mat-chip-set>
-                <mat-chip
-                  *ngFor="let id of missionTemplate.get('robotIds')?.value"
-                  (removed)="removeRobotId(id)"
-                >
-                  {{ id }}
-                  <button matChipRemove [attr.aria-label]="'Remove ' + id">
-                    <mat-icon>cancel</mat-icon>
-                  </button>
-                </mat-chip>
-              </mat-chip-set>
-            </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Add Robot ID</mat-label>
-              <input
-                matInput
-                placeholder="Enter robot ID and press Enter"
-                #robotIdInput
-                (keyup.enter)="addRobotId(robotIdInput); $event.preventDefault()"
-              />
-              <mat-icon matPrefix>pin</mat-icon>
-              <mat-hint>Press Enter to add</mat-hint>
-            </mat-form-field>
-          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Robot IDs</mat-label>
+            <mat-select formControlName="robotIds" multiple>
+              <mat-option *ngFor="let robotId of availableRobotIds()" [value]="robotId">
+                {{ robotId }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>pin</mat-icon>
+            <mat-hint *ngIf="availableRobotIds().length === 0" class="warning-hint">
+              No robot IDs available from mobile robots
+            </mat-hint>
+            <mat-hint *ngIf="availableRobotIds().length > 0">
+              Select one or more robot IDs
+            </mat-hint>
+          </mat-form-field>
         </section>
 
         <mat-divider></mat-divider>
@@ -414,47 +388,6 @@ export interface WorkflowTemplateDialogData {
       margin: 20px 0;
     }
 
-    .chip-input-container {
-      margin-bottom: 16px;
-
-      .chip-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 500;
-        color: #555;
-        margin-bottom: 8px;
-      }
-
-      .chips-display {
-        margin-bottom: 8px;
-        min-height: 40px;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #fafafa;
-
-        mat-chip-set {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        mat-chip {
-          background-color: #ff6f00;
-          color: white;
-
-          button[matChipRemove] {
-            color: white;
-            opacity: 0.8;
-
-            &:hover {
-              opacity: 1;
-            }
-          }
-        }
-      }
-    }
-
     @media (max-width: 1200px) {
       .form-row {
         flex-direction: column;
@@ -491,6 +424,8 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   public activeMissionTypes = signal<MissionTypeDisplayData[]>([]);
   public activeRobotTypes = signal<RobotTypeDisplayData[]>([]);
   public activeResumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
+  public availableRobotModels = signal<string[]>([]);
+  public availableRobotIds = signal<string[]>([]);
   public isLoadingConfig = signal<boolean>(false);
 
   private destroy$ = new Subject<void>();
@@ -501,7 +436,8 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: WorkflowTemplateDialogData,
     private missionTypesService: MissionTypesService,
     private robotTypesService: RobotTypesService,
-    private resumeStrategiesService: ResumeStrategiesService
+    private resumeStrategiesService: ResumeStrategiesService,
+    private mobileRobotsService: MobileRobotsService
   ) {}
 
   ngOnInit(): void {
@@ -536,15 +472,24 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     forkJoin({
       missionTypes: this.missionTypesService.getMissionTypes(),
       robotTypes: this.robotTypesService.getRobotTypes(),
-      resumeStrategies: this.resumeStrategiesService.getResumeStrategies()
+      resumeStrategies: this.resumeStrategiesService.getResumeStrategies(),
+      mobileRobots: this.mobileRobotsService.getMobileRobots()
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ missionTypes, robotTypes, resumeStrategies }) => {
+        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots }) => {
           // Filter for active items only
           this.activeMissionTypes.set(missionTypes.filter(mt => mt.isActive));
           this.activeRobotTypes.set(robotTypes.filter(rt => rt.isActive));
           this.activeResumeStrategies.set(resumeStrategies.filter(rs => rs.isActive));
+
+          // Extract unique robot models (robotTypeCode) and robot IDs from mobile robots
+          const uniqueRobotModels = [...new Set(mobileRobots.map(r => r.robotTypeCode))].filter(Boolean).sort();
+          const uniqueRobotIds = [...new Set(mobileRobots.map(r => r.robotId))].filter(Boolean).sort();
+
+          this.availableRobotModels.set(uniqueRobotModels);
+          this.availableRobotIds.set(uniqueRobotIds);
+
           this.isLoadingConfig.set(false);
         },
         error: (error) => {
@@ -635,8 +580,15 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   }
 
   private parsePriority(priority: string | null | undefined): number {
-    if (!priority) return 2; // Default to MEDIUM
+    if (!priority) return 2; // Default to 2
 
+    // If it's already a number string, parse it
+    const numericPriority = parseInt(priority, 10);
+    if (!isNaN(numericPriority)) {
+      return numericPriority;
+    }
+
+    // Legacy: Map old string priorities to numbers
     const priorityMap: { [key: string]: number } = {
       'LOW': 1,
       'MEDIUM': 2,
@@ -686,38 +638,6 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     this.missionData.controls.forEach((control, index) => {
       control.get('sequence')?.setValue(index);
     });
-  }
-
-  addRobotModel(input: HTMLInputElement): void {
-    const value = input.value.trim();
-    if (value) {
-      const current = this.missionTemplate.get('robotModels')?.value || [];
-      if (!current.includes(value)) {
-        this.missionTemplate.get('robotModels')?.setValue([...current, value]);
-      }
-      input.value = '';
-    }
-  }
-
-  removeRobotModel(model: string): void {
-    const current = this.missionTemplate.get('robotModels')?.value || [];
-    this.missionTemplate.get('robotModels')?.setValue(current.filter((m: string) => m !== model));
-  }
-
-  addRobotId(input: HTMLInputElement): void {
-    const value = input.value.trim();
-    if (value) {
-      const current = this.missionTemplate.get('robotIds')?.value || [];
-      if (!current.includes(value)) {
-        this.missionTemplate.get('robotIds')?.setValue([...current, value]);
-      }
-      input.value = '';
-    }
-  }
-
-  removeRobotId(id: string): void {
-    const current = this.missionTemplate.get('robotIds')?.value || [];
-    this.missionTemplate.get('robotIds')?.setValue(current.filter((robotId: string) => robotId !== id));
   }
 
   onSubmit(): void {
