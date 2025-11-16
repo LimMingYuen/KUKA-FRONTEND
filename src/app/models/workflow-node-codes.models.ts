@@ -41,6 +41,47 @@ export interface FailedWorkflowDetail {
 }
 
 /**
+ * Classified workflow information
+ */
+export interface ClassifiedWorkflow {
+  externalWorkflowId: number;
+  workflowCode: string;
+  workflowName: string;
+  zoneName: string;
+  zoneCode: string;
+}
+
+/**
+ * Result of sync and classify all workflows operation
+ */
+export interface SyncAndClassifyAllResult {
+  totalWorkflows: number;
+  successCount: number;
+  failureCount: number;
+  noZoneMatchCount: number;
+  failedWorkflowIds: number[];
+  noZoneMatchWorkflowIds: number[];
+  errors: { [key: string]: string };
+  classifiedWorkflows: ClassifiedWorkflow[];
+  timestamp?: Date;
+}
+
+/**
+ * Sync and classify history entry
+ */
+export interface SyncClassifyHistoryEntry {
+  id: number;
+  timestamp: Date;
+  totalWorkflows: number;
+  successCount: number;
+  failureCount: number;
+  noZoneMatchCount: number;
+  classifiedCount: number;
+  duration?: number; // in milliseconds
+  status: 'success' | 'partial' | 'failed';
+}
+
+/**
  * API Response wrapper
  */
 export interface ApiResponse<T> {
