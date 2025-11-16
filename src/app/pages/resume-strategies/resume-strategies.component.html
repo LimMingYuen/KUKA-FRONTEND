@@ -1,91 +1,10 @@
-<div class="resume-strategies-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-title">
-        <mat-icon class="header-icon">restart_alt</mat-icon>
-        <h1>Resume Strategies</h1>
-      </div>
-      <div class="header-actions">
-        <button mat-raised-button
-                color="primary"
-                (click)="openCreateDialog()"
-                [disabled]="isCreating">
-          <mat-icon>add</mat-icon>
-          Add Resume Strategy
-        </button>
-        <button mat-stroked-button
-                (click)="exportResumeStrategies()"
-                [disabled]="isLoading || resumeStrategies.length === 0">
-          <mat-icon>download</mat-icon>
-          Export
-        </button>
-        <button mat-stroked-button
-                (click)="refreshResumeStrategies()"
-                [disabled]="isLoading">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Statistics Cards -->
-  <div class="stats-container">
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon total">
-          <mat-icon>restart_alt</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getResumeStrategiesCount().total }}</div>
-          <div class="stat-label">Total Resume Strategies</div>
-        </div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon active">
-          <mat-icon>check_circle</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getResumeStrategiesCount().active }}</div>
-          <div class="stat-label">Active</div>
-        </div>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon inactive">
-          <mat-icon>pause_circle</mat-icon>
-        </div>
-        <div class="stat-details">
-          <div class="stat-value">{{ getResumeStrategiesCount().inactive }}</div>
-          <div class="stat-label">Inactive</div>
-        </div>
-      </div>
-    </mat-card>
-  </div>
-
-  <!-- Main Content -->
-  <mat-card class="main-content-card">
-    <mat-card-header>
-      <mat-card-title>Resume Strategies Management</mat-card-title>
-      <mat-card-subtitle>Configure and manage resume strategy settings</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <!-- Table Component -->
-      <app-generic-table
-        [config]="tableConfig"
-        [data]="resumeStrategies"
-        [loading]="isLoading"
-        (action)="onTableAction($event)"
-        (sortChange)="onSortChange($event)"
-        (pageChange)="onPageChange($event)"
-        (filterChange)="onFilterChange($event)">
-      </app-generic-table>
-    </mat-card-content>
-  </mat-card>
-</div>
+<!-- Table Component -->
+<app-generic-table
+  [config]="tableConfig"
+  [data]="resumeStrategies"
+  [loading]="isLoading"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>

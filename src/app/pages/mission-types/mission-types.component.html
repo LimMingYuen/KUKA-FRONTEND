@@ -1,32 +1,3 @@
-<!-- Mission Types Summary Card -->
-<mat-card class="mission-types-summary-card" *ngIf="!isLoading">
-  <div class="summary-content">
-    <div class="summary-stats">
-      <div class="stat-item">
-        <mat-icon class="stat-icon active-icon">check_circle</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getMissionTypesCount().active }}</span>
-          <span class="stat-label">Active Types</span>
-        </div>
-      </div>
-      <div class="stat-item">
-        <mat-icon class="stat-icon inactive-icon">pause_circle</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getMissionTypesCount().inactive }}</span>
-          <span class="stat-label">Inactive Types</span>
-        </div>
-      </div>
-      <div class="stat-item">
-        <mat-icon class="stat-icon total-icon">assignment</mat-icon>
-        <div class="stat-details">
-          <span class="stat-number">{{ getMissionTypesCount().total }}</span>
-          <span class="stat-label">Total Types</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</mat-card>
-
 <!-- Generic Table Component -->
 <app-generic-table class="mission-types-table"
   [data]="missionTypes"
