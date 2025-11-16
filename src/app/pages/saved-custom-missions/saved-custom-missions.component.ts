@@ -17,6 +17,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { SAVED_CUSTOM_MISSIONS_TABLE_CONFIG } from './saved-custom-missions-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { CustomMissionFormDialogComponent } from '../../shared/dialogs/custom-mission-form/custom-mission-form-dialog.component';
 
 @Component({
   selector: 'app-saved-custom-missions',
@@ -208,9 +209,22 @@ export class SavedCustomMissionsComponent implements OnInit, OnDestroy {
    * Edit mission
    */
   private editMission(mission: SavedCustomMissionsDisplayData): void {
-    // TODO: Implement edit dialog or navigation
-    console.log('Edit mission:', mission);
-    // Could open an edit dialog with form for mission configuration
+    const dialogRef = this.dialog.open(CustomMissionFormDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: false,
+      data: {
+        mode: 'edit',
+        mission: mission
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Refresh data after successful edit
+        this.refreshSavedCustomMissions();
+      }
+    });
   }
 
   /**
@@ -278,9 +292,21 @@ export class SavedCustomMissionsComponent implements OnInit, OnDestroy {
    * Create new mission
    */
   private createNewMission(): void {
-    // TODO: Implement create dialog or navigation
-    console.log('Create new mission');
-    // Could open a create dialog with form for mission configuration
+    const dialogRef = this.dialog.open(CustomMissionFormDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      disableClose: false,
+      data: {
+        mode: 'create'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Refresh data after successful creation
+        this.refreshSavedCustomMissions();
+      }
+    });
   }
 
   /**
