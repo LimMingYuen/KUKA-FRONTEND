@@ -343,7 +343,7 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   /**
    * Get CSS class for value display
    */
-  getValueClass(value: number): string {
+  getValueClass(value: string): string {
     return getValueClass(value);
   }
 
