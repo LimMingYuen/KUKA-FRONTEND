@@ -1,118 +1,400 @@
 <h2 mat-dialog-title>
   <mat-icon>send</mat-icon>
-  Submit Mission
+  {{ submittedMissionCode ? 'Mission Submitted' : 'Submit Mission' }}
 </h2>
 
 <mat-dialog-content>
-  <form [formGroup]="form" class="mission-form">
-    <!-- Mission Code -->
-    <mat-form-field appearance="outline">
-      <mat-label>Mission Code *</mat-label>
-      <input matInput formControlName="missionCode" placeholder="Enter mission code">
-      <mat-error *ngIf="form.get('missionCode')?.hasError('required')">
-        Mission code is required
-      </mat-error>
-    </mat-form-field>
+  <!-- Show tabs only if mission not yet submitted -->
+  <div *ngIf="!submittedMissionCode">
+    <mat-tab-group [(selectedIndex)]="selectedTab" animationDuration="300ms">
+      <!-- Sync Workflow Tab -->
+      <mat-tab label="Sync Workflow">
+        <div class="tab-content">
+          <p class="tab-description">
+            <mat-icon>sync</mat-icon>
+            Submit a mission using a pre-configured workflow template from the workflow management system.
+          </p>
 
-    <!-- Template Code -->
-    <mat-form-field appearance="outline">
-      <mat-label>Template Code</mat-label>
-      <input matInput formControlName="templateCode" placeholder="Optional template code">
-    </mat-form-field>
+          <form [formGroup]="syncForm" class="mission-form">
+            <!-- Workflow Selection -->
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-card-title>Workflow Configuration</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline">
+                  <mat-label>Template Code *</mat-label>
+                  <mat-select formControlName="templateCode" [disabled]="isLoadingWorkflows">
+                    <mat-option *ngFor="let workflow of workflows" [value]="workflow.code">
+                      {{ workflow.name }} ({{ workflow.code }})
+                    </mat-option>
+                  </mat-select>
+                  <mat-spinner *ngIf="isLoadingWorkflows" diameter="20" matSuffix></mat-spinner>
+                  <mat-hint>Select the workflow template to execute</mat-hint>
+                  <mat-error *ngIf="syncForm.get('templateCode')?.hasError('required')">
+                    Template code is required
+                  </mat-error>
+                </mat-form-field>
 
-    <!-- Priority -->
-    <mat-form-field appearance="outline">
-      <mat-label>Priority *</mat-label>
-      <mat-select formControlName="priority">
-        <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
-      <mat-error *ngIf="form.get('priority')?.hasError('required')">
-        Priority is required
-      </mat-error>
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Mission Type *</mat-label>
+                  <mat-select formControlName="missionType">
+                    <mat-option *ngFor="let type of missionTypeOptions" [value]="type.value">
+                      {{ type.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-    <!-- Organization ID -->
-    <mat-form-field appearance="outline">
-      <mat-label>Organization ID</mat-label>
-      <input matInput formControlName="orgId" placeholder="Enter organization ID">
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Priority *</mat-label>
+                  <mat-select formControlName="priority">
+                    <mat-option [value]="1">Low</mat-option>
+                    <mat-option [value]="2">Medium</mat-option>
+                    <mat-option [value]="3">High</mat-option>
+                    <mat-option [value]="4">Critical</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
 
-    <!-- View Board Type -->
-    <mat-form-field appearance="outline">
-      <mat-label>View Board Type</mat-label>
-      <input matInput formControlName="viewBoardType" placeholder="Enter view board type">
-    </mat-form-field>
+            <!-- Robot Configuration -->
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-card-title>Robot Configuration</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot Type *</mat-label>
+                  <input matInput formControlName="robotType" placeholder="e.g., LIFT">
+                </mat-form-field>
 
-    <!-- Robot Type -->
-    <mat-form-field appearance="outline">
-      <mat-label>Robot Type</mat-label>
-      <input matInput formControlName="robotType" placeholder="Enter robot type">
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot IDs *</mat-label>
+                  <input matInput formControlName="robotIds" placeholder="e.g., 14">
+                  <mat-hint>Comma-separated robot IDs</mat-hint>
+                </mat-form-field>
 
-    <!-- Robot Models (comma-separated) -->
-    <mat-form-field appearance="outline">
-      <mat-label>Robot Models</mat-label>
-      <input matInput formControlName="robotModels" placeholder="Comma-separated robot models">
-      <mat-hint>Enter robot models separated by commas</mat-hint>
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot Models</mat-label>
+                  <input matInput formControlName="robotModels" placeholder="e.g., KMP600I">
+                  <mat-hint>Comma-separated robot models</mat-hint>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
 
-    <!-- Robot IDs (comma-separated) -->
-    <mat-form-field appearance="outline">
-      <mat-label>Robot IDs</mat-label>
-      <input matInput formControlName="robotIds" placeholder="Comma-separated robot IDs">
-      <mat-hint>Enter robot IDs separated by commas</mat-hint>
-    </mat-form-field>
+            <!-- Advanced Options -->
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>settings</mat-icon>
+                  Advanced Options
+                </mat-panel-title>
+              </mat-expansion-panel-header>
 
-    <!-- Container Model Code -->
-    <mat-form-field appearance="outline">
-      <mat-label>Container Model Code</mat-label>
-      <input matInput formControlName="containerModelCode" placeholder="Enter container model code">
-    </mat-form-field>
+              <div class="advanced-options">
+                <mat-form-field appearance="outline">
+                  <mat-label>Organization ID</mat-label>
+                  <input matInput formControlName="orgId">
+                </mat-form-field>
 
-    <!-- Container Code -->
-    <mat-form-field appearance="outline">
-      <mat-label>Container Code</mat-label>
-      <input matInput formControlName="containerCode" placeholder="Enter container code">
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>View Board Type</mat-label>
+                  <input matInput formControlName="viewBoardType">
+                </mat-form-field>
 
-    <!-- Idle Node -->
-    <mat-form-field appearance="outline">
-      <mat-label>Idle Node</mat-label>
-      <input matInput formControlName="idleNode" placeholder="Enter idle node">
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Container Model Code</mat-label>
+                  <input matInput formControlName="containerModelCode">
+                </mat-form-field>
 
-    <!-- Lock Robot After Finish -->
-    <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
-      Lock robot after finish
-    </mat-checkbox>
+                <mat-form-field appearance="outline">
+                  <mat-label>Container Code</mat-label>
+                  <input matInput formControlName="containerCode">
+                </mat-form-field>
 
-    <!-- Unlock Robot ID -->
-    <mat-form-field appearance="outline">
-      <mat-label>Unlock Robot ID</mat-label>
-      <input matInput formControlName="unlockRobotId" placeholder="Enter unlock robot ID">
-    </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Idle Node</mat-label>
+                  <input matInput formControlName="idleNode">
+                </mat-form-field>
 
-    <!-- Unlock Mission Code -->
-    <mat-form-field appearance="outline">
-      <mat-label>Unlock Mission Code</mat-label>
-      <input matInput formControlName="unlockMissionCode" placeholder="Enter unlock mission code">
-    </mat-form-field>
-  </form>
+                <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
+                  Lock robot after finish
+                </mat-checkbox>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Unlock Robot ID</mat-label>
+                  <input matInput formControlName="unlockRobotId">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Unlock Mission Code</mat-label>
+                  <input matInput formControlName="unlockMissionCode">
+                </mat-form-field>
+              </div>
+            </mat-expansion-panel>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- Custom Mission Tab -->
+      <mat-tab label="Custom Mission">
+        <div class="tab-content">
+          <p class="tab-description">
+            <mat-icon>build</mat-icon>
+            Create a custom mission by defining individual mission steps with positions and actions.
+          </p>
+
+          <form [formGroup]="customForm" class="mission-form">
+            <!-- Mission Configuration -->
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-card-title>Mission Configuration</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline">
+                  <mat-label>Mission Type *</mat-label>
+                  <mat-select formControlName="missionType">
+                    <mat-option *ngFor="let type of missionTypeOptions" [value]="type.value">
+                      {{ type.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Priority *</mat-label>
+                  <mat-select formControlName="priority">
+                    <mat-option [value]="1">Low</mat-option>
+                    <mat-option [value]="2">Medium</mat-option>
+                    <mat-option [value]="3">High</mat-option>
+                    <mat-option [value]="4">Critical</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Robot Configuration -->
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-card-title>Robot Configuration</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot Type *</mat-label>
+                  <input matInput formControlName="robotType" placeholder="e.g., LIFT">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot IDs *</mat-label>
+                  <input matInput formControlName="robotIds" placeholder="e.g., 14">
+                  <mat-hint>Comma-separated robot IDs</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Robot Models</mat-label>
+                  <input matInput formControlName="robotModels" placeholder="e.g., KMP600I">
+                  <mat-hint>Comma-separated robot models</mat-hint>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Mission Steps -->
+            <mat-card class="section-card mission-steps-card">
+              <mat-card-header>
+                <mat-card-title>
+                  Mission Steps
+                  <button mat-mini-fab color="primary" (click)="addMissionStep()" type="button"
+                    matTooltip="Add Step" class="add-step-btn">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div formArrayName="missionSteps">
+                  <div *ngFor="let step of missionSteps.controls; let i = index" [formGroupName]="i"
+                    class="mission-step">
+                    <div class="step-header">
+                      <span class="step-number">Step {{ i + 1 }}</span>
+                      <div class="step-actions">
+                        <button mat-icon-button (click)="moveStepUp(i)" [disabled]="i === 0" type="button"
+                          matTooltip="Move Up">
+                          <mat-icon>arrow_upward</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="moveStepDown(i)"
+                          [disabled]="i === missionSteps.length - 1" type="button" matTooltip="Move Down">
+                          <mat-icon>arrow_downward</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="removeMissionStep(i)"
+                          [disabled]="missionSteps.length === 1" type="button" matTooltip="Remove Step">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="step-fields">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Position *</mat-label>
+                        <input matInput formControlName="position" placeholder="e.g., M001-A001-45">
+                        <mat-error>Position is required</mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Type *</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option *ngFor="let type of nodeTypeOptions" [value]="type.value">
+                            {{ type.label }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Pass Strategy *</mat-label>
+                        <mat-select formControlName="passStrategy">
+                          <mat-option *ngFor="let strategy of passStrategyOptions" [value]="strategy.value">
+                            {{ strategy.label }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Waiting Time (ms)</mat-label>
+                        <input matInput type="number" formControlName="waitingMillis" placeholder="0">
+                        <mat-error>Must be 0 or greater</mat-error>
+                      </mat-form-field>
+
+                      <mat-checkbox formControlName="putDown" class="checkbox-field">
+                        Put Down
+                      </mat-checkbox>
+                    </div>
+                  </div>
+
+                  <div *ngIf="missionSteps.length === 0" class="no-steps">
+                    <mat-icon>info</mat-icon>
+                    <p>No mission steps defined. Click the + button to add a step.</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Advanced Options -->
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>settings</mat-icon>
+                  Advanced Options
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <div class="advanced-options">
+                <mat-form-field appearance="outline">
+                  <mat-label>Organization ID</mat-label>
+                  <input matInput formControlName="orgId">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>View Board Type</mat-label>
+                  <input matInput formControlName="viewBoardType">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Container Model Code</mat-label>
+                  <input matInput formControlName="containerModelCode">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Container Code</mat-label>
+                  <input matInput formControlName="containerCode">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Idle Node</mat-label>
+                  <input matInput formControlName="idleNode">
+                </mat-form-field>
+
+                <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
+                  Lock robot after finish
+                </mat-checkbox>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Unlock Robot ID</mat-label>
+                  <input matInput formControlName="unlockRobotId">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Unlock Mission Code</mat-label>
+                  <input matInput formControlName="unlockMissionCode">
+                </mat-form-field>
+              </div>
+            </mat-expansion-panel>
+          </form>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <!-- Job Status Display (after submission) -->
+  <div *ngIf="submittedMissionCode" class="job-status-container">
+    <mat-card class="status-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>check_circle</mat-icon>
+          Mission Submitted Successfully
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="status-info">
+          <div class="info-row">
+            <span class="label">Mission Code:</span>
+            <span class="value">{{ submittedMissionCode }}</span>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div *ngIf="isPollingJobs" class="polling-status">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span>Polling job status...</span>
+          </div>
+
+          <div *ngIf="jobStatus && !isPollingJobs" class="job-details">
+            <div class="info-row">
+              <span class="label">Status:</span>
+              <mat-chip [color]="getStatusColor(jobStatus.status || '')" selected>
+                {{ jobStatus.status || 'Unknown' }}
+              </mat-chip>
+            </div>
+            <div class="info-row" *ngIf="jobStatus.robotId">
+              <span class="label">Robot ID:</span>
+              <span class="value">{{ jobStatus.robotId }}</span>
+            </div>
+            <div class="info-row" *ngIf="jobStatus.progress !== undefined">
+              <span class="label">Progress:</span>
+              <span class="value">{{ jobStatus.progress }}%</span>
+            </div>
+            <div class="info-row" *ngIf="jobStatus.currentLocation">
+              <span class="label">Current Location:</span>
+              <span class="value">{{ jobStatus.currentLocation }}</span>
+            </div>
+            <div class="info-row" *ngIf="jobStatus.updatedAt">
+              <span class="label">Last Updated:</span>
+              <span class="value">{{ jobStatus.updatedAt }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     Cancel
   </button>
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="onSubmit()"
-    [disabled]="form.invalid || isSubmitting">
+  <button *ngIf="!submittedMissionCode" mat-raised-button color="primary" (click)="onSubmit()"
+    [disabled]="(selectedTab === 0 ? syncForm.invalid : customForm.invalid) || isSubmitting">
     <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
     <span *ngIf="!isSubmitting">Submit Mission</span>
     <span *ngIf="isSubmitting">Submitting...</span>
+  </button>
+  <button *ngIf="submittedMissionCode" mat-raised-button color="primary" (click)="closeWithResult()">
+    Close
   </button>
 </mat-dialog-actions>
