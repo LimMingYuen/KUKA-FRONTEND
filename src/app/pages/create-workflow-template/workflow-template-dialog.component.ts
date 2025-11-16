@@ -838,15 +838,22 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       const formValue = this.templateForm.value;
 
       // Convert zone names to zone codes for NODE_AREA type steps
+      // AND convert putDown string to boolean
       const missionDataWithConvertedPositions = formValue.missionTemplate.missionData.map((step: any) => {
+        let convertedStep = { ...step };
+
+        // Convert zone name to zone code for NODE_AREA type
         if (step.type === 'NODE_AREA' && step.position) {
-          // Convert zone name to zone code
-          return {
-            ...step,
-            position: this.convertZoneNameToCode(step.position)
-          };
+          convertedStep.position = this.convertZoneNameToCode(step.position);
         }
-        return step;
+
+        // Convert putDown from string to boolean
+        // Backend expects boolean, but form stores shelf decision rule as string
+        if (typeof step.putDown === 'string') {
+          convertedStep.putDown = step.putDown.toUpperCase() === 'TRUE';
+        }
+
+        return convertedStep;
       });
 
       const request: SaveMissionAsTemplateRequest = {
