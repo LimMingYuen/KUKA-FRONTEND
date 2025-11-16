@@ -258,6 +258,8 @@ The application implements a complete JWT-based authentication system.
 - **Token Storage**: localStorage (`auth_token` key)
 - **User Data Storage**: localStorage (`user_data` key)
 
+**📚 Complete API Documentation**: For a comprehensive reference of all backend API endpoints, including missions, queue management, and custom missions, see [API_ENDPOINTS.md](./API_ENDPOINTS.md)
+
 ### Request/Response Format
 
 **Login Request**:
@@ -954,6 +956,11 @@ this.snackBar.open('Operation failed', 'Close', {
 
 ## Additional Resources
 
+### Project Documentation
+- [API Endpoints Documentation](./API_ENDPOINTS.md) - Complete backend API reference for all features
+- [README](./README.md) - Project setup and getting started guide
+
+### External Documentation
 - [Angular Documentation](https://angular.dev)
 - [Angular Material Documentation](https://material.angular.io)
 - [RxJS Documentation](https://rxjs.dev)
