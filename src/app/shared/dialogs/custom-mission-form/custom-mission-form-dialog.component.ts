@@ -396,6 +396,12 @@ export class CustomMissionFormDialogComponent implements OnInit, OnDestroy {
       containerModelCode: formValue.containerModelCode || null,
       containerCode: formValue.containerCode || null,
       idleNode: formValue.idleNode || null,
+      orgId: formValue.orgId || null,
+      viewBoardType: formValue.viewBoardType || null,
+      templateCode: formValue.templateCode || null,
+      lockRobotAfterFinish: formValue.lockRobotAfterFinish || false,
+      unlockRobotId: formValue.unlockRobotId || null,
+      unlockMissionCode: formValue.unlockMissionCode || null,
       missionStepsJson
     };
 
