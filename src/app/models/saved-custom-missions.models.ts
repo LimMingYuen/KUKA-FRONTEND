@@ -65,6 +65,47 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+// Workflow Template Models
+export interface MissionStepData {
+  sequence: number;
+  position: string;
+  type: string;
+  putDown: boolean;
+  passStrategy: string;
+  waitingMillis: number;
+}
+
+export interface MissionTemplate {
+  orgId: string;
+  missionType: string;
+  viewBoardType: string;
+  robotModels: string[];
+  robotIds: string[];
+  robotType: string;
+  priority: number;
+  containerModelCode: string | null;
+  containerCode: string | null;
+  templateCode: string | null;
+  lockRobotAfterFinish: boolean;
+  unlockRobotId: string | null;
+  unlockMissionCode: string | null;
+  idleNode: string | null;
+  missionData: MissionStepData[];
+}
+
+export interface SaveMissionAsTemplateRequest {
+  missionName: string;
+  description: string;
+  missionTemplate: MissionTemplate;
+}
+
+export interface SaveMissionAsTemplateResponse {
+  success: boolean;
+  message: string;
+  savedMissionId?: number;
+  missionName?: string;
+}
+
 // Display models for frontend
 export interface SavedCustomMissionsDisplayData {
   id: number;
