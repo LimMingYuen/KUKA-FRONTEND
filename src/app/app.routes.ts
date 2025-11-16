@@ -21,10 +21,10 @@ export const routes: Routes = [
     title: 'Workflows - KUKA GUI'
   },
   {
-    path: 'warehouse-management',
+    path: 'workflow-template-configuration',
     loadComponent: () => import('./pages/warehouse-management/warehouse-management.component').then(m => m.WarehouseManagementComponent),
     canActivate: [authGuard],
-    title: 'Warehouse Management - KUKA GUI'
+    title: 'Workflow Template Configuration - KUKA GUI'
   },
   {
     path: 'map-zones',
