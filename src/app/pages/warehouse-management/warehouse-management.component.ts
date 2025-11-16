@@ -1,95 +1,56 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ActivatedRoute, Router } from '@angular/router';
-
-import { ShelfDecisionRulesComponent } from '../shelf-decision-rules/shelf-decision-rules.component';
-import { MissionTypesComponent } from '../mission-types/mission-types.component';
-import { RobotTypesComponent } from '../robot-types/robot-types.component';
-import { ResumeStrategiesComponent } from '../resume-strategies/resume-strategies.component';
-import { AreasComponent } from '../areas/areas.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
-
-export interface TabItem {
-  label: string;
-  icon: string;
-  component: any;
-  description: string;
-}
+import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
+import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
+import { WORKFLOW_TEMPLATE_TABLE_CONFIG } from '../create-workflow-template/workflow-template-table.config';
+import { WorkflowTemplateDialogComponent, WorkflowTemplateDialogData } from '../create-workflow-template/workflow-template-dialog.component';
+import { ActionEvent } from '../../shared/models/table.models';
 
 @Component({
   selector: 'app-warehouse-management',
   standalone: true,
   imports: [
     CommonModule,
-    MatTabsModule,
     MatCardModule,
+    MatButtonModule,
     MatIconModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    ShelfDecisionRulesComponent,
-    MissionTypesComponent,
-    RobotTypesComponent,
-    ResumeStrategiesComponent,
-    AreasComponent
+    MatDialogModule,
+    MatSnackBarModule,
+    GenericTableComponent
   ],
   templateUrl: './warehouse-management.component.html',
   styleUrl: './warehouse-management.component.css'
 })
 export class WarehouseManagementComponent implements OnInit, OnDestroy {
-  // UI state
-  public isLoading = true;
-  public selectedTabIndex = 0;
+  // Table data
+  public workflowTemplates: SavedCustomMissionsDisplayData[] = [];
 
-  // Tabs configuration
-  public tabs: TabItem[] = [
-    {
-      label: 'Shelf Decision Rules',
-      icon: 'rule',
-      component: ShelfDecisionRulesComponent,
-      description: 'Manage warehouse shelf decision rules and configurations'
-    },
-    {
-      label: 'Mission Types',
-      icon: 'assignment',
-      component: MissionTypesComponent,
-      description: 'Manage mission type configurations and settings'
-    },
-    {
-      label: 'Robot Types',
-      icon: 'smart_toy',
-      component: RobotTypesComponent,
-      description: 'Manage robot type configurations and settings'
-    },
-    {
-      label: 'Resume Strategies',
-      icon: 'restart_alt',
-      component: ResumeStrategiesComponent,
-      description: 'Manage resume strategy configurations and settings'
-    },
-    {
-      label: 'Areas',
-      icon: 'location_on',
-      component: AreasComponent,
-      description: 'Manage warehouse area configurations and settings'
-    }
-  ];
+  // Table configuration
+  public tableConfig = WORKFLOW_TEMPLATE_TABLE_CONFIG;
+
+  // UI state
+  public isLoading = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private savedCustomMissionsService: SavedCustomMissionsService,
+    private dialog: MatDialog
+  ) {
+    // Configure empty state action
+    this.tableConfig.empty!.action = () => this.openCreateDialog();
+  }
 
   ngOnInit(): void {
-    this.initializeComponent();
-    this.handleRouteParams();
+    this.loadWorkflowTemplates();
   }
 
   ngOnDestroy(): void {
@@ -98,132 +59,173 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize the component
+   * Load workflow templates from the service
    */
-  private initializeComponent(): void {
-    // Simulate loading time
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 500);
+  private loadWorkflowTemplates(): void {
+    this.isLoading = true;
+    this.savedCustomMissionsService.getAllSavedCustomMissions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (templates) => {
+          this.workflowTemplates = templates;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading workflow templates:', error);
+          this.isLoading = false;
+        }
+      });
   }
 
   /**
-   * Handle route parameters for deep linking to specific tabs
+   * Handle table actions
    */
-  private handleRouteParams(): void {
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      if (params['tab']) {
-        const tabIndex = this.getTabIndexFromLabel(params['tab']);
-        if (tabIndex !== -1) {
-          this.selectedTabIndex = tabIndex;
-        }
+  onTableAction(event: ActionEvent): void {
+    switch (event.action) {
+      case 'view':
+        this.viewTemplate(event.row);
+        break;
+      case 'edit':
+        this.openEditDialog(event.row);
+        break;
+      case 'delete':
+        this.deleteTemplate(event.row);
+        break;
+      case 'create':
+        this.openCreateDialog();
+        break;
+      case 'refresh':
+        this.refreshTemplates();
+        break;
+      default:
+        console.log('Unknown action:', event.action);
+    }
+  }
+
+  /**
+   * Open create template dialog
+   */
+  private openCreateDialog(): void {
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'create'
+    };
+
+    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '95vw',
+      maxWidth: '1400px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createTemplate(result);
       }
     });
-
-    // Update URL when tab changes
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.updateRouteWithTab();
-    });
   }
 
   /**
-   * Get tab index from label
+   * Open edit template dialog
    */
-  private getTabIndexFromLabel(label: string): number {
-    if (!label) return -1;
-    return this.tabs.findIndex(tab =>
-      tab && tab.label && tab.label.toLowerCase().replace(/\s+/g, '-') === label.toLowerCase()
-    );
-  }
-
-  /**
-   * Update route with current tab
-   */
-  private updateRouteWithTab(): void {
-    const currentTab = this.tabs[this.selectedTabIndex];
-    if (!currentTab || !currentTab.label) {
-      return; // Skip if tab is undefined or has no label
-    }
-
-    const tabLabel = currentTab.label.toLowerCase().replace(/\s+/g, '-');
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab: tabLabel },
-      queryParamsHandling: 'merge'
-    });
-  }
-
-  /**
-   * Handle tab change
-   */
-  onTabChange(event: any): void {
-    if (event && typeof event.index === 'number' && event.index >= 0) {
-      this.selectedTabIndex = event.index;
-      this.updateRouteWithTab();
-    }
-  }
-
-  /**
-   * Get tab icon
-   */
-  getTabIcon(tab: TabItem): string {
-    return tab.icon;
-  }
-
-  /**
-   * Get tab description
-   */
-  getTabDescription(tab: TabItem): string {
-    return tab.description;
-  }
-
-  /**
-   * Check if tab is active
-   */
-  isTabActive(index: number): boolean {
-    return index === this.selectedTabIndex;
-  }
-
-  /**
-   * Get loading state for specific tab
-   */
-  isTabLoading(index: number): boolean {
-    return this.isLoading || (index === 0 && this.isLoading);
-  }
-
-  /**
-   * Get component type for tab
-   */
-  getTabComponent(index: number): any {
-    return this.tabs[index]?.component;
-  }
-
-  /**
-   * Get statistics for dashboard overview
-   */
-  getWarehouseStats(): {
-    totalRules: number;
-    activeRobots: number;
-    totalMissions: number;
-    qrCodeCount: number;
-  } {
-    // These would come from respective services in a real implementation
-    return {
-      totalRules: 0,
-      activeRobots: 0,
-      totalMissions: 0,
-      qrCodeCount: 0
+  private openEditDialog(template: SavedCustomMissionsDisplayData): void {
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'edit',
+      template: template
     };
+
+    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '95vw',
+      maxWidth: '1400px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateTemplate(template.id, result);
+      }
+    });
   }
 
   /**
-   * Navigate to specific tab
+   * Create new template
    */
-  navigateToTab(index: number): void {
-    if (typeof index === 'number' && index >= 0 && index < this.tabs.length) {
-      this.selectedTabIndex = index;
-      this.onTabChange({ index });
+  private createTemplate(request: any): void {
+    this.savedCustomMissionsService.saveMissionAsTemplate(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.refreshTemplates();
+        },
+        error: (error) => {
+          console.error('Error creating template:', error);
+        }
+      });
+  }
+
+  /**
+   * Update existing template
+   */
+  private updateTemplate(id: number, request: any): void {
+    this.savedCustomMissionsService.updateWorkflowTemplate(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.refreshTemplates();
+        },
+        error: (error) => {
+          console.error('Error updating template:', error);
+        }
+      });
+  }
+
+  /**
+   * View template details
+   */
+  private viewTemplate(template: SavedCustomMissionsDisplayData): void {
+    // Open read-only dialog or navigate to detail view
+    const dialogData: WorkflowTemplateDialogData = {
+      mode: 'edit',
+      template: template
+    };
+
+    this.dialog.open(WorkflowTemplateDialogComponent, {
+      width: '95vw',
+      maxWidth: '1400px',
+      maxHeight: '90vh',
+      data: dialogData,
+      panelClass: 'workflow-template-dialog'
+    });
+  }
+
+  /**
+   * Delete template with confirmation
+   */
+  private deleteTemplate(template: SavedCustomMissionsDisplayData): void {
+    const message = `Are you sure you want to delete workflow template "${template.missionName}"? This action cannot be undone.`;
+
+    if (confirm(message)) {
+      this.savedCustomMissionsService.deleteSavedCustomMission(template.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.refreshTemplates();
+          },
+          error: (error) => {
+            console.error('Error deleting template:', error);
+          }
+        });
     }
+  }
+
+  /**
+   * Refresh templates list
+   */
+  private refreshTemplates(): void {
+    this.loadWorkflowTemplates();
   }
 }

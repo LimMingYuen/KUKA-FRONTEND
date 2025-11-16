@@ -82,13 +82,13 @@ export class NavigationService {
       },
       {
         id: 'management',
-        label: 'Warehouse Management',
+        label: 'Configuration',
         items: [
           {
-            id: 'warehouse-management',
-            label: 'Warehouse Management',
-            icon: 'warehouse',
-            route: '/warehouse-management'
+            id: 'workflow-template-configuration',
+            label: 'Workflow Template Configuration',
+            icon: 'settings',
+            route: '/workflow-template-configuration'
           }
         ]
       },
