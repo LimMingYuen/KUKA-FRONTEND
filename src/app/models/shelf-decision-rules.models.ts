@@ -11,7 +11,7 @@
 export interface ShelfDecisionRuleDto {
   id: number;
   displayName: string;
-  actualValue: number;
+  actualValue: string;
   description: string;
   isActive: boolean;
   createdUtc: string;
@@ -23,7 +23,7 @@ export interface ShelfDecisionRuleDto {
  */
 export interface ShelfDecisionRuleCreateRequest {
   displayName: string;
-  actualValue: number;
+  actualValue: string;
   description: string;
   isActive: boolean;
 }
@@ -33,7 +33,7 @@ export interface ShelfDecisionRuleCreateRequest {
  */
 export interface ShelfDecisionRuleUpdateRequest {
   displayName: string;
-  actualValue: number;
+  actualValue: string;
   description: string;
   isActive: boolean;
 }
@@ -120,11 +120,11 @@ export function formatRelativeTime(dateString: string): string {
 }
 
 /**
- * Format numeric value for display
+ * Format value for display
  */
-export function formatValue(value: number): string {
-  if (value === null || value === undefined) return 'N/A';
-  return value.toLocaleString();
+export function formatValue(value: string): string {
+  if (!value) return 'N/A';
+  return value;
 }
 
 /**
@@ -168,9 +168,12 @@ export function getStatusClass(isActive: boolean): string {
 /**
  * Get CSS class for value display
  */
-export function getValueClass(value: number): string {
-  if (value < 0) return 'value-negative';
-  if (value === 0) return 'value-zero';
+export function getValueClass(value: string): string {
+  if (!value) return 'value-zero';
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) return 'value-neutral';
+  if (numValue < 0) return 'value-negative';
+  if (numValue === 0) return 'value-zero';
   return 'value-positive';
 }
 
@@ -185,8 +188,9 @@ export function isValidDisplayName(displayName: string): boolean {
 /**
  * Validate rule actual value
  */
-export function isValidActualValue(value: number): boolean {
-  return value !== null && value !== undefined && !isNaN(value);
+export function isValidActualValue(value: string): boolean {
+  if (!value) return false;
+  return value.trim().length >= 1 && value.trim().length <= 50;
 }
 
 /**
@@ -200,7 +204,7 @@ export function isValidDescription(description: string): boolean {
 /**
  * Check if rule value conflicts with existing rules
  */
-export function hasValueConflict(newValue: number, existingRules: ShelfDecisionRuleDto[], currentId?: number): boolean {
+export function hasValueConflict(newValue: string, existingRules: ShelfDecisionRuleDto[], currentId?: number): boolean {
   return existingRules.some(rule =>
     rule.actualValue === newValue && rule.id !== currentId
   );
@@ -234,7 +238,7 @@ export function sortRulesByPriority(rules: ShelfDecisionRuleDisplayData[]): Shel
     if (a.isActive !== b.isActive) {
       return b.isActive ? 1 : -1;
     }
-    // Then sort by actual value
-    return a.actualValue - b.actualValue;
+    // Then sort by actual value (string comparison)
+    return a.actualValue.localeCompare(b.actualValue);
   });
 }

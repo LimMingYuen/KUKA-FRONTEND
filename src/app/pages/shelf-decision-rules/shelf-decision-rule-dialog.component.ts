@@ -56,13 +56,16 @@ export interface ShelfDecisionRuleDialogData {
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Actual Value</mat-label>
-          <input matInput type="number" formControlName="actualValue" placeholder="Enter numeric value" />
-          <mat-icon matPrefix>calculate</mat-icon>
+          <input matInput formControlName="actualValue" placeholder="Enter actual value" />
+          <mat-icon matPrefix>code</mat-icon>
           <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('required')">
             Actual value is required
           </mat-error>
-          <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('min') || ruleForm.get('actualValue')?.hasError('max')">
-            Value must be between -999999 and 999999
+          <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('minlength')">
+            Actual value must be at least 1 character
+          </mat-error>
+          <mat-error *ngIf="ruleForm.get('actualValue')?.hasError('maxlength')">
+            Actual value must not exceed 50 characters
           </mat-error>
         </mat-form-field>
 
@@ -168,7 +171,7 @@ export class ShelfDecisionRuleDialogComponent implements OnInit {
   private initializeForm(): void {
     this.ruleForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      actualValue: [0, [Validators.required, Validators.min(-999999), Validators.max(999999)]],
+      actualValue: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
       description: ['', [Validators.maxLength(500)]],
       isActive: [true]
     });
@@ -188,7 +191,7 @@ export class ShelfDecisionRuleDialogComponent implements OnInit {
       const formValue = this.ruleForm.value;
       const request: ShelfDecisionRuleCreateRequest | ShelfDecisionRuleUpdateRequest = {
         displayName: formValue.displayName.trim(),
-        actualValue: formValue.actualValue,
+        actualValue: formValue.actualValue.trim(),
         description: formValue.description?.trim() || '',
         isActive: formValue.isActive
       };
