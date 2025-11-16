@@ -218,22 +218,8 @@ export interface WorkflowTemplateDialogData {
               <mat-card-content>
                 <div class="step-row">
                   <mat-form-field appearance="outline">
-                    <mat-label>Position</mat-label>
-                    <mat-select formControlName="position">
-                      <mat-optgroup label="QR Codes & Map Zones">
-                        <mat-option *ngFor="let position of availablePositions()" [value]="position">
-                          {{ position }}
-                        </mat-option>
-                      </mat-optgroup>
-                    </mat-select>
-                    <mat-hint *ngIf="availablePositions().length === 0" class="warning-hint">
-                      No positions available
-                    </mat-hint>
-                    <mat-error>Position is required</mat-error>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
                     <mat-label>Type (Area)</mat-label>
-                    <mat-select formControlName="type">
+                    <mat-select formControlName="type" (selectionChange)="onTypeChange(i)">
                       <mat-option *ngFor="let area of activeAreas()" [value]="area">
                         {{ area }}
                       </mat-option>
@@ -241,7 +227,32 @@ export interface WorkflowTemplateDialogData {
                     <mat-hint *ngIf="activeAreas().length === 0" class="warning-hint">
                       No active areas available
                     </mat-hint>
+                    <mat-hint *ngIf="activeAreas().length > 0">
+                      Select type first to load positions
+                    </mat-hint>
                     <mat-error>Type is required</mat-error>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Position</mat-label>
+                    <mat-select formControlName="position">
+                      <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_POINT'" label="QR Codes">
+                        <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
+                          {{ position }}
+                        </mat-option>
+                      </mat-optgroup>
+                      <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_AREA'" label="Map Zones">
+                        <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
+                          {{ position }}
+                        </mat-option>
+                      </mat-optgroup>
+                    </mat-select>
+                    <mat-hint *ngIf="!step.get('type')?.value" class="warning-hint">
+                      Select a type first
+                    </mat-hint>
+                    <mat-hint *ngIf="step.get('type')?.value && getAvailablePositionsForStep(i).length === 0" class="warning-hint">
+                      No positions available for selected type
+                    </mat-hint>
+                    <mat-error>Position is required</mat-error>
                   </mat-form-field>
                 </div>
                 <div class="step-row">
@@ -456,7 +467,8 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   public activeResumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
   public activeAreas = signal<string[]>([]);
   public activeShelfRules = signal<string[]>([]);
-  public availablePositions = signal<string[]>([]);
+  public qrCodePositions = signal<string[]>([]);
+  public mapZonePositions = signal<{ name: string; code: string }[]>([]);
   public availableRobotModels = signal<string[]>([]);
   public availableRobotIds = signal<string[]>([]);
   public isLoadingConfig = signal<boolean>(false);
@@ -501,6 +513,29 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get available positions for a specific step based on the selected type
+   * @param stepIndex The index of the mission step
+   * @returns Array of position options (QR codes or zone names)
+   */
+  getAvailablePositionsForStep(stepIndex: number): string[] {
+    const step = this.missionData.at(stepIndex);
+    if (!step) return [];
+
+    const selectedType = step.get('type')?.value;
+
+    if (selectedType === 'NODE_POINT') {
+      // Return QR code positions
+      return this.qrCodePositions();
+    } else if (selectedType === 'NODE_AREA') {
+      // Return zone names for display
+      return this.mapZonePositions().map(z => z.name);
+    }
+
+    // If no type selected, return empty array
+    return [];
+  }
+
+  /**
    * Load configuration data from services
    */
   private loadConfigurationData(): void {
@@ -539,11 +574,16 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
           const activeShelfRuleValues = shelfRules.filter(r => r.isActive).map(r => r.actualValue).sort();
           this.activeShelfRules.set(activeShelfRuleValues);
 
-          // Combine QR codes (using unique mapCode-Floor-Node format) and map zones (zoneCode) for positions
-          const qrCodePositions = createQrCodeUniqueIds(qrCodes);
-          const mapZonePositions = mapZones.map(mz => mz.code).filter(Boolean);
-          const allPositions = [...qrCodePositions, ...mapZonePositions].sort();
-          this.availablePositions.set([...new Set(allPositions)]);
+          // Store QR codes (using unique mapCode-Floor-Node format) - sorted ascending
+          const qrCodes_positions = createQrCodeUniqueIds(qrCodes).sort((a, b) => a.localeCompare(b));
+          this.qrCodePositions.set(qrCodes_positions);
+
+          // Store map zones with both name (for display) and code (for API) - sorted by name ascending
+          const zonePositions = mapZones
+            .map(mz => ({ name: mz.zoneName, code: mz.zoneCode }))
+            .filter(z => z.name && z.code)
+            .sort((a, b) => a.name.localeCompare(b.name));
+          this.mapZonePositions.set(zonePositions);
 
           this.isLoadingConfig.set(false);
         },
@@ -617,9 +657,15 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       // Add mission steps
       if (missionSteps.length > 0) {
         missionSteps.forEach((step: any) => {
+          // Convert zone code to zone name for display if type is NODE_AREA
+          let positionValue = step.position || '';
+          if (step.type === 'NODE_AREA' && positionValue) {
+            positionValue = this.convertZoneCodeToName(positionValue);
+          }
+
           this.missionData.push(this.fb.group({
             sequence: [step.sequence || 0],
-            position: [step.position || '', Validators.required],
+            position: [positionValue, Validators.required],
             type: [step.type || '', Validators.required],
             putDown: [step.putDown || '', Validators.required],
             passStrategy: [step.passStrategy || '', Validators.required],
@@ -695,14 +741,55 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Handle type (Area) change - clear position when type changes
+   */
+  onTypeChange(stepIndex: number): void {
+    const step = this.missionData.at(stepIndex);
+    if (step) {
+      // Clear position when type changes
+      step.get('position')?.setValue('');
+    }
+  }
+
+  /**
+   * Convert zone name to zone code for API submission
+   */
+  private convertZoneNameToCode(zoneName: string): string {
+    const zone = this.mapZonePositions().find(z => z.name === zoneName);
+    return zone ? zone.code : zoneName;
+  }
+
+  /**
+   * Convert zone code to zone name for display when editing
+   */
+  private convertZoneCodeToName(zoneCode: string): string {
+    const zone = this.mapZonePositions().find(z => z.code === zoneCode);
+    return zone ? zone.name : zoneCode;
+  }
+
   onSubmit(): void {
     if (this.templateForm.valid) {
       const formValue = this.templateForm.value;
+
+      // Convert zone names to zone codes for NODE_AREA type steps
+      const missionDataWithConvertedPositions = formValue.missionTemplate.missionData.map((step: any) => {
+        if (step.type === 'NODE_AREA' && step.position) {
+          // Convert zone name to zone code
+          return {
+            ...step,
+            position: this.convertZoneNameToCode(step.position)
+          };
+        }
+        return step;
+      });
+
       const request: SaveMissionAsTemplateRequest = {
         missionName: formValue.missionName,
         description: formValue.description,
         missionTemplate: {
           ...formValue.missionTemplate,
+          missionData: missionDataWithConvertedPositions,
           robotModels: formValue.missionTemplate.robotModels || [],
           robotIds: formValue.missionTemplate.robotIds || [],
           containerModelCode: formValue.missionTemplate.containerModelCode || null,
