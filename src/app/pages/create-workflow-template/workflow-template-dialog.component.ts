@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import {
   SaveMissionAsTemplateRequest,
@@ -30,6 +31,7 @@ import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
 import { createQrCodeUniqueIds } from '../../models/qr-code.models';
+import { MissionFlowchartComponent, MissionStepFlowData } from '../../shared/components/mission-flowchart/mission-flowchart.component';
 
 export interface WorkflowTemplateDialogData {
   mode: 'create' | 'edit';
@@ -53,7 +55,9 @@ export interface WorkflowTemplateDialogData {
     MatDividerModule,
     MatTooltipModule,
     MatCardModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatButtonToggleModule,
+    MissionFlowchartComponent
   ],
   template: `
     <h2 mat-dialog-title>
@@ -190,12 +194,25 @@ export interface WorkflowTemplateDialogData {
         <section class="form-section" [formGroup]="missionTemplate">
           <div class="section-header">
             <h3>Mission Steps</h3>
-            <button mat-mini-fab color="primary" type="button" (click)="addMissionStep()">
-              <mat-icon>add</mat-icon>
-            </button>
+            <div class="header-actions">
+              <mat-button-toggle-group [value]="viewMode()" (change)="onViewModeChange($event.value)" class="view-toggle">
+                <mat-button-toggle value="form">
+                  <mat-icon>list</mat-icon>
+                  Form
+                </mat-button-toggle>
+                <mat-button-toggle value="flowchart">
+                  <mat-icon>account_tree</mat-icon>
+                  Flowchart
+                </mat-button-toggle>
+              </mat-button-toggle-group>
+              <button mat-mini-fab color="primary" type="button" (click)="addMissionStep()">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
           </div>
 
-          <div class="mission-steps" formArrayName="missionData">
+          <!-- Form View -->
+          <div *ngIf="viewMode() === 'form'" class="mission-steps" formArrayName="missionData">
             <mat-card
               class="step-card"
               *ngFor="let step of missionData.controls; let i = index"
@@ -289,6 +306,11 @@ export interface WorkflowTemplateDialogData {
               </mat-card-content>
             </mat-card>
           </div>
+
+          <!-- Flowchart View -->
+          <div *ngIf="viewMode() === 'flowchart'" class="flowchart-view">
+            <app-mission-flowchart [missionSteps]="flowchartData()"></app-mission-flowchart>
+          </div>
         </section>
       </form>
     </mat-dialog-content>
@@ -361,6 +383,16 @@ export interface WorkflowTemplateDialogData {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+
+        .view-toggle {
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+      }
     }
 
     .full-width {
@@ -425,6 +457,16 @@ export interface WorkflowTemplateDialogData {
       }
     }
 
+    .flowchart-view {
+      min-height: 500px;
+      max-height: 600px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #fafafa;
+      padding: 0;
+      overflow: hidden;
+    }
+
     mat-divider {
       margin: 20px 0;
     }
@@ -472,6 +514,29 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   public availableRobotModels = signal<string[]>([]);
   public availableRobotIds = signal<string[]>([]);
   public isLoadingConfig = signal<boolean>(false);
+
+  // View mode signal
+  public viewMode = signal<'form' | 'flowchart'>('form');
+
+  // Computed signal for flowchart data
+  public flowchartData = computed<MissionStepFlowData[]>(() => {
+    if (!this.templateForm) return [];
+
+    const missionData = this.missionData;
+    if (!missionData || missionData.length === 0) return [];
+
+    return missionData.controls.map((control, index) => {
+      const value = control.value;
+      return {
+        sequence: index,
+        position: value.position || '',
+        type: value.type || '',
+        putDown: value.putDown || '',
+        passStrategy: value.passStrategy || '',
+        waitingMillis: value.waitingMillis || 0
+      };
+    });
+  });
 
   private destroy$ = new Subject<void>();
 
@@ -802,6 +867,10 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       };
       this.dialogRef.close(request);
     }
+  }
+
+  onViewModeChange(mode: 'form' | 'flowchart'): void {
+    this.viewMode.set(mode);
   }
 
   onCancel(): void {
