@@ -14,6 +14,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatChipsModule } from '@angular/material/chips';
 
 import { MissionsService } from '../../../services/missions.service';
 import { WorkflowService } from '../../../services/workflow.service';
@@ -45,7 +46,8 @@ export interface MissionSubmitDialogData {
     MatCardModule,
     MatDividerModule,
     MatTooltipModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatChipsModule
   ],
   templateUrl: './mission-submit-dialog.component.html',
   styleUrl: './mission-submit-dialog.component.scss'
