@@ -98,6 +98,33 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
     } as ActionConfig
   ],
 
+  headerActions: [
+    {
+      action: 'refresh',
+      label: 'Refresh',
+      icon: 'refresh',
+      type: 'icon',
+      tooltip: 'Refresh robot types'
+    },
+    {
+      action: 'create-robot-type',
+      label: 'Create Robot Type',
+      icon: 'add',
+      type: 'raised',
+      color: 'primary',
+      tooltip: 'Create new robot type',
+      loading: false
+    },
+    {
+      action: 'export',
+      label: 'Export',
+      icon: 'download',
+      type: 'button',
+      color: 'accent',
+      tooltip: 'Export robot types data'
+    }
+  ],
+
   pagination: {
     pageSize: 10,
     pageSizeOptions: [5, 10, 25, 50],
@@ -115,7 +142,7 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
     direction: 'asc'
   },
 
-  
+
   empty: {
     message: 'There are no robot types configured yet.',
     icon: 'smart_toy',
