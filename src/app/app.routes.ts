@@ -75,6 +75,12 @@ export const routes: Routes = [
     title: 'Role Management - KUKA GUI'
   },
   {
+    path: 'workflow-sync-status',
+    loadComponent: () => import('./pages/workflow-sync-status/workflow-sync-status.component').then(m => m.WorkflowSyncStatusComponent),
+    canActivate: [authGuard],
+    title: 'Workflow Sync Status - KUKA GUI'
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'

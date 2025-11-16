@@ -59,6 +59,12 @@ export class NavigationService {
             label: 'Workflows',
             icon: 'account_tree',
             route: '/workflows'
+          },
+          {
+            id: 'workflow-sync-status',
+            label: 'Workflow Sync Status',
+            icon: 'sync',
+            route: '/workflow-sync-status'
           }
         ]
       },
