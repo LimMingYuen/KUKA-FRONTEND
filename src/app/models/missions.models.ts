@@ -18,7 +18,7 @@ export interface MissionTemplate {
   robotModels: string[];
   robotIds: string[];
   robotType: string;
-  priority: number; // 1=LOW, 2=MEDIUM, 3=HIGH, 4=CRITICAL
+  priority: number; // Priority range: 0-100 (higher = more urgent)
   containerModelCode: string | null;
   containerCode: string | null;
   templateCode: string | null;
@@ -109,10 +109,10 @@ export interface JobData {
   workflowId?: number;          // Workflow id
   containerCode?: string;       // Container code
   robotId?: string;             // Robot id
-  status: number | string;      // Job status (10=Created, 20=Executing, 25=Waiting, 28=Cancelling, 30=Complete, 31=Cancelled, 35=Manual complete, 50=Warning, 60=Startup error)
+  status: number | string;      // Job status (0=Created, 2=Executing, 3=Waiting, 4=Cancelling, 5=Complete, 31=Cancelled, 32=Manual Complete, 50=Warning, 99=Startup Error)
   workflowName?: string;        // Name of the workflow configuration
   workflowCode?: string;        // Workflow code of the workflow configuration
-  workflowPriority?: number;    // Workflow priority
+  workflowPriority?: number;    // Workflow priority (0-100)
   mapCode?: string;             // Map code
   targetCellCode?: string;      // Target node code of the running task
   beginCellCode?: string;       // Begin node code of the running task
@@ -410,15 +410,15 @@ export class MissionsUtils {
     if (typeof status === 'string') return status;
 
     switch (status) {
-      case 10: return 'Created';
-      case 20: return 'Executing';
-      case 25: return 'Waiting';
-      case 28: return 'Cancelling';
-      case 30: return 'Complete';
+      case 0: return 'Created';
+      case 2: return 'Executing';
+      case 3: return 'Waiting';
+      case 4: return 'Cancelling';
+      case 5: return 'Complete';
       case 31: return 'Cancelled';
-      case 35: return 'Manual Complete';
+      case 32: return 'Manual Complete';
       case 50: return 'Warning';
-      case 60: return 'Startup Error';
+      case 99: return 'Startup Error';
       default: return `Status ${status}`;
     }
   }
@@ -430,22 +430,22 @@ export class MissionsUtils {
     const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
 
     switch (numStatus) {
-      case 10: // Created
+      case 0: // Created
         return '';
-      case 20: // Executing
+      case 2: // Executing
         return 'primary';
-      case 25: // Waiting
+      case 3: // Waiting
         return 'accent';
-      case 28: // Cancelling
+      case 4: // Cancelling
         return 'warn';
-      case 30: // Complete
-      case 35: // Manual Complete
+      case 5: // Complete
+      case 32: // Manual Complete
         return 'accent';
       case 31: // Cancelled
         return '';
       case 50: // Warning
         return 'warn';
-      case 60: // Startup Error
+      case 99: // Startup Error
         return 'warn';
       default:
         return '';
@@ -457,7 +457,7 @@ export class MissionsUtils {
    */
   static isJobTerminal(status: number | string): boolean {
     const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
-    return numStatus === 30 || numStatus === 31 || numStatus === 35 || numStatus === 60;
+    return numStatus === 5 || numStatus === 31 || numStatus === 32 || numStatus === 99;
   }
 
   /**

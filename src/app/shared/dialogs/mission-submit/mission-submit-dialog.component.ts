@@ -18,7 +18,7 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { MissionsService } from '../../../services/missions.service';
 import { WorkflowService } from '../../../services/workflow.service';
-import { SubmitMissionRequest, MissionPriority, MissionStepData, JobData } from '../../../models/missions.models';
+import { SubmitMissionRequest, MissionPriority, MissionStepData, JobData, MissionsUtils } from '../../../models/missions.models';
 import { WorkflowDisplayData } from '../../../models/workflow.models';
 import { Subject, takeUntil, interval } from 'rxjs';
 
@@ -117,7 +117,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       robotModels: [['KMP600I']],
       robotIds: [['14']],
       robotType: ['LIFT', Validators.required],
-      priority: [1, Validators.required],
+      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
       containerModelCode: [''],
       containerCode: [''],
       templateCode: ['', Validators.required],
@@ -135,7 +135,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       robotModels: [['KMP600I']],
       robotIds: [['14']],
       robotType: ['LIFT', Validators.required],
-      priority: [1, Validators.required],
+      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
       containerModelCode: [''],
       containerCode: [''],
       lockRobotAfterFinish: [false],
@@ -373,8 +373,8 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   startJobPolling(missionCode: string): void {
     this.isPollingJobs = true;
 
-    // Poll every 2 seconds
-    this.pollingSubscription = interval(2000)
+    // Poll every 3 seconds (as per API recommendation)
+    this.pollingSubscription = interval(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.missionsService.queryJobs({
@@ -385,10 +385,8 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
             if (response.success && response.data && response.data.length > 0) {
               this.jobStatus = response.data[0];
 
-              // Stop polling if job is completed, failed, or cancelled
-              if (this.jobStatus.status?.toUpperCase().includes('COMPLETED') ||
-                  this.jobStatus.status?.toUpperCase().includes('FAILED') ||
-                  this.jobStatus.status?.toUpperCase().includes('CANCELLED')) {
+              // Stop polling if job is in terminal state
+              if (MissionsUtils.isJobTerminal(this.jobStatus.status)) {
                 this.stopJobPolling();
               }
             }
@@ -462,17 +460,14 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   /**
    * Get status color for job status
    */
-  getStatusColor(status: string): string {
-    const statusUpper = status?.toUpperCase();
-    if (statusUpper?.includes('EXECUTING') || statusUpper?.includes('PROGRESS')) {
-      return 'primary';
-    }
-    if (statusUpper?.includes('COMPLETED') || statusUpper?.includes('SUCCESS')) {
-      return 'accent';
-    }
-    if (statusUpper?.includes('FAILED') || statusUpper?.includes('ERROR')) {
-      return 'warn';
-    }
-    return '';
+  getStatusColor(status: number | string): string {
+    return MissionsUtils.getJobStatusColor(status);
+  }
+
+  /**
+   * Get status text for job status
+   */
+  getStatusText(status: number | string): string {
+    return MissionsUtils.getJobStatusText(status);
   }
 }
