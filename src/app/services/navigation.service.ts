@@ -125,6 +125,12 @@ export class NavigationService {
             label: 'Saved Custom Missions',
             icon: 'save',
             route: '/saved-custom-missions'
+          },
+          {
+            id: 'queue-monitor',
+            label: 'Queue Monitor',
+            icon: 'queue',
+            route: '/queue-monitor'
           }
         ]
       },
