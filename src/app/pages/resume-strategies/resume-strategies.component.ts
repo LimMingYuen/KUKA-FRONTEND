@@ -27,6 +27,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { RESUME_STRATEGIES_TABLE_CONFIG } from './resume-strategies-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { ResumeStrategyDialogComponent } from './resume-strategy-dialog.component';
 
 @Component({
   selector: 'app-resume-strategies',
@@ -202,8 +203,21 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
    * Edit resume strategy
    */
   private editResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
-    // TODO: Implement edit dialog
-    console.log('Edit resume strategy:', resumeStrategy);
+    const dialogRef = this.dialog.open(ResumeStrategyDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'edit',
+        resumeStrategy: resumeStrategy
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateResumeStrategy(resumeStrategy.id, result);
+      }
+    });
   }
 
   /**
@@ -245,9 +259,20 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
    * Open create dialog
    */
   public openCreateDialog(): void {
-    this.resetForm();
-    // TODO: Implement create dialog
-    console.log('Open create dialog');
+    const dialogRef = this.dialog.open(ResumeStrategyDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'create'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createResumeStrategy(result);
+      }
+    });
   }
 
   /**
@@ -269,33 +294,25 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
   /**
    * Create new resume strategy
    */
-  createResumeStrategy(): void {
-    if (this.resumeStrategyForm.invalid) {
-      this.markFormGroupTouched(this.resumeStrategyForm);
-      return;
-    }
-
-    const formValue = this.resumeStrategyForm.value;
-
-    if (!this.validateResumeStrategyData(formValue.displayName, formValue.actualValue, formValue.description)) {
-      return;
-    }
-
-    const request: ResumeStrategyCreateRequest = {
-      displayName: formValue.displayName.trim(),
-      actualValue: formValue.actualValue.trim(),
-      description: formValue.description?.trim() || '',
-      isActive: formValue.isActive
-    };
-
+  private createResumeStrategy(request: ResumeStrategyCreateRequest): void {
     this.resumeStrategiesService.createResumeStrategy(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.resetForm();
-        },
         error: (error) => {
           console.error('Error creating resume strategy:', error);
+        }
+      });
+  }
+
+  /**
+   * Update resume strategy
+   */
+  private updateResumeStrategy(id: number, request: ResumeStrategyUpdateRequest): void {
+    this.resumeStrategiesService.updateResumeStrategy(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error updating resume strategy:', error);
         }
       });
   }

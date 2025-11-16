@@ -28,6 +28,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { ROBOT_TYPES_TABLE_CONFIG } from './robot-types-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import { RobotTypeDialogComponent } from './robot-type-dialog.component';
 
 @Component({
   selector: 'app-robot-types',
@@ -203,8 +204,21 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
    * Edit robot type
    */
   private editRobotType(robotType: RobotTypeDisplayData): void {
-    // TODO: Implement edit dialog
-    console.log('Edit robot type:', robotType);
+    const dialogRef = this.dialog.open(RobotTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'edit',
+        robotType: robotType
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateRobotType(robotType.id, result);
+      }
+    });
   }
 
   /**
@@ -246,9 +260,20 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
    * Open create dialog
    */
   public openCreateDialog(): void {
-    this.resetForm();
-    // TODO: Implement create dialog
-    console.log('Open create dialog');
+    const dialogRef = this.dialog.open(RobotTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'create'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createRobotType(result);
+      }
+    });
   }
 
   /**
@@ -270,33 +295,25 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
   /**
    * Create new robot type
    */
-  createRobotType(): void {
-    if (this.robotTypeForm.invalid) {
-      this.markFormGroupTouched(this.robotTypeForm);
-      return;
-    }
-
-    const formValue = this.robotTypeForm.value;
-
-    if (!this.validateRobotTypeData(formValue.displayName, formValue.actualValue, formValue.description)) {
-      return;
-    }
-
-    const request: RobotTypeCreateRequest = {
-      displayName: formValue.displayName.trim(),
-      actualValue: formValue.actualValue.trim(),
-      description: formValue.description?.trim() || '',
-      isActive: formValue.isActive
-    };
-
+  private createRobotType(request: RobotTypeCreateRequest): void {
     this.robotTypesService.createRobotType(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.resetForm();
-        },
         error: (error) => {
           console.error('Error creating robot type:', error);
+        }
+      });
+  }
+
+  /**
+   * Update robot type
+   */
+  private updateRobotType(id: number, request: RobotTypeUpdateRequest): void {
+    this.robotTypesService.updateRobotType(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error updating robot type:', error);
         }
       });
   }
