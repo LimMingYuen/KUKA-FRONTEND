@@ -1,0 +1,118 @@
+<h2 mat-dialog-title>
+  <mat-icon>send</mat-icon>
+  Submit Mission
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="mission-form">
+    <!-- Mission Code -->
+    <mat-form-field appearance="outline">
+      <mat-label>Mission Code *</mat-label>
+      <input matInput formControlName="missionCode" placeholder="Enter mission code">
+      <mat-error *ngIf="form.get('missionCode')?.hasError('required')">
+        Mission code is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Template Code -->
+    <mat-form-field appearance="outline">
+      <mat-label>Template Code</mat-label>
+      <input matInput formControlName="templateCode" placeholder="Optional template code">
+    </mat-form-field>
+
+    <!-- Priority -->
+    <mat-form-field appearance="outline">
+      <mat-label>Priority *</mat-label>
+      <mat-select formControlName="priority">
+        <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('priority')?.hasError('required')">
+        Priority is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Organization ID -->
+    <mat-form-field appearance="outline">
+      <mat-label>Organization ID</mat-label>
+      <input matInput formControlName="orgId" placeholder="Enter organization ID">
+    </mat-form-field>
+
+    <!-- View Board Type -->
+    <mat-form-field appearance="outline">
+      <mat-label>View Board Type</mat-label>
+      <input matInput formControlName="viewBoardType" placeholder="Enter view board type">
+    </mat-form-field>
+
+    <!-- Robot Type -->
+    <mat-form-field appearance="outline">
+      <mat-label>Robot Type</mat-label>
+      <input matInput formControlName="robotType" placeholder="Enter robot type">
+    </mat-form-field>
+
+    <!-- Robot Models (comma-separated) -->
+    <mat-form-field appearance="outline">
+      <mat-label>Robot Models</mat-label>
+      <input matInput formControlName="robotModels" placeholder="Comma-separated robot models">
+      <mat-hint>Enter robot models separated by commas</mat-hint>
+    </mat-form-field>
+
+    <!-- Robot IDs (comma-separated) -->
+    <mat-form-field appearance="outline">
+      <mat-label>Robot IDs</mat-label>
+      <input matInput formControlName="robotIds" placeholder="Comma-separated robot IDs">
+      <mat-hint>Enter robot IDs separated by commas</mat-hint>
+    </mat-form-field>
+
+    <!-- Container Model Code -->
+    <mat-form-field appearance="outline">
+      <mat-label>Container Model Code</mat-label>
+      <input matInput formControlName="containerModelCode" placeholder="Enter container model code">
+    </mat-form-field>
+
+    <!-- Container Code -->
+    <mat-form-field appearance="outline">
+      <mat-label>Container Code</mat-label>
+      <input matInput formControlName="containerCode" placeholder="Enter container code">
+    </mat-form-field>
+
+    <!-- Idle Node -->
+    <mat-form-field appearance="outline">
+      <mat-label>Idle Node</mat-label>
+      <input matInput formControlName="idleNode" placeholder="Enter idle node">
+    </mat-form-field>
+
+    <!-- Lock Robot After Finish -->
+    <mat-checkbox formControlName="lockRobotAfterFinish" class="checkbox-field">
+      Lock robot after finish
+    </mat-checkbox>
+
+    <!-- Unlock Robot ID -->
+    <mat-form-field appearance="outline">
+      <mat-label>Unlock Robot ID</mat-label>
+      <input matInput formControlName="unlockRobotId" placeholder="Enter unlock robot ID">
+    </mat-form-field>
+
+    <!-- Unlock Mission Code -->
+    <mat-form-field appearance="outline">
+      <mat-label>Unlock Mission Code</mat-label>
+      <input matInput formControlName="unlockMissionCode" placeholder="Enter unlock mission code">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+    Cancel
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="form.invalid || isSubmitting">
+    <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+    <span *ngIf="!isSubmitting">Submit Mission</span>
+    <span *ngIf="isSubmitting">Submitting...</span>
+  </button>
+</mat-dialog-actions>

@@ -57,6 +57,12 @@ export const routes: Routes = [
     title: 'Saved Custom Missions - KUKA GUI'
   },
   {
+    path: 'queue-monitor',
+    loadComponent: () => import('./pages/queue-monitor/queue-monitor.component').then(m => m.QueueMonitorComponent),
+    canActivate: [authGuard],
+    title: 'Queue Monitor - KUKA GUI'
+  },
+  {
     path: 'robot-analytics',
     loadComponent: () => import('./pages/robot-analytics/robot-analytics.component').then(m => m.RobotAnalyticsComponent),
     canActivate: [authGuard],
