@@ -138,12 +138,19 @@
       }
     }
 
-    .trigger-btn {
-      width: 100%;
+    .card-actions {
       display: flex;
-      align-items: center;
-      justify-content: center;
       gap: 8px;
+      flex-wrap: wrap;
+
+      .action-btn {
+        flex: 1;
+        min-width: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
     }
 
     .status-chip-1 {

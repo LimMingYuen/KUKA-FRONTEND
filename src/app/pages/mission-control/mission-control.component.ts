@@ -16,10 +16,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { MissionPollingService, MissionJob } from '../../services/mission-polling.service';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
-import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-mission-control',
@@ -67,7 +68,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   // Cleanup
   private destroy$ = new Subject<void>();
-  private pollingSubscriptions: Map<string, any> = new Map();
 
   // Expose MissionsUtils to template
   public readonly MissionsUtils = MissionsUtils;
@@ -76,6 +76,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
     private customMissionsService: SavedCustomMissionsService,
+    private missionPollingService: MissionPollingService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
@@ -83,14 +84,34 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadWorkflows();
     this.loadCustomMissions();
+
+    // Subscribe to polling service updates
+    this.missionPollingService.getActiveMissions$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(activeMissions => {
+        // Update local job maps from polling service
+        activeMissions.forEach((mission) => {
+          if (mission.type === 'workflow') {
+            this.workflowJobs.set(mission.id, {
+              missionCode: mission.missionCode,
+              jobData: mission.jobData,
+              robotData: mission.robotData
+            });
+          } else {
+            this.customMissionJobs.set(mission.id, {
+              missionCode: mission.missionCode,
+              jobData: mission.jobData,
+              robotData: mission.robotData
+            });
+          }
+        });
+      });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    // Stop all polling
-    this.pollingSubscriptions.forEach(sub => sub.unsubscribe());
-    this.pollingSubscriptions.clear();
+    // Note: We don't stop polling here - it continues in the background
   }
 
   /**
@@ -165,13 +186,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         if (response.success) {
           this.snackBar.open(`Workflow "${workflow.name}" triggered successfully!`, 'Close', { duration: 3000 });
 
-          // Initialize job tracking for this workflow
-          this.workflowJobs.set(id, {
-            missionCode: request.missionCode
-          });
-
-          // Start polling job status
-          this.startJobPolling(id, request.missionCode, 'workflow');
+          // Start tracking with polling service (persists across navigation)
+          this.missionPollingService.startTracking(id, request.missionCode, 'workflow');
         } else {
           this.snackBar.open(`Failed to trigger workflow: ${response.message}`, 'Close', { duration: 5000 });
         }
@@ -203,13 +219,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           if (response && (response as any).missionCode) {
             const missionCode = (response as any).missionCode;
 
-            // Initialize job tracking for this custom mission
-            this.customMissionJobs.set(id, {
-              missionCode: missionCode
-            });
-
-            // Start polling job status
-            this.startJobPolling(id, missionCode, 'custom');
+            // Start tracking with polling service (persists across navigation)
+            this.missionPollingService.startTracking(id, missionCode, 'custom');
           }
         },
         error: (error) => {
@@ -221,94 +232,43 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Start polling for job and robot status
-   * @param id - Workflow ID or Custom Mission ID
-   * @param missionCode - Mission code to query
-   * @param type - 'workflow' or 'custom'
+   * Cancel a mission
    */
-  startJobPolling(id: number, missionCode: string, type: 'workflow' | 'custom'): void {
-    // Don't start if already polling
-    if (this.pollingSubscriptions.has(missionCode)) {
+  cancelMission(id: number, type: 'workflow' | 'custom'): void {
+    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+    const job = jobsMap.get(id);
+
+    if (!job || !job.missionCode) {
+      this.snackBar.open('No active mission to cancel', 'Close', { duration: 3000 });
       return;
     }
 
-    // Poll every 3 seconds (as per API recommendation)
-    const subscription = interval(3000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        // Query job status
-        this.missionsService.queryJobs({
-          jobCode: missionCode,
-          limit: 10
-        }).subscribe({
-          next: (response) => {
-            if (response.success && response.data && response.data.length > 0) {
-              const jobData = response.data[0];
+    // TODO: Show dialog to select cancel mode
+    // For now, using FORCE mode by default
+    const request = {
+      requestId: this.generateRequestId(),
+      missionCode: job.missionCode,
+      containerCode: '',
+      position: '',
+      cancelMode: 'FORCE' as 'FORCE' | 'NORMAL' | 'REDIRECT_START',
+      reason: 'Cancelled by user'
+    };
 
-              // Update the appropriate job map
-              const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-              const currentJob = jobsMap.get(id);
-              if (currentJob) {
-                currentJob.jobData = jobData;
-              }
-
-              // Query robot status if robotId is available
-              if (jobData.robotId) {
-                this.queryRobotStatus(id, jobData.robotId, type);
-              }
-
-              // Stop polling if job is in terminal state
-              if (MissionsUtils.isJobTerminal(jobData.status)) {
-                this.stopJobPolling(missionCode);
-              }
-            }
-          },
-          error: (error) => {
-            console.error('Error polling job status:', error);
-          }
-        });
-      });
-
-    this.pollingSubscriptions.set(missionCode, subscription);
-  }
-
-  /**
-   * Query robot status
-   * @param id - Workflow ID or Custom Mission ID
-   * @param robotId - Robot ID to query
-   * @param type - 'workflow' or 'custom'
-   */
-  private queryRobotStatus(id: number, robotId: string, type: 'workflow' | 'custom'): void {
-    this.missionsService.queryRobots({
-      robotId: robotId
-    }).subscribe({
+    this.missionsService.cancelMission(request).subscribe({
       next: (response) => {
-        if (response.success && response.data && response.data.length > 0) {
-          const robotData = response.data[0];
-
-          // Update the appropriate job map
-          const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-          const currentJob = jobsMap.get(id);
-          if (currentJob) {
-            currentJob.robotData = robotData;
-          }
+        if (response.success) {
+          this.snackBar.open('Mission cancelled successfully', 'Close', { duration: 3000 });
+          // Stop tracking this mission
+          this.missionPollingService.stopTracking(id);
+        } else {
+          this.snackBar.open(`Failed to cancel mission: ${response.message}`, 'Close', { duration: 5000 });
         }
       },
       error: (error) => {
-        console.error('Error querying robot status:', error);
+        this.snackBar.open('Failed to cancel mission', 'Close', { duration: 5000 });
+        console.error('Error cancelling mission:', error);
       }
     });
-  }
-
-  /**
-   * Stop job polling
-   */
-  stopJobPolling(missionCode: string): void {
-    const subscription = this.pollingSubscriptions.get(missionCode);
-    if (subscription) {
-      subscription.unsubscribe();
-      this.pollingSubscriptions.delete(missionCode);
-    }
   }
 
   /**

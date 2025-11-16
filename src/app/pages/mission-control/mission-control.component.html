@@ -109,17 +109,26 @@
                 </div>
               </div>
             </mat-card-content>
-            <mat-card-actions>
+            <mat-card-actions class="card-actions">
               <button
                 mat-raised-button
                 color="primary"
                 (click)="triggerWorkflow(workflow)"
-                [disabled]="isTriggering(workflow.id)"
-                class="trigger-btn">
+                [disabled]="isTriggering(workflow.id) || workflowJobs.has(workflow.id)"
+                class="action-btn">
                 <mat-spinner *ngIf="isTriggering(workflow.id)" diameter="20"></mat-spinner>
                 <mat-icon *ngIf="!isTriggering(workflow.id)">play_arrow</mat-icon>
                 <span *ngIf="!isTriggering(workflow.id)">Trigger</span>
                 <span *ngIf="isTriggering(workflow.id)">Triggering...</span>
+              </button>
+              <button
+                *ngIf="workflowJobs.has(workflow.id) && workflowJobs.get(workflow.id)?.jobData"
+                mat-raised-button
+                color="warn"
+                (click)="cancelMission(workflow.id, 'workflow')"
+                class="action-btn">
+                <mat-icon>cancel</mat-icon>
+                <span>Cancel</span>
               </button>
             </mat-card-actions>
           </mat-card>
@@ -235,17 +244,26 @@
                 </div>
               </div>
             </mat-card-content>
-            <mat-card-actions>
+            <mat-card-actions class="card-actions">
               <button
                 mat-raised-button
                 color="primary"
                 (click)="triggerCustomMission(mission)"
-                [disabled]="isTriggering(mission.id)"
-                class="trigger-btn">
+                [disabled]="isTriggering(mission.id) || customMissionJobs.has(mission.id)"
+                class="action-btn">
                 <mat-spinner *ngIf="isTriggering(mission.id)" diameter="20"></mat-spinner>
                 <mat-icon *ngIf="!isTriggering(mission.id)">play_arrow</mat-icon>
                 <span *ngIf="!isTriggering(mission.id)">Trigger</span>
                 <span *ngIf="isTriggering(mission.id)">Triggering...</span>
+              </button>
+              <button
+                *ngIf="customMissionJobs.has(mission.id) && customMissionJobs.get(mission.id)?.jobData"
+                mat-raised-button
+                color="warn"
+                (click)="cancelMission(mission.id, 'custom')"
+                class="action-btn">
+                <mat-icon>cancel</mat-icon>
+                <span>Cancel</span>
               </button>
             </mat-card-actions>
           </mat-card>
