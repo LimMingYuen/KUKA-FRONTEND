@@ -209,8 +209,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         // Query job status
         this.missionsService.queryJobs({
-          missionCodes: [missionCode],
-          limit: 1
+          jobCode: missionCode,
+          limit: 10
         }).subscribe({
           next: (response) => {
             if (response.success && response.data && response.data.length > 0) {
@@ -242,8 +242,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    */
   private queryRobotStatus(robotId: string): void {
     this.missionsService.queryRobots({
-      robotId: robotId,
-      includeCurrentMission: true
+      robotId: robotId
     }).subscribe({
       next: (response) => {
         if (response.success && response.data && response.data.length > 0) {

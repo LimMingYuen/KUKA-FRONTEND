@@ -96,11 +96,18 @@ export interface MissionCancelResponse {
 // =============================================================================
 
 export interface JobQueryRequest {
-  missionCodes?: string[];
-  queueItemIds?: number[];
-  robotId?: string;
-  status?: string;
-  limit?: number;
+  jobCode?: string;           // Specific mission/job code
+  workflowId?: number;        // Workflow template ID
+  workflowCode?: string;      // Workflow template code
+  workflowName?: string;      // Workflow name
+  robotId?: string;           // Assigned robot ID
+  status?: string;            // Job status code
+  containerCode?: string;     // Container code
+  targetCellCode?: string;    // Destination cell
+  createUsername?: string;    // User who created the mission
+  sourceValue?: number;       // Source type (2=Interface, 3=PDA, 4=Device, 5=MLS, 6=Fleet, 7=Workflow event)
+  maps?: string[];            // Filter by map codes
+  limit?: number;             // Maximum results (default: 10)
 }
 
 export interface JobData {
@@ -109,7 +116,7 @@ export interface JobData {
   workflowId?: number;          // Workflow id
   containerCode?: string;       // Container code
   robotId?: string;             // Robot id
-  status: number | string;      // Job status (0=Created, 2=Executing, 3=Waiting, 4=Cancelling, 5=Complete, 31=Cancelled, 32=Manual Complete, 50=Warning, 99=Startup Error)
+  status: number | string;      // Job status (10=Created, 20=Executing, 25=Waiting, 28=Cancelling, 30=Complete, 31=Cancelled, 35=Manual Complete, 50=Warning, 60=Startup Error)
   workflowName?: string;        // Name of the workflow configuration
   workflowCode?: string;        // Workflow code of the workflow configuration
   workflowPriority?: number;    // Workflow priority (0-100)
@@ -164,11 +171,10 @@ export interface OperationFeedbackResponse {
 // =============================================================================
 
 export interface RobotQueryRequest {
-  robotId?: string;
-  robotType?: string;
-  mapCode?: string;
-  floorNumber?: number;
-  includeCurrentMission?: boolean;
+  robotId?: string;       // Specific robot ID (empty = query all robots)
+  robotType?: string;     // Robot type code (e.g., "KMP600I", "LIFT")
+  mapCode?: string;       // Filter by map code
+  floorNumber?: string;   // Filter by floor number (Note: mapCode and floorNumber must be passed together)
 }
 
 export interface RobotData {
@@ -405,47 +411,49 @@ export class MissionsUtils {
 
   /**
    * Convert numeric job status to readable string
+   * Status codes from AMR System API (Section 3.1)
    */
   static getJobStatusText(status: number | string): string {
     if (typeof status === 'string') return status;
 
     switch (status) {
-      case 0: return 'Created';
-      case 2: return 'Executing';
-      case 3: return 'Waiting';
-      case 4: return 'Cancelling';
-      case 5: return 'Complete';
+      case 10: return 'Created';
+      case 20: return 'Executing';
+      case 25: return 'Waiting';
+      case 28: return 'Cancelling';
+      case 30: return 'Complete';
       case 31: return 'Cancelled';
-      case 32: return 'Manual Complete';
+      case 35: return 'Manual Complete';
       case 50: return 'Warning';
-      case 99: return 'Startup Error';
+      case 60: return 'Startup Error';
       default: return `Status ${status}`;
     }
   }
 
   /**
    * Get color for job status
+   * Status codes from AMR System API (Section 3.1)
    */
   static getJobStatusColor(status: number | string): string {
     const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
 
     switch (numStatus) {
-      case 0: // Created
+      case 10: // Created
         return '';
-      case 2: // Executing
+      case 20: // Executing
         return 'primary';
-      case 3: // Waiting
+      case 25: // Waiting
         return 'accent';
-      case 4: // Cancelling
+      case 28: // Cancelling
         return 'warn';
-      case 5: // Complete
-      case 32: // Manual Complete
+      case 30: // Complete
+      case 35: // Manual Complete
         return 'accent';
       case 31: // Cancelled
         return '';
       case 50: // Warning
         return 'warn';
-      case 99: // Startup Error
+      case 60: // Startup Error
         return 'warn';
       default:
         return '';
@@ -454,10 +462,11 @@ export class MissionsUtils {
 
   /**
    * Check if job is in terminal state (completed, cancelled, or error)
+   * Terminal states: 30 (Complete), 31 (Cancelled), 35 (Manual Complete), 60 (Startup Error)
    */
   static isJobTerminal(status: number | string): boolean {
     const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
-    return numStatus === 5 || numStatus === 31 || numStatus === 32 || numStatus === 99;
+    return numStatus === 30 || numStatus === 31 || numStatus === 35 || numStatus === 60;
   }
 
   /**
