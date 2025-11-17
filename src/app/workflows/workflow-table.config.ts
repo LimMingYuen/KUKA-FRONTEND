@@ -81,48 +81,20 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
 
   actions: [
     {
+      action: 'view',
+      label: 'View',
+      icon: 'visibility',
+      type: 'icon',
+      tooltip: 'View workflow details',
+      color: 'primary'
+    },
+    {
       action: 'trigger',
       label: 'Trigger',
       icon: 'play_arrow',
       type: 'icon',
       tooltip: 'Trigger workflow mission',
-      color: 'primary'
-    },
-    {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View details'
-    },
-    {
-      action: 'stop',
-      label: 'Stop',
-      icon: 'stop',
-      type: 'menu-item',
-      tooltip: 'Stop workflow'
-    },
-    {
-      action: 'duplicate',
-      label: 'Duplicate',
-      icon: 'content_copy',
-      type: 'menu-item',
-      tooltip: 'Duplicate workflow'
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'menu-item',
-      tooltip: 'Export workflow'
-    },
-    {
-      action: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      type: 'menu-item',
-      tooltip: 'Delete workflow',
-      cssClass: 'danger-action'
+      color: 'accent'
     }
   ],
 
