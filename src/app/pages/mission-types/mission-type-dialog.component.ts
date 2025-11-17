@@ -14,7 +14,7 @@ import {
 } from '../../models/mission-types.models';
 
 export interface MissionTypeDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   missionType?: MissionTypeDisplayData;
 }
 
@@ -33,8 +33,8 @@ export interface MissionTypeDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Mission Type' : 'Edit Mission Type' }}
+      <mat-icon>{{ getDialogIcon() }}</mat-icon>
+      {{ getDialogTitle() }}
     </h2>
 
     <mat-dialog-content>
@@ -93,10 +93,10 @@ export interface MissionTypeDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!missionTypeForm.valid">
+      <button *ngIf="data.mode !== 'view'" mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!missionTypeForm.valid">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -163,8 +163,11 @@ export class MissionTypeDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    if (this.data.mode === 'edit' && this.data.missionType) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.missionType) {
       this.populateForm(this.data.missionType);
+    }
+    if (this.data.mode === 'view') {
+      this.missionTypeForm.disable();
     }
   }
 
@@ -201,5 +204,31 @@ export class MissionTypeDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  getDialogIcon(): string {
+    switch (this.data.mode) {
+      case 'create':
+        return 'add';
+      case 'edit':
+        return 'edit';
+      case 'view':
+        return 'visibility';
+      default:
+        return 'info';
+    }
+  }
+
+  getDialogTitle(): string {
+    switch (this.data.mode) {
+      case 'create':
+        return 'Create Mission Type';
+      case 'edit':
+        return 'Edit Mission Type';
+      case 'view':
+        return 'View Mission Type';
+      default:
+        return 'Mission Type';
+    }
   }
 }

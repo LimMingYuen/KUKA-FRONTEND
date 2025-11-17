@@ -160,8 +160,17 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
    * View mission type details
    */
   private viewMissionType(missionType: MissionTypeDisplayData): void {
-    // TODO: Implement view dialog
-    console.log('View mission type:', missionType);
+    const dialogData: MissionTypeDialogData = {
+      mode: 'view',
+      missionType: missionType
+    };
+
+    this.dialog.open(MissionTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: dialogData
+    });
   }
 
   /**
