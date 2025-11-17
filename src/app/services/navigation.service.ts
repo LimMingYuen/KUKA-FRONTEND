@@ -121,12 +121,6 @@ export class NavigationService {
             route: '/saved-custom-missions'
           },
           {
-            id: 'queue-monitor',
-            label: 'Queue Monitor',
-            icon: 'queue',
-            route: '/queue-monitor'
-          },
-          {
             id: 'mission-control',
             label: 'Mission Control',
             icon: 'settings_remote',
