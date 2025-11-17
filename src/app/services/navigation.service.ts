@@ -49,12 +49,6 @@ export class NavigationService {
         label: 'Main',
         items: [
           {
-            id: 'dashboard',
-            label: 'Dashboard',
-            icon: 'dashboard',
-            route: '/dashboard'
-          },
-          {
             id: 'workflows',
             label: 'Workflows',
             icon: 'account_tree',
