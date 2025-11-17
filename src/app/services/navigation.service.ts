@@ -157,24 +157,6 @@ export class NavigationService {
             route: '/role-management'
           }
         ]
-      },
-      {
-        id: 'system',
-        label: 'System',
-        items: [
-          {
-            id: 'monitoring',
-            label: 'Monitoring',
-            icon: 'monitor_heart',
-            route: '/monitoring'
-          },
-          {
-            id: 'help',
-            label: 'Help & Support',
-            icon: 'help',
-            route: '/help'
-          }
-        ]
       }
     ];
   }
