@@ -75,18 +75,6 @@ export const routes: Routes = [
     title: 'Role Management - KUKA GUI'
   },
   {
-    path: 'workflow-sync-status',
-    loadComponent: () => import('./pages/workflow-sync-status/workflow-sync-status.component').then(m => m.WorkflowSyncStatusComponent),
-    canActivate: [authGuard],
-    title: 'Workflow Sync Status - KUKA GUI'
-  },
-  {
-    path: 'workflow-classify',
-    loadComponent: () => import('./pages/workflow-classify/workflow-classify.component').then(m => m.WorkflowClassifyComponent),
-    canActivate: [authGuard],
-    title: 'Workflow Classification - KUKA GUI'
-  },
-  {
     path: 'create-workflow-template',
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],

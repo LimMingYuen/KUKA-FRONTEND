@@ -55,18 +55,6 @@ export class NavigationService {
             route: '/workflows'
           },
           {
-            id: 'workflow-sync-status',
-            label: 'Workflow Sync Status',
-            icon: 'sync',
-            route: '/workflow-sync-status'
-          },
-          {
-            id: 'workflow-classify',
-            label: 'Workflow Classification',
-            icon: 'category',
-            route: '/workflow-classify'
-          },
-          {
             id: 'workflow-templates',
             label: 'Workflow Templates',
             icon: 'assignment',
