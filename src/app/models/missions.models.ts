@@ -200,135 +200,14 @@ export interface RobotQueryResponse {
 }
 
 // =============================================================================
-// QUEUE MONITORING MODELS
-// =============================================================================
-
-export interface QueueItemStatusDto {
-  queueItemId: number;
-  queueItemCode: string;
-  missionCode: string;
-  status: string;
-  priority: number;
-  primaryMapCode: string;
-  assignedRobotId?: string;
-  enqueuedUtc: string;
-  startedUtc?: string;
-  completedUtc?: string;
-  cancelledUtc?: string;
-  errorMessage?: string;
-  retryCount: number;
-  isOpportunisticJob: boolean;
-  hasNextSegment: boolean;
-}
-
-export interface MissionQueueStatusResponse {
-  missionCode: string;
-  totalSegments: number;
-  queueItems: QueueItemStatusDto[];
-  overallStatus: string;
-  warnings: string[];
-  readyForJobPolling: boolean;
-  estimatedProcessingDelaySeconds?: number;
-}
-
-export interface MapCodeQueueResponse {
-  mapCode: string;
-  queueItems: QueueItemStatusDto[];
-  pendingCount: number;
-  processingCount: number;
-  completedCount: number;
-}
-
-export interface MapCodeStatistics {
-  mapCode: string;
-  pendingCount: number;
-  readyToAssignCount: number;
-  assignedCount: number;
-  executingCount: number;
-  completedCount: number;
-  failedCount: number;
-  cancelledCount: number;
-  totalCount: number;
-}
-
-export interface QueueStatisticsResponse {
-  mapCodeStatistics: MapCodeStatistics[];
-  totalPending: number;
-  totalProcessing: number;
-  totalCompleted: number;
-  totalFailed: number;
-  generatedAt: string;
-}
-
-export interface RobotCurrentJobResponse {
-  robotId: string;
-  hasActiveJob: boolean;
-  currentJob?: QueueItemStatusDto;
-}
-
-export interface CancelQueueItemResponse {
-  success: boolean;
-  message: string;
-  queueItemId: number;
-  cancelledUtc?: string;
-}
-
-// =============================================================================
-// MISSION QUEUE CONTROLLER MODELS
-// =============================================================================
-
-export interface MissionQueueItem {
-  id: number;
-  queueItemCode: string;
-  missionCode: string;
-  status: MissionQueueStatus;
-  priority: number;
-  primaryMapCode: string;
-  assignedRobotId?: string;
-  enqueuedUtc: string;
-  startedUtc?: string;
-  completedUtc?: string;
-  cancelledUtc?: string;
-  errorMessage?: string;
-  retryCount: number;
-  isOpportunisticJob: boolean;
-  nextQueueItemId?: number;
-}
-
-export interface CancelJobRequest {
-  reason?: string;
-}
-
-export interface UpdateStatusRequest {
-  status: MissionQueueStatus;
-}
-
-// =============================================================================
 // ENUMS
 // =============================================================================
-
-export enum MissionQueueStatus {
-  Pending = 'Pending',
-  ReadyToAssign = 'ReadyToAssign',
-  Assigned = 'Assigned',
-  SubmittedToAmr = 'SubmittedToAmr',
-  Executing = 'Executing',
-  Completed = 'Completed',
-  Failed = 'Failed',
-  Cancelled = 'Cancelled'
-}
 
 export enum MissionPriority {
   LOW = 1,
   MEDIUM = 2,
   HIGH = 3,
   CRITICAL = 4
-}
-
-export enum MissionTriggerSource {
-  Direct = 'Direct',
-  Scheduled = 'Scheduled',
-  Opportunistic = 'Opportunistic'
 }
 
 // =============================================================================

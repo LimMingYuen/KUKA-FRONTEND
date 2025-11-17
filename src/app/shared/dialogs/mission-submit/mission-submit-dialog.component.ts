@@ -18,8 +18,7 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { MissionsService } from '../../../services/missions.service';
 import { WorkflowService } from '../../../services/workflow.service';
-import { QueueMonitorService } from '../../../services/queue-monitor.service';
-import { SubmitMissionRequest, MissionPriority, MissionStepData, JobData, MissionsUtils, MissionQueueStatusResponse } from '../../../models/missions.models';
+import { SubmitMissionRequest, MissionPriority, MissionStepData, JobData, MissionsUtils } from '../../../models/missions.models';
 import { WorkflowDisplayData } from '../../../models/workflow.models';
 import { Subject, takeUntil, interval } from 'rxjs';
 
@@ -62,13 +61,11 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   public selectedTab = 0; // 0 = Sync Workflow, 1 = Custom Mission
   public isSubmitting = false;
   public isLoadingWorkflows = false;
-  public isMonitoringQueue = false;
   public isPollingJobs = false;
 
   // Data
   public workflows: WorkflowDisplayData[] = [];
   public submittedMissionCode: string | null = null;
-  public queueStatus: MissionQueueStatusResponse | null = null;
   public jobStatus: JobData | null = null;
 
   // Options
@@ -103,14 +100,12 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
 
   // Cleanup
   private destroy$ = new Subject<void>();
-  private queuePollingSubscription: any;
   private jobPollingSubscription: any;
 
   constructor(
     private fb: FormBuilder,
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
-    private queueMonitorService: QueueMonitorService,
     public dialogRef: MatDialogRef<MissionSubmitDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: MissionSubmitDialogData
   ) {
@@ -373,47 +368,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Start monitoring queue status (before job polling)
-   */
-  startQueueMonitoring(missionCode: string): void {
-    this.isMonitoringQueue = true;
-
-    // Poll queue status every 2 seconds
-    this.queuePollingSubscription = interval(2000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.queueMonitorService.getMissionStatus(missionCode).subscribe({
-          next: (status) => {
-            this.queueStatus = status;
-
-            // Check if ready to start job polling
-            if (status.readyForJobPolling) {
-              this.stopQueueMonitoring();
-              this.startJobPolling(missionCode);
-            }
-          },
-          error: (error) => {
-            console.error('Error monitoring queue status:', error);
-            // If queue endpoint fails, fall back to job polling
-            this.stopQueueMonitoring();
-            this.startJobPolling(missionCode);
-          }
-        });
-      });
-  }
-
-  /**
-   * Stop queue monitoring
-   */
-  stopQueueMonitoring(): void {
-    this.isMonitoringQueue = false;
-    if (this.queuePollingSubscription) {
-      this.queuePollingSubscription.unsubscribe();
-    }
-  }
-
-  /**
-   * Start polling for job status (only after queue processing is complete)
+   * Start polling for job status
    */
   startJobPolling(missionCode: string): void {
     this.isPollingJobs = true;
