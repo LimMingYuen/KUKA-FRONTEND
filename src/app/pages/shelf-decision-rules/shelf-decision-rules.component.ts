@@ -45,7 +45,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   // UI state
   public isLoading = false;
   public isCreating = false;
-  public isUpdating = false;
   public isDeleting = false;
 
   // Cleanup subject
@@ -70,10 +69,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
       if (createAction) {
         createAction.loading = this.isCreating;
       }
-    });
-
-    effect(() => {
-      this.isUpdating = this.shelfDecisionRulesService.isUpdating();
     });
 
     effect(() => {
@@ -112,15 +107,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    */
   onTableAction(event: ActionEvent): void {
     switch (event.action) {
-      case 'view':
-        this.viewRule(event.row);
-        break;
-      case 'edit':
-        this.editRule(event.row);
-        break;
-      case 'toggle-status':
-        this.toggleRuleStatus(event.row);
-        break;
       case 'delete':
         this.deleteRule(event.row);
         break;
@@ -129,9 +115,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
         break;
       case 'create-rule':
         this.openCreateDialog();
-        break;
-      case 'export':
-        this.exportRules();
         break;
       default:
         // Unknown action - ignore silently
@@ -157,34 +140,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    */
   onFilterChange(event: FilterEvent): void {
     // Filtering is handled by the generic table component
-  }
-
-  /**
-   * View rule details
-   */
-  private viewRule(rule: ShelfDecisionRuleDisplayData): void {
-    // TODO: Implement view dialog
-    console.log('View rule:', rule);
-  }
-
-  /**
-   * Edit rule
-   */
-  private editRule(rule: ShelfDecisionRuleDisplayData): void {
-    this.openEditDialog(rule);
-  }
-
-  /**
-   * Toggle rule status
-   */
-  private toggleRuleStatus(rule: ShelfDecisionRuleDisplayData): void {
-    this.shelfDecisionRulesService.toggleRuleStatus(rule.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        error: (error) => {
-          console.error('Error toggling rule status:', error);
-        }
-      });
   }
 
   /**
@@ -231,44 +186,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Open edit dialog
-   */
-  private openEditDialog(rule: ShelfDecisionRuleDisplayData): void {
-    const dialogData: ShelfDecisionRuleDialogData = {
-      mode: 'edit',
-      rule: rule
-    };
-
-    const dialogRef = this.dialog.open(ShelfDecisionRuleDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      disableClose: true,
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.updateRule(rule.id, result);
-      }
-    });
-  }
-
-  /**
-   * Export rules data
-   */
-  private exportRules(): void {
-    this.shelfDecisionRulesService.exportShelfDecisionRules()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (blob) => {
-          this.downloadFile(blob, 'shelf-decision-rules-export.csv');
-        },
-        error: (error) => {
-          console.error('Error exporting rules:', error);
-        }
-      });
-  }
 
   /**
    * Create new rule
@@ -286,35 +203,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Update existing rule
-   */
-  private updateRule(id: number, request: any): void {
-    this.shelfDecisionRulesService.updateShelfDecisionRule(id, request)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          // Rule updated successfully
-        },
-        error: (error) => {
-          console.error('Error updating rule:', error);
-        }
-      });
-  }
-
-  /**
-   * Download file from blob
-   */
-  private downloadFile(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  }
 
   /**
    * Get cell value for table display

@@ -97,33 +97,12 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
 
   actions: [
     {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View rule details'
-    },
-    {
-      action: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      type: 'icon',
-      tooltip: 'Edit rule'
-    },
-    {
-      action: 'toggle-status',
-      label: 'Toggle Status',
-      icon: 'toggle_on',
-      type: 'icon',
-      tooltip: 'Toggle active/inactive status'
-    },
-    {
       action: 'delete',
       label: 'Delete',
       icon: 'delete',
-      type: 'menu-item',
-      tooltip: 'Delete rule',
-      cssClass: 'danger-action'
+      type: 'icon',
+      color: 'warn',
+      tooltip: 'Delete rule'
     }
   ],
 
