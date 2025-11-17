@@ -110,20 +110,10 @@ export class WorkflowsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refresh workflow data
-   */
-  public refresh(): void {
-    this.loadWorkflows();
-  }
-
-  /**
    * Handle table action events
    */
   public onTableAction(event: ActionEvent): void {
     switch (event.action) {
-      case 'refresh':
-        this.refresh();
-        break;
       case 'sync':
         this.syncWorkflows();
         break;

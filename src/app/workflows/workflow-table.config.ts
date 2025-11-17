@@ -128,13 +128,6 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
 
   headerActions: [
     {
-      action: 'refresh',
-      label: 'Refresh',
-      icon: 'refresh',
-      type: 'icon',
-      tooltip: 'Refresh workflows'
-    },
-    {
       action: 'sync',
       label: 'Sync Workflows',
       icon: 'sync',
