@@ -16,9 +16,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { MissionHistoryService } from '../../services/mission-history.service';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
+import { MissionHistoryRequest, UpdateMissionHistoryRequest } from '../../models/mission-history.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 
 @Component({
@@ -50,12 +52,20 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Store job execution state for each workflow/mission
   public workflowJobs: Map<number, {
     missionCode: string;
+    requestId?: string;
+    workflowName?: string;
+    workflowId?: number;
+    savedMissionId?: number;
     jobData?: JobData;
     robotData?: RobotData;
   }> = new Map();
 
   public customMissionJobs: Map<number, {
     missionCode: string;
+    requestId?: string;
+    workflowName?: string;
+    workflowId?: number;
+    savedMissionId?: number;
     jobData?: JobData;
     robotData?: RobotData;
   }> = new Map();
@@ -76,6 +86,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
     private customMissionsService: SavedCustomMissionsService,
+    private missionHistoryService: MissionHistoryService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
@@ -167,7 +178,10 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
           // Initialize job tracking for this workflow
           this.workflowJobs.set(id, {
-            missionCode: request.missionCode
+            missionCode: request.missionCode,
+            requestId: request.requestId,
+            workflowName: workflow.name,
+            workflowId: workflow.id
           });
 
           // Start polling job status
@@ -202,10 +216,14 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           // If response contains missionCode, start polling
           if (response && (response as any).missionCode) {
             const missionCode = (response as any).missionCode;
+            const requestId = (response as any).requestId || this.generateRequestId();
 
             // Initialize job tracking for this custom mission
             this.customMissionJobs.set(id, {
-              missionCode: missionCode
+              missionCode: missionCode,
+              requestId: requestId,
+              workflowName: mission.missionName,
+              savedMissionId: id
             });
 
             // Start polling job status
@@ -259,6 +277,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
               // Stop polling if job is in terminal state
               if (MissionsUtils.isJobTerminal(jobData.status)) {
+                // Create mission history record with completion data
+                this.createMissionHistoryOnCompletion(id, missionCode, jobData, type);
                 this.stopJobPolling(missionCode);
               }
             }
@@ -309,6 +329,70 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       subscription.unsubscribe();
       this.pollingSubscriptions.delete(missionCode);
     }
+  }
+
+  /**
+   * Create mission history record when mission completes
+   */
+  private createMissionHistoryOnCompletion(
+    id: number,
+    missionCode: string,
+    jobData: JobData,
+    type: 'workflow' | 'custom'
+  ): void {
+    // Get job metadata from tracking map
+    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+    const jobInfo = jobsMap.get(id);
+
+    if (!jobInfo) {
+      console.error(`No job info found for ${type} ID ${id}`);
+      return;
+    }
+
+    // Only create history for completed missions (not failed/cancelled without execution)
+    const finalStatus = MissionsUtils.getJobStatusText(jobData.status);
+
+    const historyRequest: MissionHistoryRequest = {
+      missionCode: missionCode,
+      requestId: jobInfo.requestId || `request_${missionCode}`,
+      workflowName: jobInfo.workflowName || 'Unknown',
+      status: finalStatus,
+      workflowId: jobInfo.workflowId,
+      savedMissionId: jobInfo.savedMissionId,
+      assignedRobotId: jobData.robotId,
+      completedDate: new Date().toISOString(),
+      // Use job creation time or current time as submitted time
+      submittedToAmrDate: jobData.createTime || new Date().toISOString(),
+      // For completed jobs, estimate processed date from job data
+      processedDate: this.estimateProcessedDate(jobData)
+    };
+
+    this.missionHistoryService.addMissionHistory(historyRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log(`✓ Mission history created: ${missionCode} - ${finalStatus}`);
+        },
+        error: (error) => {
+          console.error(`✗ Failed to create mission history for ${missionCode}:`, error);
+        }
+      });
+  }
+
+  /**
+   * Estimate when the job started processing (for duration calculation)
+   */
+  private estimateProcessedDate(jobData: JobData): string | undefined {
+    // If job has createTime and spendTime, calculate when it started
+    if (jobData.createTime && jobData.spendTime) {
+      const createDate = new Date(jobData.createTime);
+      const completedDate = new Date();
+      const processedDate = new Date(completedDate.getTime() - (jobData.spendTime * 1000));
+      return processedDate.toISOString();
+    }
+
+    // Otherwise use createTime as a fallback
+    return jobData.createTime || undefined;
   }
 
   /**

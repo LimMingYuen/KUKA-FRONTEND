@@ -25,6 +25,30 @@ export interface MissionHistoryRequest {
   requestId: string;
   workflowName: string;
   status: string;
+
+  // Additional fields for analytics and duration tracking
+  workflowId?: number;
+  savedMissionId?: number;
+  triggerSource?: string;
+  missionType?: string;
+  assignedRobotId?: string;
+  processedDate?: string;
+  submittedToAmrDate?: string;
+  completedDate?: string;
+  errorMessage?: string;
+  createdBy?: string;
+}
+
+/**
+ * Update Mission History Request DTO
+ */
+export interface UpdateMissionHistoryRequest {
+  status?: string;
+  assignedRobotId?: string;
+  processedDate?: string;
+  submittedToAmrDate?: string;
+  completedDate?: string;
+  errorMessage?: string;
 }
 
 /**

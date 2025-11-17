@@ -351,12 +351,86 @@
 
           <mat-divider></mat-divider>
 
-          <div *ngIf="isPollingJobs" class="polling-status">
+          <!-- Queue Status Monitoring (Phase 1: Waiting for queue processing) -->
+          <div *ngIf="isMonitoringQueue && queueStatus" class="queue-status">
+            <div class="status-header">
+              <mat-icon color="primary">hourglass_empty</mat-icon>
+              <h4>Queue Status</h4>
+            </div>
+
+            <!-- Queue Status Chips -->
+            <div class="queue-progress">
+              <mat-chip-set aria-label="Queue progress">
+                <mat-chip
+                  [highlighted]="queueStatus.overallStatus === 'Pending'"
+                  [color]="queueStatus.overallStatus === 'Pending' ? 'primary' : 'accent'">
+                  <mat-icon>pending</mat-icon> Queued
+                </mat-chip>
+                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                <mat-chip
+                  [highlighted]="queueStatus.overallStatus === 'Assigned'"
+                  [color]="queueStatus.overallStatus === 'Assigned' ? 'primary' : 'accent'">
+                  <mat-icon>robot</mat-icon> Assigning Robot
+                </mat-chip>
+                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                <mat-chip
+                  [highlighted]="queueStatus.overallStatus === 'SubmittedToAmr'"
+                  [color]="queueStatus.overallStatus === 'SubmittedToAmr' ? 'primary' : 'accent'">
+                  <mat-icon>send</mat-icon> Submitting
+                </mat-chip>
+                <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                <mat-chip
+                  [highlighted]="queueStatus.overallStatus === 'Executing'"
+                  [color]="queueStatus.overallStatus === 'Executing' ? 'primary' : 'accent'">
+                  <mat-icon>play_arrow</mat-icon> Executing
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <!-- Current Status Info -->
+            <div class="info-row">
+              <span class="label">Current Status:</span>
+              <mat-chip [color]="'primary'" selected>
+                {{ queueStatus.overallStatus }}
+              </mat-chip>
+            </div>
+
+            <!-- Estimated Wait Time -->
+            <div class="info-row" *ngIf="queueStatus.estimatedProcessingDelaySeconds">
+              <span class="label">Estimated Wait:</span>
+              <span class="value">~{{ queueStatus.estimatedProcessingDelaySeconds }} seconds</span>
+            </div>
+
+            <!-- Queue Segments (for multi-map missions) -->
+            <div class="info-row" *ngIf="queueStatus.totalSegments > 1">
+              <span class="label">Queue Segments:</span>
+              <span class="value">{{ queueStatus.totalSegments }} segments</span>
+            </div>
+
+            <!-- Warnings -->
+            <div *ngIf="queueStatus.warnings && queueStatus.warnings.length > 0" class="warnings-section">
+              <mat-divider></mat-divider>
+              <div class="warning-item" *ngFor="let warning of queueStatus.warnings">
+                <mat-icon color="warn">warning</mat-icon>
+                <span>{{ warning }}</span>
+              </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="polling-status">
+              <mat-spinner diameter="24"></mat-spinner>
+              <span>Waiting for queue processing...</span>
+            </div>
+          </div>
+
+          <!-- Job Status Polling (Phase 2: After queue processing) -->
+          <div *ngIf="isPollingJobs && !isMonitoringQueue" class="polling-status">
             <mat-spinner diameter="24"></mat-spinner>
             <span>Polling job status...</span>
           </div>
 
-          <div *ngIf="jobStatus && !isPollingJobs" class="job-details">
+          <!-- Job Details (Phase 3: Job is running/completed) -->
+          <div *ngIf="jobStatus && !isPollingJobs && !isMonitoringQueue" class="job-details">
             <div class="info-row">
               <span class="label">Status:</span>
               <mat-chip [color]="getStatusColor(jobStatus.status)" selected>

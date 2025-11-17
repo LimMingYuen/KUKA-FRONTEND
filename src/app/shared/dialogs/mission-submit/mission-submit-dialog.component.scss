@@ -229,6 +229,93 @@ mat-dialog-content {
         .job-details {
           margin-top: 16px;
         }
+
+        // Queue Status Styles
+        .queue-status {
+          margin-top: 16px;
+
+          .status-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+
+            mat-icon {
+              font-size: 28px;
+              width: 28px;
+              height: 28px;
+            }
+
+            h4 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 500;
+              color: rgba(0, 0, 0, 0.87);
+            }
+          }
+
+          .queue-progress {
+            margin: 20px 0;
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+
+            mat-chip-set {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-wrap: wrap;
+              gap: 8px;
+
+              mat-chip {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 8px 12px;
+                min-height: 36px;
+                font-size: 13px;
+
+                mat-icon {
+                  font-size: 18px;
+                  width: 18px;
+                  height: 18px;
+                }
+              }
+
+              .arrow-icon {
+                color: rgba(0, 0, 0, 0.3);
+                font-size: 20px;
+                width: 20px;
+                height: 20px;
+              }
+            }
+          }
+
+          .warnings-section {
+            margin-top: 16px;
+            padding-top: 16px;
+
+            .warning-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 12px;
+              margin: 8px 0;
+              background-color: #fff3e0;
+              border-left: 4px solid #ff9800;
+              border-radius: 4px;
+              font-size: 14px;
+              color: rgba(0, 0, 0, 0.87);
+
+              mat-icon {
+                flex-shrink: 0;
+                font-size: 24px;
+                width: 24px;
+                height: 24px;
+              }
+            }
+          }
+        }
       }
     }
   }

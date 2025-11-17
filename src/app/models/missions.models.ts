@@ -184,6 +184,7 @@ export interface RobotData {
   status: string;
   batteryLevel?: number;
   currentLocation?: string;
+  nodeCode?: string;
   currentMission?: {
     missionCode: string;
     progress: number;
@@ -225,6 +226,9 @@ export interface MissionQueueStatusResponse {
   totalSegments: number;
   queueItems: QueueItemStatusDto[];
   overallStatus: string;
+  warnings: string[];
+  readyForJobPolling: boolean;
+  estimatedProcessingDelaySeconds?: number;
 }
 
 export interface MapCodeQueueResponse {

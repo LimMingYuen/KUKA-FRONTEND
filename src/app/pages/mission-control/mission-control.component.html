@@ -87,6 +87,11 @@
                   <span class="value highlight">{{ job.robotData?.currentLocation }}</span>
                 </div>
 
+                <div class="info-row" *ngIf="job.robotData?.nodeCode">
+                  <span class="label">Current Node Code:</span>
+                  <span class="value highlight">{{ job.robotData?.nodeCode }}</span>
+                </div>
+
                 <div class="info-row" *ngIf="job.jobData?.mapCode">
                   <span class="label">Map Code:</span>
                   <span class="value">{{ job.jobData?.mapCode }}</span>
@@ -211,6 +216,11 @@
                 <div class="info-row" *ngIf="job.robotData?.currentLocation">
                   <span class="label">Current Node:</span>
                   <span class="value highlight">{{ job.robotData?.currentLocation }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="job.robotData?.nodeCode">
+                  <span class="label">Current Node Code:</span>
+                  <span class="value highlight">{{ job.robotData?.nodeCode }}</span>
                 </div>
 
                 <div class="info-row" *ngIf="job.jobData?.mapCode">

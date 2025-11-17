@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   MissionHistorySummaryDto,
   MissionHistoryRequest,
+  UpdateMissionHistoryRequest,
   MissionHistoryCountResponse,
   MissionHistoryDisplayData,
   transformMissionHistoryForDisplay
@@ -91,6 +92,26 @@ export class MissionHistoryService {
       }),
       catchError(error => {
         this.handleError(error, 'Failed to add mission history record');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Update existing mission history record
+   */
+  updateMissionHistory(missionCode: string, request: UpdateMissionHistoryRequest): Observable<MissionHistoryDisplayData> {
+    return this.http.put<MissionHistorySummaryDto>(
+      `${this.API_URL}${this.MISSION_HISTORY_ENDPOINT}/${missionCode}`,
+      request,
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(mission => transformMissionHistoryForDisplay([mission])[0]),
+      tap(() => {
+        console.log(`Mission history updated for ${missionCode}`);
+      }),
+      catchError(error => {
+        console.error(`Failed to update mission history for ${missionCode}:`, error);
         return throwError(() => error);
       })
     );
