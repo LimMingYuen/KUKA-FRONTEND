@@ -45,6 +45,7 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   // UI state
   public isLoading = false;
   public isCreating = false;
+  public isUpdating = false;
   public isDeleting = false;
 
   // Cleanup subject
@@ -69,6 +70,10 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
       if (createAction) {
         createAction.loading = this.isCreating;
       }
+    });
+
+    effect(() => {
+      this.isUpdating = this.shelfDecisionRulesService.isUpdating();
     });
 
     effect(() => {
@@ -107,6 +112,12 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    */
   onTableAction(event: ActionEvent): void {
     switch (event.action) {
+      case 'view':
+        this.viewRule(event.row);
+        break;
+      case 'edit':
+        this.editRule(event.row);
+        break;
       case 'delete':
         this.deleteRule(event.row);
         break;
@@ -140,6 +151,30 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    */
   onFilterChange(event: FilterEvent): void {
     // Filtering is handled by the generic table component
+  }
+
+  /**
+   * View rule details
+   */
+  private viewRule(rule: ShelfDecisionRuleDisplayData): void {
+    const dialogData: ShelfDecisionRuleDialogData = {
+      mode: 'view',
+      rule: rule
+    };
+
+    this.dialog.open(ShelfDecisionRuleDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: dialogData
+    });
+  }
+
+  /**
+   * Edit rule
+   */
+  private editRule(rule: ShelfDecisionRuleDisplayData): void {
+    this.openEditDialog(rule);
   }
 
   /**
@@ -203,6 +238,44 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Open edit dialog
+   */
+  private openEditDialog(rule: ShelfDecisionRuleDisplayData): void {
+    const dialogData: ShelfDecisionRuleDialogData = {
+      mode: 'edit',
+      rule: rule
+    };
+
+    const dialogRef = this.dialog.open(ShelfDecisionRuleDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.updateRule(rule.id, result);
+      }
+    });
+  }
+
+  /**
+   * Update existing rule
+   */
+  private updateRule(id: number, request: any): void {
+    this.shelfDecisionRulesService.updateShelfDecisionRule(id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Rule updated successfully
+        },
+        error: (error) => {
+          console.error('Error updating rule:', error);
+        }
+      });
+  }
 
   /**
    * Get cell value for table display

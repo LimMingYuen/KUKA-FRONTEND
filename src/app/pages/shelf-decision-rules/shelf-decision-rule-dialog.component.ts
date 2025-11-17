@@ -14,7 +14,7 @@ import {
 } from '../../models/shelf-decision-rules.models';
 
 export interface ShelfDecisionRuleDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   rule?: ShelfDecisionRuleDisplayData;
 }
 
@@ -33,8 +33,8 @@ export interface ShelfDecisionRuleDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Shelf Decision Rule' : 'Edit Shelf Decision Rule' }}
+      <mat-icon>{{ getDialogIcon() }}</mat-icon>
+      {{ getDialogTitle() }}
     </h2>
 
     <mat-dialog-content>
@@ -93,10 +93,10 @@ export interface ShelfDecisionRuleDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!ruleForm.valid">
+      <button *ngIf="data.mode !== 'view'" mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!ruleForm.valid">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -163,8 +163,11 @@ export class ShelfDecisionRuleDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    if (this.data.mode === 'edit' && this.data.rule) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.rule) {
       this.populateForm(this.data.rule);
+    }
+    if (this.data.mode === 'view') {
+      this.ruleForm.disable();
     }
   }
 
@@ -201,5 +204,31 @@ export class ShelfDecisionRuleDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  getDialogIcon(): string {
+    switch (this.data.mode) {
+      case 'create':
+        return 'add';
+      case 'edit':
+        return 'edit';
+      case 'view':
+        return 'visibility';
+      default:
+        return 'info';
+    }
+  }
+
+  getDialogTitle(): string {
+    switch (this.data.mode) {
+      case 'create':
+        return 'Create Shelf Decision Rule';
+      case 'edit':
+        return 'Edit Shelf Decision Rule';
+      case 'view':
+        return 'View Shelf Decision Rule';
+      default:
+        return 'Shelf Decision Rule';
+    }
   }
 }
