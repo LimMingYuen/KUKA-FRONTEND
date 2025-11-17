@@ -64,19 +64,25 @@ export const WORKFLOW_TEMPLATE_TABLE_CONFIG: TableConfig<SavedCustomMissionsDisp
       action: 'view',
       label: 'View Details',
       icon: 'visibility',
-      color: 'primary'
+      color: 'primary',
+      type: 'icon',
+      tooltip: 'View template details'
     },
     {
       action: 'edit',
       label: 'Edit',
       icon: 'edit',
-      color: 'primary'
+      color: 'primary',
+      type: 'icon',
+      tooltip: 'Edit template'
     },
     {
       action: 'delete',
       label: 'Delete',
       icon: 'delete',
-      color: 'warn'
+      color: 'warn',
+      type: 'icon',
+      tooltip: 'Delete template'
     }
   ],
   headerActions: [

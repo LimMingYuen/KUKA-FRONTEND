@@ -34,7 +34,7 @@ import { createQrCodeUniqueIds } from '../../models/qr-code.models';
 import { MissionFlowchartComponent, MissionStepFlowData } from '../../shared/components/mission-flowchart/mission-flowchart.component';
 
 export interface WorkflowTemplateDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   template?: SavedCustomMissionsDisplayData;
 }
 
@@ -61,8 +61,8 @@ export interface WorkflowTemplateDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add_task' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Workflow Template' : 'Edit Workflow Template' }}
+      <mat-icon>{{ data.mode === 'create' ? 'add_task' : (data.mode === 'view' ? 'visibility' : 'edit') }}</mat-icon>
+      {{ data.mode === 'create' ? 'Create Workflow Template' : (data.mode === 'view' ? 'View Workflow Template' : 'Edit Workflow Template') }}
     </h2>
 
     <mat-dialog-content>
@@ -205,7 +205,7 @@ export interface WorkflowTemplateDialogData {
                   Flowchart
                 </mat-button-toggle>
               </mat-button-toggle-group>
-              <button mat-mini-fab color="primary" type="button" (click)="addMissionStep()">
+              <button *ngIf="data.mode !== 'view'" mat-mini-fab color="primary" type="button" (click)="addMissionStep()">
                 <mat-icon>add</mat-icon>
               </button>
             </div>
@@ -220,7 +220,7 @@ export interface WorkflowTemplateDialogData {
             >
               <mat-card-header>
                 <mat-card-title>Step {{ i + 1 }}</mat-card-title>
-                <div class="step-actions">
+                <div class="step-actions" *ngIf="data.mode !== 'view'">
                   <button mat-icon-button (click)="moveStepUp(i)" [disabled]="i === 0">
                     <mat-icon>arrow_upward</mat-icon>
                   </button>
@@ -317,10 +317,11 @@ export interface WorkflowTemplateDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
       <button
+        *ngIf="data.mode !== 'view'"
         mat-raised-button
         color="primary"
         (click)="onSubmit()"
@@ -558,9 +559,15 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     this.initializeForm();
     this.loadConfigurationData();
 
-    if (this.data.mode === 'edit' && this.data.template) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.template) {
       // Wait for configuration to load before populating form
-      setTimeout(() => this.populateForm(this.data.template!), 500);
+      setTimeout(() => {
+        this.populateForm(this.data.template!);
+        // Disable all form controls if in view mode
+        if (this.data.mode === 'view') {
+          this.templateForm.disable();
+        }
+      }, 500);
     }
   }
 

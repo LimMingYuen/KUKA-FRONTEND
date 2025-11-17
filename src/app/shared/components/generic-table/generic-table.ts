@@ -524,4 +524,16 @@ export class GenericTableComponent<T = any> implements OnInit, AfterViewInit, On
     const idProperty = 'id' as keyof T;
     return (item as any)[idProperty] || index;
   }
+
+  /**
+   * Check if there are any menu-item type actions for a row
+   */
+  public hasMenuActions(row: T): boolean {
+    if (!this.config.actions || this.config.actions.length === 0) {
+      return false;
+    }
+    return this.config.actions.some(
+      action => this.isActionVisible(action, row) && action.type === 'menu-item'
+    );
+  }
 }

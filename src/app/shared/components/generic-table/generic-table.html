@@ -201,7 +201,7 @@
             <button mat-icon-button
                     [matMenuTriggerFor]="actionMenu"
                     matTooltip="More actions"
-                    *ngIf="config.actions && config.actions.length > 2">
+                    *ngIf="hasMenuActions(row)">
               <mat-icon>more_vert</mat-icon>
             </button>
 
