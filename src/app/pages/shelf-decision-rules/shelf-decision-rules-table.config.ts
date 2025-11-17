@@ -97,6 +97,20 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
 
   actions: [
     {
+      action: 'view',
+      label: 'View',
+      icon: 'visibility',
+      type: 'icon',
+      tooltip: 'View rule details'
+    },
+    {
+      action: 'edit',
+      label: 'Edit',
+      icon: 'edit',
+      type: 'icon',
+      tooltip: 'Edit rule'
+    },
+    {
       action: 'delete',
       label: 'Delete',
       icon: 'delete',
