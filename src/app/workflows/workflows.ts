@@ -110,43 +110,12 @@ export class WorkflowsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refresh workflow data
-   */
-  public refresh(): void {
-    this.loadWorkflows();
-  }
-
-  /**
    * Handle table action events
    */
   public onTableAction(event: ActionEvent): void {
     switch (event.action) {
-      case 'refresh':
-        this.refresh();
-        break;
       case 'sync':
         this.syncWorkflows();
-        break;
-      case 'view':
-        console.log('View workflow:', event.row);
-        break;
-      case 'edit':
-        console.log('Edit workflow:', event.row);
-        break;
-      case 'start':
-        console.log('Start workflow:', event.row);
-        break;
-      case 'stop':
-        console.log('Stop workflow:', event.row);
-        break;
-      case 'duplicate':
-        console.log('Duplicate workflow:', event.row);
-        break;
-      case 'export':
-        console.log('Export workflow:', event.row);
-        break;
-      case 'delete':
-        console.log('Delete workflow:', event.row);
         break;
       default:
         console.log('Unknown action:', event.action, event.row);
