@@ -9,12 +9,6 @@ export const routes: Routes = [
     title: 'Login - KUKA GUI'
   },
   {
-    path: 'dashboard',
-    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent),
-    canActivate: [authGuard],
-    title: 'Dashboard - KUKA GUI'
-  },
-  {
     path: 'workflows',
     loadComponent: () => import('./workflows/workflows').then(m => m.WorkflowsComponent),
     canActivate: [authGuard],
@@ -106,11 +100,11 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/workflows',
     pathMatch: 'full'
   },
   {
     path: '**',
-    redirectTo: '/dashboard'
+    redirectTo: '/workflows'
   }
 ];

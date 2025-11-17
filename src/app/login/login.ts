@@ -52,7 +52,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Redirect if already authenticated
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/workflows']);
     }
 
     // Check for return URL from query params
@@ -80,8 +80,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.login(credentials).subscribe({
         next: (success) => {
           if (success) {
-            // Get return URL from query params or default to dashboard
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+            // Get return URL from query params or default to workflows
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/workflows';
             this.router.navigate([returnUrl]);
           }
         }
