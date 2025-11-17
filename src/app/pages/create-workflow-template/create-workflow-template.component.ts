@@ -187,9 +187,9 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    * View template details
    */
   private viewTemplate(template: SavedCustomMissionsDisplayData): void {
-    // Open read-only dialog or navigate to detail view
+    // Open read-only dialog
     const dialogData: WorkflowTemplateDialogData = {
-      mode: 'edit',
+      mode: 'view',
       template: template
     };
 
