@@ -79,25 +79,6 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
     }
   ],
 
-  actions: [
-    {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View workflow details',
-      color: 'primary'
-    },
-    {
-      action: 'trigger',
-      label: 'Trigger',
-      icon: 'play_arrow',
-      type: 'icon',
-      tooltip: 'Trigger workflow mission',
-      color: 'accent'
-    }
-  ],
-
   headerActions: [
     {
       action: 'sync',

@@ -117,31 +117,9 @@ export class WorkflowsComponent implements OnInit, OnDestroy {
       case 'sync':
         this.syncWorkflows();
         break;
-      case 'view':
-        this.viewWorkflow(event.row);
-        break;
-      case 'trigger':
-        this.triggerWorkflow(event.row);
-        break;
       default:
         console.log('Unknown action:', event.action, event.row);
     }
-  }
-
-  /**
-   * View workflow details
-   */
-  private viewWorkflow(workflow: WorkflowDisplayData): void {
-    // TODO: Implement when API endpoint is available
-    console.log('View workflow details:', workflow);
-  }
-
-  /**
-   * Trigger workflow mission
-   */
-  private triggerWorkflow(workflow: WorkflowDisplayData): void {
-    // TODO: Implement workflow trigger functionality
-    console.log('Trigger workflow:', workflow);
   }
 
   /**
