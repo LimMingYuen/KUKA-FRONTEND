@@ -447,21 +447,63 @@
 }
 
 // Custom success color styling (green) for active job status
-::ng-deep .mat-mdc-standard-chip.mat-success,
-::ng-deep mat-chip[color="success"],
-::ng-deep .mdc-evolution-chip.mat-success {
-  --mdc-chip-elevated-container-color: #4caf50 !important;
-  --mdc-chip-label-text-color: white !important;
-  --mat-chip-selected-label-text-color: white !important;
-  background-color: #4caf50 !important;
-  color: white !important;
+::ng-deep .job-status-panel {
+  // Target chips with color="success" attribute
+  mat-chip[color="success"],
+  mat-chip[color="success"][selected] {
+    // MDC Chip CSS Custom Properties (Material Design 3)
+    --mdc-chip-elevated-container-color: #4caf50 !important;
+    --mdc-chip-flat-selected-container-color: #4caf50 !important;
+    --mdc-chip-label-text-color: white !important;
+    --mat-chip-selected-label-text-color: white !important;
+    --mdc-chip-with-icon-icon-color: white !important;
 
-  .mdc-evolution-chip__action {
+    // Direct background and text color
+    background-color: #4caf50 !important;
     color: white !important;
+
+    // Style all internal MDC chip layers
+    .mdc-evolution-chip__cell,
+    .mdc-evolution-chip__action,
+    .mdc-evolution-chip__graphic,
+    .mdc-evolution-chip__text-label {
+      background-color: #4caf50 !important;
+      color: white !important;
+    }
+
+    // Primary action layer (clickable area)
+    .mdc-evolution-chip__action--primary {
+      background-color: #4caf50 !important;
+
+      &::before,
+      &::after {
+        background-color: #4caf50 !important;
+      }
+    }
+
+    // Icon styling
+    mat-icon,
+    .mat-icon {
+      color: white !important;
+    }
+
+    // Ripple overlay
+    .mat-mdc-chip-ripple,
+    .mdc-evolution-chip__ripple {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+    }
   }
+}
 
-  mat-icon {
-    color: white !important;
+// Global fallback for any success chips
+::ng-deep mat-chip[color="success"] {
+  --mdc-chip-elevated-container-color: #4caf50 !important;
+  --mdc-chip-flat-selected-container-color: #4caf50 !important;
+  --mdc-chip-label-text-color: white !important;
+  background-color: #4caf50 !important;
+
+  .mdc-evolution-chip__action--primary {
+    background-color: #4caf50 !important;
   }
 }
 
