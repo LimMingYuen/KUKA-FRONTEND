@@ -1,0 +1,76 @@
+<h2 mat-dialog-title>
+  <mat-icon>filter_list</mat-icon>
+  Select Workflows to Display
+</h2>
+
+<mat-dialog-content>
+  <!-- Search Box -->
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search workflows</mat-label>
+    <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" placeholder="Search by name or code...">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <!-- Selection Info & Actions -->
+  <div class="selection-actions">
+    <span class="selection-count">{{ selectedCount }} of {{ totalWorkflows }} selected</span>
+    <div class="action-buttons">
+      <button mat-button color="primary" (click)="selectAll()">
+        <mat-icon>check_box</mat-icon>
+        Select All
+      </button>
+      <button mat-button (click)="deselectAll()">
+        <mat-icon>check_box_outline_blank</mat-icon>
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Workflows List by Zone -->
+  <div class="workflows-list">
+    <mat-accordion multi>
+      <mat-expansion-panel *ngFor="let zone of filteredWorkflowsByZone | keyvalue" [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-checkbox
+              [checked]="isZoneAllSelected(zone.key)"
+              [indeterminate]="isZoneIndeterminate(zone.key)"
+              (change)="toggleZone(zone.key)"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+            <span class="zone-name">{{ zone.key }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ zone.value.length }} workflow{{ zone.value.length !== 1 ? 's' : '' }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="workflow-items">
+          <div *ngFor="let workflow of zone.value" class="workflow-item">
+            <mat-checkbox
+              [checked]="isSelected(workflow.id)"
+              (change)="toggleWorkflow(workflow.id)">
+              {{ workflow.name }}
+            </mat-checkbox>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredWorkflowsByZone.size === 0" class="empty-state">
+      <mat-icon>search_off</mat-icon>
+      <p>No workflows match your search</p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onApply()">
+    <mat-icon>check</mat-icon>
+    Apply ({{ selectedCount }})
+  </button>
+</mat-dialog-actions>

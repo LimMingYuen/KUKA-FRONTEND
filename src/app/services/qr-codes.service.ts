@@ -7,6 +7,7 @@ import {
   QrCodeSummaryDto,
   QrCodeSyncResultDto,
   QrCodeDisplayData,
+  QrCodeWithUuidDto,
   transformQrCodesForDisplay
 } from '../models/qr-code.models';
 
@@ -69,6 +70,21 @@ export class QrCodesService {
       catchError(error => {
         this.isLoading.set(false);
         this.handleError(error, 'Failed to load QR codes');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Get all QR codes with UUID for zone mapping
+   */
+  getQrCodesWithUuid(): Observable<QrCodeWithUuidDto[]> {
+    return this.http.get<QrCodeWithUuidDto[]>(
+      `${this.API_URL}${this.QR_CODES_ENDPOINT}/with-uuid`,
+      { headers: this.createHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.handleError(error, 'Failed to load QR codes with UUID');
         return throwError(() => error);
       })
     );

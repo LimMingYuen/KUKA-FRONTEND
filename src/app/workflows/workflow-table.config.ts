@@ -15,15 +15,6 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      headerClass: 'id-header',
-      cellClass: 'id-cell'
-    },
-    {
       key: 'name',
       header: 'Name',
       sortable: true,
@@ -114,7 +105,7 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
   },
 
   defaultSort: {
-    column: 'id',
+    column: 'name',
     direction: 'asc'
   },
 

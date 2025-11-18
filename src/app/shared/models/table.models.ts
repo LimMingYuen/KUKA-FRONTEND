@@ -193,6 +193,8 @@ export interface TableConfig<T> {
     column: keyof T;
     direction: 'asc' | 'desc';
   };
+  /** Whether to show row numbers column (enabled by default) */
+  showRowNumbers?: boolean;
 }
 
 /**
@@ -221,5 +223,6 @@ export const DEFAULT_TABLE_CONFIG: Partial<TableConfig<any>> = {
   filter: DEFAULT_FILTER_CONFIG,
   bordered: true,
   striped: true,
-  hoverable: true
+  hoverable: true,
+  showRowNumbers: true
 };

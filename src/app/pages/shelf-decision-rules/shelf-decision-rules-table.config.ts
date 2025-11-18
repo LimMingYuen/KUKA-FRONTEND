@@ -15,15 +15,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      headerClass: 'id-header',
-      cellClass: 'id-cell'
-    },
-    {
       key: 'displayName',
       header: 'Display Name',
       sortable: true,

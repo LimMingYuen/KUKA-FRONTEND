@@ -1,0 +1,76 @@
+<h2 mat-dialog-title>
+  <mat-icon>filter_list</mat-icon>
+  Select Custom Missions to Display
+</h2>
+
+<mat-dialog-content>
+  <!-- Search Box -->
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search missions</mat-label>
+    <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" placeholder="Search by name...">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <!-- Selection Info & Actions -->
+  <div class="selection-actions">
+    <span class="selection-count">{{ selectedCount }} of {{ totalMissions }} selected</span>
+    <div class="action-buttons">
+      <button mat-button color="primary" (click)="selectAll()">
+        <mat-icon>check_box</mat-icon>
+        Select All
+      </button>
+      <button mat-button (click)="deselectAll()">
+        <mat-icon>check_box_outline_blank</mat-icon>
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Missions List by Zone -->
+  <div class="missions-list">
+    <mat-accordion multi>
+      <mat-expansion-panel *ngFor="let zone of filteredMissionsByZone | keyvalue" [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-checkbox
+              [checked]="isZoneAllSelected(zone.key)"
+              [indeterminate]="isZoneIndeterminate(zone.key)"
+              (change)="toggleZone(zone.key)"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+            <span class="zone-name">{{ zone.key }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ zone.value.length }} mission{{ zone.value.length !== 1 ? 's' : '' }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="mission-items">
+          <div *ngFor="let mission of zone.value" class="mission-item">
+            <mat-checkbox
+              [checked]="isSelected(mission.id)"
+              (change)="toggleMission(mission.id)">
+              {{ mission.missionName }}
+            </mat-checkbox>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredMissionsByZone.size === 0" class="empty-state">
+      <mat-icon>search_off</mat-icon>
+      <p>No missions match your search</p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onApply()">
+    <mat-icon>check</mat-icon>
+    Apply ({{ selectedCount }})
+  </button>
+</mat-dialog-actions>

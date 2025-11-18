@@ -5,12 +5,6 @@ export const WORKFLOW_TEMPLATE_TABLE_CONFIG: TableConfig<SavedCustomMissionsDisp
   title: 'Workflow Templates',
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: false
-    },
-    {
       key: 'missionName',
       header: 'Template Name',
       sortable: true,

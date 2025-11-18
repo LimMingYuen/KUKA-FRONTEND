@@ -21,12 +21,20 @@ import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
 import { MissionHistoryService } from '../../services/mission-history.service';
+import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.service';
+import { MapZonesService } from '../../services/map-zones.service';
+import { QrCodesService } from '../../services/qr-codes.service';
 import { WorkflowDisplayData } from '../../models/workflow.models';
-import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
+import { SavedCustomMissionsDisplayData, MissionStepData } from '../../models/saved-custom-missions.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
 import { MissionHistoryRequest, UpdateMissionHistoryRequest } from '../../models/mission-history.models';
+import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
+import { MapZoneWithNodesDto } from '../../models/map-zone.models';
+import { QrCodeWithUuidDto } from '../../models/qr-code.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
+import { SelectWorkflowsDialogComponent, SelectWorkflowsDialogData, SelectWorkflowsDialogResult } from '../../shared/dialogs/select-workflows-dialog/select-workflows-dialog.component';
+import { SelectCustomMissionsDialogComponent, SelectCustomMissionsDialogData, SelectCustomMissionsDialogResult } from '../../shared/dialogs/select-custom-missions-dialog/select-custom-missions-dialog.component';
 
 @Component({
   selector: 'app-mission-control',
@@ -57,6 +65,21 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Data
   public workflows: WorkflowDisplayData[] = [];
   public customMissions: SavedCustomMissionsDisplayData[] = [];
+  public zoneMappings: WorkflowZoneMapping[] = [];
+
+  // Grouped workflows by zone
+  public workflowsByZone: Map<string, WorkflowDisplayData[]> = new Map();
+  public filteredWorkflowsByZone: Map<string, WorkflowDisplayData[]> = new Map();
+  public selectedWorkflowIds: Set<number> = new Set();
+  public expandedZones: Set<string> = new Set();
+
+  // Grouped custom missions by zone
+  public mapZonesWithNodes: MapZoneWithNodesDto[] = [];
+  public qrCodesWithUuid: QrCodeWithUuidDto[] = [];
+  public customMissionsByZone: Map<string, SavedCustomMissionsDisplayData[]> = new Map();
+  public filteredCustomMissionsByZone: Map<string, SavedCustomMissionsDisplayData[]> = new Map();
+  public selectedCustomMissionIds: Set<number> = new Set();
+  public expandedCustomZones: Set<string> = new Set();
 
   // Store job execution state for each workflow/mission
   public workflowJobs: Map<number, {
@@ -82,6 +105,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Loading states
   public isLoadingWorkflows = false;
   public isLoadingCustomMissions = false;
+  public isLoadingZoneMappings = false;
   public triggeringMissions: Set<number> = new Set();
   public cancellingMissions: Set<number> = new Set();
 
@@ -102,13 +126,183 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     private workflowService: WorkflowService,
     private customMissionsService: SavedCustomMissionsService,
     private missionHistoryService: MissionHistoryService,
+    private workflowNodeCodesService: WorkflowNodeCodesService,
+    private mapZonesService: MapZonesService,
+    private qrCodesService: QrCodesService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    this.loadWorkflows();
-    this.loadCustomMissions();
+    this.loadWorkflowsAndZones();
+    this.loadCustomMissionsAndZones();
+  }
+
+  /**
+   * Load workflows and zone mappings together, then group by zone
+   */
+  loadWorkflowsAndZones(): void {
+    this.isLoadingWorkflows = true;
+    this.isLoadingZoneMappings = true;
+
+    forkJoin({
+      workflows: this.workflowService.getWorkflows(),
+      zoneMappings: this.workflowNodeCodesService.getZoneMappings()
+    }).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.workflows = result.workflows;
+          this.zoneMappings = result.zoneMappings;
+          this.groupWorkflowsByZone();
+          this.isLoadingWorkflows = false;
+          this.isLoadingZoneMappings = false;
+        },
+        error: (error) => {
+          console.error('Error loading workflows and zones:', error);
+          this.isLoadingWorkflows = false;
+          this.isLoadingZoneMappings = false;
+          this.snackBar.open('Failed to load workflows', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
+  /**
+   * Group workflows by zone name using zone mappings
+   */
+  groupWorkflowsByZone(): void {
+    // Create a map from externalWorkflowId to zoneName
+    const zoneMap = new Map<number, string>();
+    this.zoneMappings.forEach(mapping => {
+      zoneMap.set(mapping.externalWorkflowId, mapping.zoneName);
+    });
+
+    // Group workflows by zone
+    const grouped = new Map<string, WorkflowDisplayData[]>();
+
+    this.workflows.forEach(workflow => {
+      // Get zone name from mapping (using workflow's external code/id)
+      // The workflow.id corresponds to the internal database ID
+      // We need to find the zone mapping by matching externalWorkflowId
+      const zoneName = this.findZoneForWorkflow(workflow, zoneMap) || 'Uncategorized';
+
+      if (!grouped.has(zoneName)) {
+        grouped.set(zoneName, []);
+        // Expand all zones by default
+        this.expandedZones.add(zoneName);
+      }
+      grouped.get(zoneName)!.push(workflow);
+    });
+
+    // Sort zones alphabetically, but keep "Uncategorized" at the end
+    const sortedGrouped = new Map<string, WorkflowDisplayData[]>();
+    const sortedKeys = Array.from(grouped.keys()).sort((a, b) => {
+      if (a === 'Uncategorized') return 1;
+      if (b === 'Uncategorized') return -1;
+      return a.localeCompare(b);
+    });
+
+    sortedKeys.forEach(key => {
+      sortedGrouped.set(key, grouped.get(key)!);
+    });
+
+    this.workflowsByZone = sortedGrouped;
+
+    // Apply filter if any workflows are selected, otherwise show all
+    this.applyWorkflowFilter();
+  }
+
+  /**
+   * Apply workflow filter based on selected IDs
+   */
+  applyWorkflowFilter(): void {
+    if (this.selectedWorkflowIds.size === 0) {
+      // No filter - show all workflows
+      this.filteredWorkflowsByZone = new Map(this.workflowsByZone);
+    } else {
+      // Filter to show only selected workflows
+      const filtered = new Map<string, WorkflowDisplayData[]>();
+
+      this.workflowsByZone.forEach((workflows, zoneName) => {
+        const selectedWorkflows = workflows.filter(w => this.selectedWorkflowIds.has(w.id));
+        if (selectedWorkflows.length > 0) {
+          filtered.set(zoneName, selectedWorkflows);
+        }
+      });
+
+      this.filteredWorkflowsByZone = filtered;
+    }
+  }
+
+  /**
+   * Open workflow selection dialog
+   */
+  openSelectWorkflowsDialog(): void {
+    const dialogRef = this.dialog.open(SelectWorkflowsDialogComponent, {
+      width: '600px',
+      maxHeight: '80vh',
+      data: {
+        workflowsByZone: this.workflowsByZone,
+        selectedIds: this.selectedWorkflowIds
+      } as SelectWorkflowsDialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: SelectWorkflowsDialogResult | undefined) => {
+      if (result) {
+        this.selectedWorkflowIds = result.selectedIds;
+        this.applyWorkflowFilter();
+      }
+    });
+  }
+
+  /**
+   * Get selected workflow count text
+   */
+  getSelectedWorkflowText(): string {
+    if (this.selectedWorkflowIds.size === 0) {
+      return 'All';
+    }
+    return `${this.selectedWorkflowIds.size}`;
+  }
+
+  /**
+   * Clear workflow filter
+   */
+  clearWorkflowFilter(): void {
+    this.selectedWorkflowIds.clear();
+    this.applyWorkflowFilter();
+  }
+
+  /**
+   * Find zone name for a workflow by matching with zone mappings
+   */
+  private findZoneForWorkflow(workflow: WorkflowDisplayData, zoneMap: Map<number, string>): string | null {
+    // First try to match by checking if any zone mapping has matching workflow code
+    for (const mapping of this.zoneMappings) {
+      if (mapping.workflowCode === workflow.code) {
+        return mapping.zoneName;
+      }
+    }
+
+    // If no match by code, return null (will go to Uncategorized)
+    return null;
+  }
+
+  /**
+   * Toggle zone expansion
+   */
+  toggleZone(zoneName: string): void {
+    if (this.expandedZones.has(zoneName)) {
+      this.expandedZones.delete(zoneName);
+    } else {
+      this.expandedZones.add(zoneName);
+    }
+  }
+
+  /**
+   * Check if zone is expanded
+   */
+  isZoneExpanded(zoneName: string): boolean {
+    return this.expandedZones.has(zoneName);
   }
 
   ngOnDestroy(): void {
@@ -123,43 +317,195 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load workflows from workflow service
+   * Load custom missions, map zones, and QR codes together, then group by zone
    */
-  loadWorkflows(): void {
-    this.isLoadingWorkflows = true;
-    this.workflowService.getWorkflows()
-      .pipe(takeUntil(this.destroy$))
+  loadCustomMissionsAndZones(): void {
+    this.isLoadingCustomMissions = true;
+
+    forkJoin({
+      customMissions: this.customMissionsService.getAllSavedCustomMissions(),
+      mapZones: this.mapZonesService.getMapZonesWithNodes(),
+      qrCodes: this.qrCodesService.getQrCodesWithUuid()
+    }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (workflows) => {
-          this.workflows = workflows;
-          this.isLoadingWorkflows = false;
+        next: (result) => {
+          this.customMissions = result.customMissions;
+          this.mapZonesWithNodes = result.mapZones;
+          this.qrCodesWithUuid = result.qrCodes;
+          this.groupCustomMissionsByZone();
+          this.isLoadingCustomMissions = false;
         },
         error: (error) => {
-          console.error('Error loading workflows:', error);
-          this.isLoadingWorkflows = false;
-          this.snackBar.open('Failed to load workflows', 'Close', { duration: 3000 });
+          console.error('Error loading custom missions and zones:', error);
+          this.isLoadingCustomMissions = false;
+          this.snackBar.open('Failed to load custom missions', 'Close', { duration: 3000 });
         }
       });
   }
 
   /**
-   * Load custom missions
+   * Group custom missions by zone based on MissionStepsJson
    */
-  loadCustomMissions(): void {
-    this.isLoadingCustomMissions = true;
-    this.customMissionsService.getAllSavedCustomMissions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (missions) => {
-          this.customMissions = missions;
-          this.isLoadingCustomMissions = false;
-        },
-        error: (error) => {
-          console.error('Error loading custom missions:', error);
-          this.isLoadingCustomMissions = false;
-          this.snackBar.open('Failed to load custom missions', 'Close', { duration: 3000 });
+  groupCustomMissionsByZone(): void {
+    const grouped = new Map<string, SavedCustomMissionsDisplayData[]>();
+
+    this.customMissions.forEach(mission => {
+      const zoneName = this.findZoneForCustomMission(mission) || 'Uncategorized';
+
+      if (!grouped.has(zoneName)) {
+        grouped.set(zoneName, []);
+        this.expandedCustomZones.add(zoneName);
+      }
+      grouped.get(zoneName)!.push(mission);
+    });
+
+    // Sort zones alphabetically, keep "Uncategorized" at the end
+    const sortedGrouped = new Map<string, SavedCustomMissionsDisplayData[]>();
+    const sortedKeys = Array.from(grouped.keys()).sort((a, b) => {
+      if (a === 'Uncategorized') return 1;
+      if (b === 'Uncategorized') return -1;
+      return a.localeCompare(b);
+    });
+
+    sortedKeys.forEach(key => {
+      sortedGrouped.set(key, grouped.get(key)!);
+    });
+
+    this.customMissionsByZone = sortedGrouped;
+
+    // Apply filter if any missions are selected, otherwise show all
+    this.applyCustomMissionFilter();
+  }
+
+  /**
+   * Apply custom mission filter based on selected IDs
+   */
+  applyCustomMissionFilter(): void {
+    if (this.selectedCustomMissionIds.size === 0) {
+      // No filter - show all missions
+      this.filteredCustomMissionsByZone = new Map(this.customMissionsByZone);
+    } else {
+      // Filter to show only selected missions
+      const filtered = new Map<string, SavedCustomMissionsDisplayData[]>();
+
+      this.customMissionsByZone.forEach((missions, zoneName) => {
+        const selectedMissions = missions.filter(m => this.selectedCustomMissionIds.has(m.id));
+        if (selectedMissions.length > 0) {
+          filtered.set(zoneName, selectedMissions);
         }
       });
+
+      this.filteredCustomMissionsByZone = filtered;
+    }
+  }
+
+  /**
+   * Open custom mission selection dialog
+   */
+  openSelectCustomMissionsDialog(): void {
+    const dialogRef = this.dialog.open(SelectCustomMissionsDialogComponent, {
+      width: '600px',
+      maxHeight: '80vh',
+      data: {
+        missionsByZone: this.customMissionsByZone,
+        selectedIds: this.selectedCustomMissionIds
+      } as SelectCustomMissionsDialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: SelectCustomMissionsDialogResult | undefined) => {
+      if (result) {
+        this.selectedCustomMissionIds = result.selectedIds;
+        this.applyCustomMissionFilter();
+      }
+    });
+  }
+
+  /**
+   * Clear custom mission filter
+   */
+  clearCustomMissionFilter(): void {
+    this.selectedCustomMissionIds.clear();
+    this.applyCustomMissionFilter();
+  }
+
+  /**
+   * Find zone for custom mission by parsing MissionStepsJson
+   */
+  private findZoneForCustomMission(mission: SavedCustomMissionsDisplayData): string | null {
+    if (!mission.missionStepsJson) {
+      return null;
+    }
+
+    try {
+      const steps: MissionStepData[] = JSON.parse(mission.missionStepsJson);
+
+      // Get the first step (sequence 0)
+      const firstStep = steps.find(step => step.sequence === 0) || steps[0];
+
+      if (!firstStep || !firstStep.position) {
+        return null;
+      }
+
+      // Handle based on step type
+      if (firstStep.type && firstStep.type.toUpperCase().includes('AREA')) {
+        // For NODE_AREA type, position is the ZoneCode
+        // Match directly against zone.zoneCode to get zoneName
+        for (const zone of this.mapZonesWithNodes) {
+          if (zone.zoneCode === firstStep.position) {
+            return zone.zoneName;
+          }
+        }
+      } else if (firstStep.type && firstStep.type.toUpperCase() === 'NODE_POINT') {
+        // For NODE_POINT type, use the position value directly as category name
+        // e.g., "Sim1-1-1" becomes the category
+        return firstStep.position;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error parsing mission steps:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Extract last number after the final dash from a node code
+   * E.g., "Sim1-1-12" -> "12", "Sim1-1-1756095423769" -> "1756095423769"
+   */
+  private extractLastNodeNumber(nodeCode: string): string {
+    const lastDashIndex = nodeCode.lastIndexOf('-');
+    if (lastDashIndex >= 0 && lastDashIndex < nodeCode.length - 1) {
+      return nodeCode.substring(lastDashIndex + 1);
+    }
+    return nodeCode;
+  }
+
+  /**
+   * Parse zone nodes from JSON array or comma-separated string
+   */
+  private parseZoneNodes(nodesStr: string): string[] {
+    if (!nodesStr) return [];
+
+    try {
+      // Try to parse as JSON array first
+      const parsed = JSON.parse(nodesStr);
+      // Ensure it's actually an array
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+      // If parsed but not an array, return empty
+      return [];
+    } catch {
+      // If not JSON, try comma-separated
+      return nodesStr.split(',').map(n => n.trim()).filter(n => n);
+    }
+  }
+
+  /**
+   * Check if custom zone is expanded
+   */
+  isCustomZoneExpanded(zoneName: string): boolean {
+    return this.expandedCustomZones.has(zoneName);
   }
 
   /**
@@ -452,8 +798,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    * Refresh all data
    */
   refresh(): void {
-    this.loadWorkflows();
-    this.loadCustomMissions();
+    this.loadWorkflowsAndZones();
+    this.loadCustomMissionsAndZones();
   }
 
   /**

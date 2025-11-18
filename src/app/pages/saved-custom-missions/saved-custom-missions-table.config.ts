@@ -16,18 +16,6 @@ export const SAVED_CUSTOM_MISSIONS_TABLE_CONFIG: TableConfig<SavedCustomMissions
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      headerClass: 'id-header',
-      cellClass: 'id-cell',
-      transform: (value: number) => {
-        return value?.toString() || 'N/A';
-      }
-    },
-    {
       key: 'missionName',
       header: 'Mission Name',
       sortable: true,

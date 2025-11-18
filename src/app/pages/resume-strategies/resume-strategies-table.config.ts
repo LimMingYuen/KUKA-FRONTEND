@@ -10,17 +10,6 @@ export const RESUME_STRATEGIES_TABLE_CONFIG: TableConfig<ResumeStrategyDisplayDa
   // Column definitions
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      cellClass: 'id-cell',
-      headerClass: 'id-header',
-      transform: (value: number) => value.toString()
-    } as ColumnConfig<ResumeStrategyDisplayData>,
-
-    {
       key: 'displayName',
       header: 'Display Name',
       sortable: true,

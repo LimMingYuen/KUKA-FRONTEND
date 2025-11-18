@@ -190,7 +190,15 @@ export class GenericTableComponent<T = any> implements OnInit, AfterViewInit, On
    * Update displayed columns based on configuration
    */
   private updateDisplayedColumns(): void {
-    const columnKeys = this.config.columns.map(col => col.key as string);
+    const columnKeys: string[] = [];
+
+    // Add row number column if enabled (default: true)
+    if (this.config.showRowNumbers !== false) {
+      columnKeys.push('rowNumber');
+    }
+
+    // Add data columns
+    columnKeys.push(...this.config.columns.map(col => col.key as string));
 
     // Add actions column if actions are configured
     if (this.config.actions && this.config.actions.length > 0) {
@@ -535,5 +543,17 @@ export class GenericTableComponent<T = any> implements OnInit, AfterViewInit, On
     return this.config.actions.some(
       action => this.isActionVisible(action, row) && action.type === 'menu-item'
     );
+  }
+
+  /**
+   * Calculate the display row number based on pagination
+   * @param index - The index of the row within the current page (0-based)
+   * @returns The absolute row number (1-based)
+   */
+  public getRowNumber(index: number): number {
+    if (this.paginator && this.config.pagination?.enabled) {
+      return (this.paginator.pageIndex * this.paginator.pageSize) + index + 1;
+    }
+    return index + 1;
   }
 }

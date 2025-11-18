@@ -5,12 +5,6 @@ export const ROLE_MANAGEMENT_TABLE_CONFIG: TableConfig<RoleDto> = {
   title: 'Role Management',
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: false
-    },
-    {
       key: 'name',
       header: 'Role Name',
       sortable: true,

@@ -15,15 +15,6 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      headerClass: 'id-header',
-      cellClass: 'id-cell'
-    },
-    {
       key: 'name',
       header: 'Zone Name',
       sortable: true,
@@ -179,7 +170,7 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
   },
 
   defaultSort: {
-    column: 'id',
+    column: 'name',
     direction: 'asc'
   },
 

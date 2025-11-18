@@ -5,12 +5,6 @@ export const USER_MANAGEMENT_TABLE_CONFIG: TableConfig<UserDto> = {
   title: 'User Management',
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: false
-    },
-    {
       key: 'username',
       header: 'Username',
       sortable: true,

@@ -18,6 +18,14 @@ export interface MapZoneSyncResultDto {
   updated: number;
 }
 
+export interface MapZoneWithNodesDto {
+  id: number;
+  zoneName: string;
+  zoneCode: string;
+  nodes: string;
+  mapCode: string;
+}
+
 export interface MapZoneDto {
   zoneName: string;
   zoneCode: string;

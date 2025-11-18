@@ -243,6 +243,25 @@
         }
       }
 
+      // Row number column
+      .row-number-header,
+      .row-number-cell {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        text-align: center !important;
+        color: var(--mat-sys-on-surface-variant) !important;
+        font-weight: 500 !important;
+      }
+
+      .row-number-header {
+        font-weight: 600 !important;
+      }
+
+      .row-number-cell {
+        font-size: 0.8rem !important;
+      }
+
       // No results row
       .no-results {
         display: flex;

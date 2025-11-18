@@ -15,15 +15,6 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      headerClass: 'id-header',
-      cellClass: 'id-cell'
-    },
-    {
       key: 'nodeLabel',
       header: 'Node Label',
       sortable: true,
@@ -163,7 +154,7 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
   },
 
   defaultSort: {
-    column: 'id',
+    column: 'nodeLabel',
     direction: 'asc'
   },
 

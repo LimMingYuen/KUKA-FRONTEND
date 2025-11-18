@@ -7,6 +7,7 @@ import {
   MapZoneSummaryDto,
   MapZoneSyncResultDto,
   MapZoneDisplayData,
+  MapZoneWithNodesDto,
   getAreaPurpose,
   getZoneStatusText
 } from '../models/map-zone.models';
@@ -81,6 +82,21 @@ export class MapZonesService {
       catchError(error => {
         this.isLoading.set(false);
         this.handleError(error, 'Failed to load map zones');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Get all map zones with nodes (for categorization)
+   */
+  getMapZonesWithNodes(): Observable<MapZoneWithNodesDto[]> {
+    return this.http.get<MapZoneWithNodesDto[]>(
+      `${this.API_URL}${this.MAP_ZONES_ENDPOINT}/with-nodes`,
+      { headers: this.createHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.handleError(error, 'Failed to load map zones with nodes');
         return throwError(() => error);
       })
     );

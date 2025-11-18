@@ -29,6 +29,17 @@ export interface QrCodeSyncResultDto {
 }
 
 /**
+ * QR Code with UUID DTO for zone mapping
+ */
+export interface QrCodeWithUuidDto {
+  id: number;
+  nodeUuid: string;
+  mapCode: string;
+  floorNumber: string;
+  nodeNumber: number;
+}
+
+/**
  * Display Data for QR Codes Table
  * Extended with formatted display values
  */

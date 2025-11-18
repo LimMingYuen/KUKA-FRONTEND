@@ -6,13 +6,6 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
 
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px'
-    },
-    {
       key: 'displayName',
       header: 'Display Name',
       sortable: true,
