@@ -97,10 +97,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Expose MissionsUtils to template
   public readonly MissionsUtils = MissionsUtils;
 
-  // Expansion panel state
-  public expandedWorkflowJobs: Set<number> = new Set();
-  public expandedCustomJobs: Set<number> = new Set();
-
   constructor(
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
