@@ -323,6 +323,7 @@ export class MissionsUtils {
   /**
    * Get color for job status
    * Status codes from AMR System API (Section 3.1)
+   * Returns 'success' for active/executing jobs to display in green
    */
   static getJobStatusColor(status: number | string): string {
     const numStatus = typeof status === 'number' ? status : parseInt(status, 10);
@@ -330,10 +331,10 @@ export class MissionsUtils {
     switch (numStatus) {
       case 10: // Created
         return '';
-      case 20: // Executing
-        return 'primary';
-      case 25: // Waiting
-        return 'accent';
+      case 20: // Executing - GREEN (Active Job)
+        return 'success';
+      case 25: // Waiting - GREEN (Active Job)
+        return 'success';
       case 28: // Cancelling
         return 'warn';
       case 30: // Complete

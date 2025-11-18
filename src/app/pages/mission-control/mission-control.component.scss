@@ -328,6 +328,26 @@
       }
     }
 
+    // Custom success color for active job status (green)
+    mat-chip[color="success"] {
+      background-color: #4caf50 !important;
+      color: white !important;
+
+      mat-icon {
+        color: white;
+      }
+    }
+
+    // Alternative selector for selected chips
+    mat-chip[color="success"][selected] {
+      background-color: #4caf50 !important;
+      color: white !important;
+
+      mat-icon {
+        color: white;
+      }
+    }
+
     // Card Actions
     mat-card-actions.card-actions {
       display: flex;
@@ -423,6 +443,25 @@
     .tab-content {
       padding: 24px 0;
     }
+  }
+}
+
+// Custom success color styling (green) for active job status
+::ng-deep .mat-mdc-standard-chip.mat-success,
+::ng-deep mat-chip[color="success"],
+::ng-deep .mdc-evolution-chip.mat-success {
+  --mdc-chip-elevated-container-color: #4caf50 !important;
+  --mdc-chip-label-text-color: white !important;
+  --mat-chip-selected-label-text-color: white !important;
+  background-color: #4caf50 !important;
+  color: white !important;
+
+  .mdc-evolution-chip__action {
+    color: white !important;
+  }
+
+  mat-icon {
+    color: white !important;
   }
 }
 
