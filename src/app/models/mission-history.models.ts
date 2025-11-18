@@ -15,6 +15,11 @@ export interface MissionHistorySummaryDto {
   workflowName: string;
   status: string;
   createdDate: string;
+  processedDate?: string;
+  submittedToAmrDate?: string;
+  completedDate?: string;
+  assignedRobotId?: string;
+  durationMinutes?: number;  // Mission working time in minutes
 }
 
 /**
@@ -69,6 +74,8 @@ export interface MissionHistoryDisplayData extends MissionHistorySummaryDto {
   createdDateDisplay: string;
   createdDateRelative: string;
   workflowDisplay: string;
+  durationDisplay: string;  // Formatted duration (e.g., "2m 30s", "1h 15m")
+  robotDisplay: string;  // Formatted robot ID
 }
 
 /**
@@ -161,6 +168,47 @@ export function formatWorkflowName(workflowName: string): string {
 }
 
 /**
+ * Format duration in minutes to human-readable format
+ */
+export function formatDuration(durationMinutes: number | null | undefined): string {
+  if (durationMinutes == null || durationMinutes < 0) return 'N/A';
+
+  const totalSeconds = Math.round(durationMinutes * 60);
+
+  if (totalSeconds < 60) {
+    return `${totalSeconds}s`;
+  }
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    if (minutes > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${hours}h`;
+  }
+
+  if (minutes > 0) {
+    if (seconds > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${minutes}m`;
+  }
+
+  return `${seconds}s`;
+}
+
+/**
+ * Format robot ID for display
+ */
+export function formatRobotId(robotId: string | null | undefined): string {
+  if (!robotId) return 'N/A';
+  return `Robot ${robotId}`;
+}
+
+/**
  * Transform MissionHistorySummaryDto to MissionHistoryDisplayData
  */
 export function transformMissionHistoryData(mission: MissionHistorySummaryDto): MissionHistoryDisplayData {
@@ -169,7 +217,9 @@ export function transformMissionHistoryData(mission: MissionHistorySummaryDto): 
     statusText: getStatusText(mission.status),
     createdDateDisplay: formatDate(mission.createdDate),
     createdDateRelative: formatRelativeTime(mission.createdDate),
-    workflowDisplay: formatWorkflowName(mission.workflowName)
+    workflowDisplay: formatWorkflowName(mission.workflowName),
+    durationDisplay: formatDuration(mission.durationMinutes),
+    robotDisplay: formatRobotId(mission.assignedRobotId)
   };
 }
 

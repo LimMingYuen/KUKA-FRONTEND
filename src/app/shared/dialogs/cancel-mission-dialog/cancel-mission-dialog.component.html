@@ -1,0 +1,54 @@
+<div class="cancel-mission-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon color="warn">warning</mat-icon>
+    Cancel Mission
+  </h2>
+
+  <mat-dialog-content>
+    <div class="mission-info">
+      <p><strong>Mission:</strong> {{ data.missionName }}</p>
+      <p><strong>Code:</strong> {{ data.missionCode }}</p>
+    </div>
+
+    <div class="cancel-mode-selection">
+      <h3>Select Cancel Mode:</h3>
+
+      <mat-radio-group [(ngModel)]="selectedMode" class="cancel-modes">
+        <div *ngFor="let mode of cancelModes" class="mode-option">
+          <mat-radio-button [value]="mode.value" [color]="mode.color">
+            <div class="mode-content">
+              <div class="mode-header">
+                <mat-icon [color]="mode.color">{{ mode.icon }}</mat-icon>
+                <span class="mode-label">{{ mode.label }}</span>
+              </div>
+              <p class="mode-description">{{ mode.description }}</p>
+            </div>
+          </mat-radio-button>
+        </div>
+      </mat-radio-group>
+    </div>
+
+    <mat-form-field appearance="outline" class="reason-field">
+      <mat-label>Reason (Optional)</mat-label>
+      <textarea
+        matInput
+        [(ngModel)]="reason"
+        placeholder="Enter reason for cancellation..."
+        rows="3"
+        maxlength="500">
+      </textarea>
+      <mat-hint align="end">{{ reason.length }}/500</mat-hint>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <button mat-raised-button color="warn" (click)="onConfirm()">
+      <mat-icon>check</mat-icon>
+      Confirm Cancellation
+    </button>
+  </mat-dialog-actions>
+</div>

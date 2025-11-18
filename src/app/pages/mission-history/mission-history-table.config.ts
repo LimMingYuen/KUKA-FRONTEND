@@ -63,6 +63,30 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
       }
     },
     {
+      key: 'robotDisplay',
+      header: 'Robot',
+      sortable: true,
+      filterable: true,
+      width: '140px',
+      headerClass: 'robot-header',
+      cellClass: 'robot-cell',
+      transform: (value: string, row: MissionHistoryDisplayData) => {
+        return value || 'N/A';
+      }
+    },
+    {
+      key: 'durationDisplay',
+      header: 'Working Time',
+      sortable: true,
+      filterable: false,
+      width: '130px',
+      headerClass: 'duration-header',
+      cellClass: 'duration-cell',
+      transform: (value: string, row: MissionHistoryDisplayData) => {
+        return value || 'N/A';
+      }
+    },
+    {
       key: 'createdDateDisplay',
       header: 'Created Date',
       sortable: true,

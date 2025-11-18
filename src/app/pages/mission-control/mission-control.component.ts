@@ -12,6 +12,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
@@ -22,6 +26,7 @@ import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missio
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
 import { MissionHistoryRequest, UpdateMissionHistoryRequest } from '../../models/mission-history.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
+import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
 
 @Component({
   selector: 'app-mission-control',
@@ -39,7 +44,11 @@ import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
     MatTooltipModule,
     MatSnackBarModule,
     MatDialogModule,
-    MatDividerModule
+    MatDividerModule,
+    MatExpansionModule,
+    MatListModule,
+    MatMenuModule,
+    MatProgressBarModule
   ],
   templateUrl: './mission-control.component.html',
   styleUrl: './mission-control.component.scss'
@@ -74,13 +83,23 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public isLoadingWorkflows = false;
   public isLoadingCustomMissions = false;
   public triggeringMissions: Set<number> = new Set();
+  public cancellingMissions: Set<number> = new Set();
 
   // Cleanup
   private destroy$ = new Subject<void>();
   private pollingSubscriptions: Map<string, any> = new Map();
 
+  // Error tracking for polling
+  private jobQueryErrorCount: Map<string, number> = new Map();
+  private robotQueryErrorCount: Map<string, number> = new Map();
+  private readonly MAX_CONSECUTIVE_ERRORS = 5;
+
   // Expose MissionsUtils to template
   public readonly MissionsUtils = MissionsUtils;
+
+  // Expansion panel state
+  public expandedWorkflowJobs: Set<number> = new Set();
+  public expandedCustomJobs: Set<number> = new Set();
 
   constructor(
     private missionsService: MissionsService,
@@ -102,6 +121,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     // Stop all polling
     this.pollingSubscriptions.forEach(sub => sub.unsubscribe());
     this.pollingSubscriptions.clear();
+    // Clear error counters
+    this.jobQueryErrorCount.clear();
+    this.robotQueryErrorCount.clear();
   }
 
   /**
@@ -157,13 +179,13 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       missionCode: this.generateMissionCode(),
       missionType: 'RACK_MOVE',
       viewBoardType: '',
-      robotModels: ['KMP600I'],
-      robotIds: ['14'],
+      robotModels: [], // Empty - let AMR system assign based on template
+      robotIds: [], // Empty - let AMR system assign based on template
       robotType: 'LIFT',
-      priority: 50, // Priority range: 0-100 (50 = normal)
+      priority: 1, // Priority: 1-4 (1 = highest priority)
       containerModelCode: '',
       containerCode: '',
-      templateCode: workflow.code,
+      templateCode: workflow.code, // WorkflowCode from WorkflowDiagrams table
       lockRobotAfterFinish: false,
       unlockRobotId: '',
       unlockMissionCode: '',
@@ -187,12 +209,18 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           // Start polling job status
           this.startJobPolling(id, request.missionCode, 'workflow');
         } else {
-          this.snackBar.open(`Failed to trigger workflow: ${response.message}`, 'Close', { duration: 5000 });
+          // Handle API error response (success: false)
+          const errorMsg = response.message || 'Unknown error occurred';
+          const errorCode = response.code ? `[${response.code}]` : '';
+          this.snackBar.open(`Failed to trigger workflow ${errorCode}: ${errorMsg}`, 'Close', { duration: 8000 });
+          console.error('Workflow trigger failed:', response);
         }
       },
       error: (error) => {
         this.triggeringMissions.delete(id);
-        this.snackBar.open('Failed to trigger workflow', 'Close', { duration: 5000 });
+        // Handle HTTP/network errors
+        const errorMsg = this.extractErrorMessage(error);
+        this.snackBar.open(`Error triggering workflow: ${errorMsg}`, 'Close', { duration: 8000 });
         console.error('Error triggering workflow:', error);
       }
     });
@@ -232,7 +260,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.triggeringMissions.delete(id);
-          this.snackBar.open('Failed to trigger custom mission', 'Close', { duration: 5000 });
+          // Handle HTTP/network errors
+          const errorMsg = this.extractErrorMessage(error);
+          this.snackBar.open(`Error triggering custom mission: ${errorMsg}`, 'Close', { duration: 8000 });
           console.error('Error triggering custom mission:', error);
         }
       });
@@ -261,6 +291,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: (response) => {
             if (response.success && response.data && response.data.length > 0) {
+              // Reset error counter on success
+              this.jobQueryErrorCount.set(missionCode, 0);
+
               const jobData = response.data[0];
 
               // Update the appropriate job map
@@ -281,10 +314,16 @@ export class MissionControlComponent implements OnInit, OnDestroy {
                 this.createMissionHistoryOnCompletion(id, missionCode, jobData, type);
                 this.stopJobPolling(missionCode);
               }
+            } else if (!response.success) {
+              // Handle API error response (success: false)
+              console.warn(`Job query failed for ${missionCode}:`, response.message || response.code);
+              this.handleJobQueryError(missionCode, response.message || 'Job query failed');
             }
           },
           error: (error) => {
             console.error('Error polling job status:', error);
+            const errorMsg = this.extractErrorMessage(error);
+            this.handleJobQueryError(missionCode, errorMsg);
           }
         });
       });
@@ -304,6 +343,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (response) => {
         if (response.success && response.data && response.data.length > 0) {
+          // Reset error counter on success
+          this.robotQueryErrorCount.set(robotId, 0);
+
           const robotData = response.data[0];
 
           // Update the appropriate job map
@@ -312,10 +354,16 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           if (currentJob) {
             currentJob.robotData = robotData;
           }
+        } else if (!response.success) {
+          // Handle API error response (success: false)
+          console.warn(`Robot query failed for ${robotId}:`, response.message || response.code);
+          this.handleRobotQueryError(robotId, response.message || 'Robot query failed');
         }
       },
       error: (error) => {
         console.error('Error querying robot status:', error);
+        const errorMsg = this.extractErrorMessage(error);
+        this.handleRobotQueryError(robotId, errorMsg);
       }
     });
   }
@@ -329,6 +377,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       subscription.unsubscribe();
       this.pollingSubscriptions.delete(missionCode);
     }
+    // Clean up error counters
+    this.jobQueryErrorCount.delete(missionCode);
   }
 
   /**
@@ -408,6 +458,224 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.loadWorkflows();
     this.loadCustomMissions();
+  }
+
+  /**
+   * Check if workflow has active job
+   */
+  hasActiveJob(id: number, type: 'workflow' | 'custom'): boolean {
+    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+    return jobsMap.has(id);
+  }
+
+  /**
+   * Get active job count for badge
+   */
+  getActiveJobCount(type: 'workflow' | 'custom'): number {
+    return type === 'workflow' ? this.workflowJobs.size : this.customMissionJobs.size;
+  }
+
+  /**
+   * Refresh single workflow job status
+   */
+  refreshWorkflowStatus(workflow: WorkflowDisplayData): void {
+    const job = this.workflowJobs.get(workflow.id);
+    if (job && job.missionCode) {
+      this.snackBar.open('Refreshing job status...', '', { duration: 1000 });
+      // Polling will automatically update the status
+    } else {
+      this.snackBar.open('No active job for this workflow', 'Close', { duration: 2000 });
+    }
+  }
+
+  /**
+   * Refresh single custom mission job status
+   */
+  refreshCustomMissionStatus(mission: SavedCustomMissionsDisplayData): void {
+    const job = this.customMissionJobs.get(mission.id);
+    if (job && job.missionCode) {
+      this.snackBar.open('Refreshing job status...', '', { duration: 1000 });
+      // Polling will automatically update the status
+    } else {
+      this.snackBar.open('No active job for this mission', 'Close', { duration: 2000 });
+    }
+  }
+
+  /**
+   * View workflow details (placeholder for future implementation)
+   */
+  viewWorkflowDetails(workflow: WorkflowDisplayData): void {
+    this.snackBar.open(`View details for: ${workflow.name}`, 'Close', { duration: 2000 });
+    // TODO: Open dialog or navigate to details page
+  }
+
+  /**
+   * View custom mission details (placeholder for future implementation)
+   */
+  viewCustomMissionDetails(mission: SavedCustomMissionsDisplayData): void {
+    this.snackBar.open(`View details for: ${mission.missionName}`, 'Close', { duration: 2000 });
+    // TODO: Open dialog or navigate to details page
+  }
+
+  /**
+   * Cancel mission - opens dialog to select cancel mode
+   */
+  cancelMission(id: number, type: 'workflow' | 'custom', event?: Event): void {
+    // Prevent event propagation if called from button
+    if (event) {
+      event.stopPropagation();
+    }
+
+    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
+    const job = jobsMap.get(id);
+
+    if (!job || !job.missionCode) {
+      this.snackBar.open('No active mission to cancel', 'Close', { duration: 2000 });
+      return;
+    }
+
+    // Check if job is already in terminal state
+    if (job.jobData && this.MissionsUtils.isJobTerminal(job.jobData.status)) {
+      this.snackBar.open('Mission has already completed', 'Close', { duration: 2000 });
+      return;
+    }
+
+    // Get mission name based on type
+    const missionName = job.workflowName || 'Unknown Mission';
+
+    // Open cancel confirmation dialog
+    const dialogRef = this.dialog.open(CancelMissionDialogComponent, {
+      width: '600px',
+      disableClose: true,
+      data: {
+        missionName: missionName,
+        missionCode: job.missionCode
+      } as CancelMissionDialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: CancelMissionDialogResult | undefined) => {
+      if (!result) {
+        // User cancelled the dialog
+        return;
+      }
+
+      // Proceed with cancellation
+      this.cancellingMissions.add(id);
+
+      // Call cancel API with selected mode
+      this.missionsService.cancelMission({
+        requestId: job.requestId || this.generateRequestId(),
+        missionCode: job.missionCode,
+        containerCode: '',
+        position: '',
+        cancelMode: result.cancelMode,
+        reason: result.reason || ''
+      }).pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.cancellingMissions.delete(id);
+            if (response.success) {
+              // Stop polling for this mission
+              this.stopJobPolling(job.missionCode);
+              // Remove from tracking
+              jobsMap.delete(id);
+              this.snackBar.open(`Mission cancelled successfully (${result.cancelMode})`, 'Close', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            this.cancellingMissions.delete(id);
+            console.error('Error cancelling mission:', error);
+          }
+        });
+    });
+  }
+
+  /**
+   * Check if mission is being cancelled
+   */
+  isCancelling(id: number): boolean {
+    return this.cancellingMissions.has(id);
+  }
+
+  /**
+   * Extract error message from HTTP error response
+   */
+  private extractErrorMessage(error: any): string {
+    // Handle external AMR API error format (500 error with message field)
+    if (error.error?.message) {
+      return error.error.message;
+    }
+
+    // Handle standard error object
+    if (error.message) {
+      return error.message;
+    }
+
+    // Handle HTTP status errors
+    if (error.status) {
+      switch (error.status) {
+        case 0:
+          return 'Unable to connect to server';
+        case 404:
+          return 'Resource not found';
+        case 500:
+          return 'Internal server error';
+        case 503:
+          return 'Service unavailable';
+        default:
+          return `HTTP ${error.status} error`;
+      }
+    }
+
+    return 'Unknown error occurred';
+  }
+
+  /**
+   * Handle job query errors with retry limit
+   */
+  private handleJobQueryError(missionCode: string, errorMsg: string): void {
+    const currentCount = (this.jobQueryErrorCount.get(missionCode) || 0) + 1;
+    this.jobQueryErrorCount.set(missionCode, currentCount);
+
+    if (currentCount >= this.MAX_CONSECUTIVE_ERRORS) {
+      // Stop polling after max consecutive errors
+      this.stopJobPolling(missionCode);
+      this.jobQueryErrorCount.delete(missionCode);
+
+      this.snackBar.open(
+        `Job status polling stopped after ${this.MAX_CONSECUTIVE_ERRORS} errors: ${errorMsg}`,
+        'Close',
+        { duration: 8000 }
+      );
+      console.error(`Job query stopped for ${missionCode} after ${this.MAX_CONSECUTIVE_ERRORS} errors`);
+    } else if (currentCount === 3) {
+      // Warn user after 3 errors (but continue polling)
+      this.snackBar.open(
+        `Job status query issues detected: ${errorMsg}`,
+        'Close',
+        { duration: 5000 }
+      );
+    }
+  }
+
+  /**
+   * Handle robot query errors with retry limit
+   */
+  private handleRobotQueryError(robotId: string, errorMsg: string): void {
+    const currentCount = (this.robotQueryErrorCount.get(robotId) || 0) + 1;
+    this.robotQueryErrorCount.set(robotId, currentCount);
+
+    // Only notify user after 5 consecutive errors (robot data is less critical)
+    if (currentCount === this.MAX_CONSECUTIVE_ERRORS) {
+      this.snackBar.open(
+        `Robot status unavailable for ${robotId}: ${errorMsg}`,
+        'Close',
+        { duration: 5000 }
+      );
+    }
+
+    // Don't stop polling robot status - job status is more important
+    // Robot data will just remain unavailable in the UI
   }
 
   /**

@@ -80,8 +80,14 @@ export interface SubmitMissionResponse {
 // MISSION CANCEL MODELS
 // =============================================================================
 
+export type CancelMode = 'FORCE' | 'NORMAL' | 'REDIRECT_START';
+
 export interface MissionCancelRequest {
+  requestId: string;
   missionCode: string;
+  containerCode?: string;
+  position?: string;
+  cancelMode: CancelMode;
   reason?: string;
 }
 
@@ -89,6 +95,7 @@ export interface MissionCancelResponse {
   success: boolean;
   code: string;
   message: string;
+  data?: any;
 }
 
 // =============================================================================

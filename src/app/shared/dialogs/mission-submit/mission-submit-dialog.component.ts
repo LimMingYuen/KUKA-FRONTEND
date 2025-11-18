@@ -114,10 +114,10 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       orgId: ['UNIVERSAL', Validators.required],
       missionType: ['RACK_MOVE', Validators.required],
       viewBoardType: [''],
-      robotModels: [['KMP600I']],
-      robotIds: [['14']],
+      robotModels: [[]], // Empty - let AMR system assign based on template
+      robotIds: [[]], // Empty - let AMR system assign based on template
       robotType: ['LIFT', Validators.required],
-      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
+      priority: [1, Validators.required], // Priority: 1-4 (1 = highest priority)
       containerModelCode: [''],
       containerCode: [''],
       templateCode: ['', Validators.required],
@@ -132,10 +132,10 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
       orgId: ['UNIVERSAL', Validators.required],
       missionType: ['RACK_MOVE', Validators.required],
       viewBoardType: [''],
-      robotModels: [['KMP600I']],
-      robotIds: [['14']],
+      robotModels: [[]], // Empty - user should specify or let system assign
+      robotIds: [[]], // Empty - user should specify or let system assign
       robotType: ['LIFT', Validators.required],
-      priority: [50, Validators.required], // Priority range: 0-100 (50 = normal)
+      priority: [1, Validators.required], // Priority: 1-4 (1 = highest priority)
       containerModelCode: [''],
       containerCode: [''],
       lockRobotAfterFinish: [false],

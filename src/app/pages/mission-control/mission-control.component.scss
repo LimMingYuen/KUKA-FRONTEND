@@ -59,17 +59,35 @@
 
   .missions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
     gap: 24px;
     padding: 24px 0;
   }
 
   .mission-card {
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
 
     &:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    mat-card-header {
+      position: relative;
+
+      .card-menu-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: rgba(0, 0, 0, 0.54);
+
+        &:hover {
+          color: rgba(0, 0, 0, 0.87);
+        }
+      }
     }
 
     .workflow-icon,
@@ -79,86 +97,276 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
 
       mat-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
       }
     }
 
-    .mission-info {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    mat-card-header {
+      padding: 12px 16px;
 
-      .info-row {
+      mat-card-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 14px;
+        flex-wrap: wrap;
 
-        .label {
-          font-weight: 500;
-          color: rgba(0, 0, 0, 0.6);
-          min-width: 120px;
+        .title-text {
+          flex: 0 1 auto;
         }
 
-        .value {
-          color: rgba(0, 0, 0, 0.87);
-          font-weight: 400;
+        mat-chip {
+          flex: 0 0 auto;
+        }
+      }
+    }
 
-          &.highlight {
-            color: #ff6f00;
+    mat-card-content {
+      padding: 8px 16px;
+    }
+
+    // Material List Styling
+    .mission-info-list {
+      padding: 0;
+      margin-bottom: 12px;
+
+      mat-list-item {
+        height: auto;
+        min-height: 40px;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        mat-icon[matListItemIcon] {
+          color: #ff6f00;
+          margin-right: 12px;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        [matListItemTitle] {
+          font-weight: 500;
+          font-size: 11px;
+          color: rgba(0, 0, 0, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 2px;
+        }
+
+        [matListItemLine] {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.87);
+          line-height: 1.3;
+          white-space: normal;
+          word-wrap: break-word;
+        }
+      }
+    }
+
+    // Job Status Expansion Panel
+    .job-status-panel {
+      margin-top: 16px;
+      box-shadow: none;
+      border: 2px solid #ff6f00;
+      border-radius: 8px;
+      overflow: hidden;
+
+      &::before {
+        display: none; // Remove default Material divider
+      }
+
+      mat-expansion-panel-header {
+        background-color: rgba(255, 111, 0, 0.05);
+        padding: 0 16px;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: rgba(255, 111, 0, 0.1);
+        }
+
+        mat-panel-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 500;
+          color: #ff6f00;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+
+        mat-panel-description {
+          justify-content: flex-end;
+          align-items: center;
+        }
+      }
+
+      .mat-expansion-panel-content {
+        .mat-expansion-panel-body {
+          padding: 0;
+        }
+      }
+
+      .job-details-list {
+        padding: 0;
+
+        mat-list-item {
+          height: auto;
+          min-height: 56px;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          mat-icon[matListItemIcon] {
+            margin-right: 16px;
+          }
+
+          [matListItemTitle] {
             font-weight: 500;
+            font-size: 13px;
+            color: rgba(0, 0, 0, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          }
+
+          [matListItemLine] {
+            font-size: 15px;
+            color: rgba(0, 0, 0, 0.87);
+
+            &.highlight-value {
+              color: #ff6f00;
+              font-weight: 500;
+              font-size: 16px;
+            }
+          }
+
+          // Battery Info Styling
+          .battery-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+
+            .battery-text {
+              font-weight: 600;
+              font-size: 16px;
+            }
+
+            mat-progress-bar {
+              height: 8px;
+              border-radius: 4px;
+              overflow: hidden;
+            }
           }
         }
       }
     }
 
-    .job-status-section {
-      margin-top: 16px;
-      padding-top: 16px;
+    // Enhanced Chip Styling
+    mat-chip-set {
+      margin: 0;
+    }
 
-      .section-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 0 0 12px;
+    mat-chip {
+      font-weight: 500;
+      border-radius: 12px;
+      padding: 2px 8px;
+      height: auto;
+      min-height: 24px;
+      font-size: 12px;
+
+      mat-icon[matChipAvatar] {
+        margin-left: -2px;
+        margin-right: 4px;
         font-size: 16px;
-        font-weight: 500;
-        color: rgba(0, 0, 0, 0.87);
-
-        mat-icon {
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
-          color: #ff6f00;
-        }
+        width: 16px;
+        height: 16px;
       }
     }
 
-    .trigger-btn {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
     .status-chip-1 {
-      background-color: #4caf50;
-      color: white;
+      background-color: #4caf50 !important;
+      color: white !important;
+
+      mat-icon {
+        color: white;
+      }
     }
 
     .status-chip-0 {
-      background-color: #9e9e9e;
-      color: white;
+      background-color: #9e9e9e !important;
+      color: white !important;
+
+      mat-icon {
+        color: white;
+      }
     }
 
     .priority-chip {
-      background-color: #2196f3;
-      color: white;
+      background-color: #2196f3 !important;
+      color: white !important;
+
+      mat-icon {
+        color: white;
+      }
+    }
+
+    // Card Actions
+    mat-card-actions.card-actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+
+      .action-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 40px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+
+        &:not([disabled]):hover {
+          transform: scale(1.02);
+        }
+
+        mat-spinner {
+          display: inline-block;
+        }
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .trigger-btn {
+        // Primary button styling inherited from mat-raised-button color="primary"
+      }
+
+      .cancel-btn {
+        // Warn button styling inherited from mat-raised-button color="warn"
+      }
     }
   }
 
@@ -214,154 +422,20 @@
 
     .tab-content {
       padding: 24px 0;
+    }
+  }
+}
 
-      mat-card {
-        mat-card-header {
-          padding: 24px 24px 0;
+// Action Menu Styling
+::ng-deep .mat-mdc-menu-panel {
+  mat-icon {
+    margin-right: 12px;
+    color: rgba(0, 0, 0, 0.54);
+  }
 
-          mat-card-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 500;
-
-            mat-icon {
-              color: #ff6f00;
-            }
-          }
-
-          mat-card-subtitle {
-            margin-top: 8px;
-            font-size: 14px;
-            color: rgba(0, 0, 0, 0.6);
-          }
-        }
-
-        mat-card-content {
-          padding: 24px;
-
-          .submit-btn {
-            margin-top: 16px;
-
-            mat-icon {
-              margin-right: 8px;
-            }
-          }
-
-          .form-container {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-top: 16px;
-
-            .full-width {
-              width: 100%;
-            }
-
-            .form-row {
-              display: flex;
-              gap: 16px;
-              flex-wrap: wrap;
-
-              .flex-1 {
-                flex: 1;
-                min-width: 200px;
-              }
-
-              .limit-field {
-                max-width: 120px;
-              }
-            }
-
-            .form-actions {
-              display: flex;
-              gap: 12px;
-              margin-top: 8px;
-
-              button {
-                mat-spinner {
-                  display: inline-block;
-                  margin-right: 8px;
-                }
-
-                mat-icon {
-                  margin-right: 8px;
-                }
-              }
-            }
-          }
-
-          .results-section {
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid rgba(0, 0, 0, 0.12);
-
-            h3 {
-              margin: 0 0 16px;
-              font-size: 18px;
-              font-weight: 500;
-              color: rgba(0, 0, 0, 0.87);
-            }
-
-            .table-container {
-              overflow-x: auto;
-              border: 1px solid rgba(0, 0, 0, 0.12);
-              border-radius: 4px;
-
-              .results-table {
-                width: 100%;
-
-                th {
-                  background-color: #f5f5f5;
-                  font-weight: 600;
-                  color: rgba(0, 0, 0, 0.87);
-                }
-
-                td, th {
-                  padding: 12px 16px;
-                }
-
-                .mission-info {
-                  strong {
-                    color: rgba(0, 0, 0, 0.87);
-                  }
-
-                  small {
-                    color: rgba(0, 0, 0, 0.6);
-                  }
-                }
-              }
-            }
-          }
-
-          .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            margin-top: 24px;
-            text-align: center;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-
-            mat-icon {
-              font-size: 64px;
-              width: 64px;
-              height: 64px;
-              color: rgba(0, 0, 0, 0.3);
-              margin-bottom: 16px;
-            }
-
-            p {
-              margin: 0;
-              font-size: 16px;
-              color: rgba(0, 0, 0, 0.6);
-            }
-          }
-        }
-      }
+  button[disabled] {
+    mat-icon {
+      color: rgba(0, 0, 0, 0.26);
     }
   }
 }
@@ -381,54 +455,52 @@
       }
     }
 
+    .missions-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
     .mission-tabs {
       .tab-content {
         padding: 16px 0;
+      }
+    }
 
-        mat-card {
-          mat-card-header {
-            padding: 16px 16px 0;
+    .mission-card {
+      mat-card-header {
+        .card-menu-btn {
+          top: 4px;
+          right: 4px;
+        }
+      }
 
-            mat-card-title {
-              font-size: 18px;
-            }
-          }
+      .mission-info-list mat-list-item {
+        min-height: 48px;
+        padding: 6px 0;
 
-          mat-card-content {
-            padding: 16px;
+        [matListItemTitle] {
+          font-size: 12px;
+        }
 
-            .form-container {
-              .form-row {
-                flex-direction: column;
+        [matListItemLine] {
+          font-size: 14px;
+        }
+      }
 
-                .flex-1,
-                .limit-field {
-                  width: 100%;
-                  max-width: 100%;
-                }
-              }
+      .job-status-panel {
+        .job-details-list mat-list-item {
+          min-height: 48px;
+          padding: 8px 12px;
+        }
+      }
 
-              .form-actions {
-                flex-direction: column;
+      // Stack buttons vertically on mobile
+      mat-card-actions.card-actions {
+        flex-direction: column;
+        gap: 8px;
 
-                button {
-                  width: 100%;
-                }
-              }
-            }
-
-            .results-section {
-              .table-container {
-                .results-table {
-                  font-size: 14px;
-
-                  td, th {
-                    padding: 8px 12px;
-                  }
-                }
-              }
-            }
-          }
+        .action-btn {
+          width: 100%;
         }
       }
     }
