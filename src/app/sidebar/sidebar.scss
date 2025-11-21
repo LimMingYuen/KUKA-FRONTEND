@@ -1,24 +1,46 @@
 @use '@angular/material' as mat;
 
-// Main Toolbar (now at the top, outside sidenav-container)
+// ==========================================
+// CLAUDE-INSPIRED MINIMAL SIDEBAR
+// ==========================================
+
+// Color Palette - Dark Theme
+$sidebar-bg: #1f1f1f;
+$sidebar-bg-hover: #2a2a2a;
+$sidebar-border: #3a3a3a;
+$icon-color: #e0e0e0;
+$icon-hover: #ffffff;
+$icon-active: #ff6b35;
+$action-button-bg: #ff6b35;
+$action-button-hover: #ff7f50;
+$status-online: #10b981;
+$user-avatar-bg: #3a3a3a;
+
+// Dimensions
+$sidebar-width: 72px;
+$icon-size: 24px;
+$action-button-size: 48px;
+$user-avatar-size: 40px;
+$nav-item-size: 48px;
+
+// ==========================================
+// TOP TOOLBAR
+// ==========================================
 .main-toolbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   height: 64px;
   box-sizing: border-box;
-
-  .menu-toggle {
-    margin-right: 16px;
-  }
 
   .logo-container {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-left: $sidebar-width + 16px; // Offset for sidebar
 
     .kuka-logo {
       font-size: 32px;
@@ -43,258 +65,6 @@
     display: flex;
     align-items: center;
   }
-}
-
-// Main container (now below toolbar)
-.sidebar-container {
-  width: 100%;
-  height: calc(100vh - 64px);
-  margin-top: 64px;
-  overflow: hidden;
-}
-
-// Sidebar Navigation
-.sidebar {
-  width: 280px;
-  background-color: var(--mat-sys-surface-container);
-  border-right: 1px solid var(--mat-sys-outline-variant);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-
-  // When collapsed (via [opened]="false"), Material Sidenav will hide it
-  // But we still want proper styling for any edge cases
-  &.sidebar--collapsed {
-    width: 0;
-    transform: translateX(-100%);
-    overflow: hidden;
-  }
-
-  &.sidebar--expanded {
-    width: 280px;
-    transform: translateX(0);
-  }
-}
-
-// Sidebar Header - removed (now in main toolbar)
-
-// Sidebar Content
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px 0;
-}
-
-.sidebar-nav {
-  padding: 0 12px;
-}
-
-// Navigation Sections
-.nav-section {
-  margin-bottom: 24px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.section-header {
-  padding: 8px 12px;
-  margin-bottom: 4px;
-
-  .section-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--mat-sys-on-surface-variant);
-    opacity: 0.7;
-  }
-}
-
-// Navigation Items
-.nav-items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nav-item-wrapper {
-  position: relative;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--mat-sys-on-surface);
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-  min-height: 48px;
-  gap: 12px;
-
-  &:hover {
-    background-color: var(--mat-sys-surface-variant);
-    color: var(--mat-sys-on-surface);
-  }
-
-  &:focus {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: -2px;
-  }
-
-  &.nav-item--active {
-    background-color: var(--mat-sys-primary-container);
-    color: var(--mat-sys-on-primary-container);
-    font-weight: 500;
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 24px;
-      background-color: var(--mat-sys-primary);
-      border-radius: 0 2px 2px 0;
-    }
-  }
-
-  &.nav-item--disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-}
-
-.nav-item__icon {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  color: inherit;
-}
-
-.nav-item__content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.nav-item__label {
-  font-size: 14px;
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-}
-
-.nav-item__badge {
-  flex-shrink: 0;
-}
-
-.nav-item__expand-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-  transition: transform 0.2s ease;
-  color: var(--mat-sys-on-surface-variant);
-
-  &--expanded {
-    transform: rotate(180deg);
-  }
-}
-
-// Children Items
-.nav-children {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-left: 20px;
-  margin-top: 4px;
-  padding-left: 12px;
-  border-left: 1px solid var(--mat-sys-outline-variant);
-}
-
-.nav-child-item {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: var(--mat-sys-on-surface-variant);
-  transition: all 0.2s ease;
-  font-size: 13px;
-  gap: 8px;
-  min-height: 40px;
-
-  &:hover {
-    background-color: var(--mat-sys-surface-variant-highest);
-    color: var(--mat-sys-on-surface);
-  }
-
-  &.nav-child-item--active {
-    background-color: var(--mat-sys-secondary-container);
-    color: var(--mat-sys-on-secondary-container);
-    font-weight: 500;
-  }
-}
-
-.nav-child-item__icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.nav-child-item__label {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nav-child-item__badge {
-  flex-shrink: 0;
-  font-size: 10px;
-}
-
-// Sidebar Footer
-.sidebar-footer {
-  border-top: 1px solid var(--mat-sys-outline-variant);
-  padding: 16px;
-  background-color: var(--mat-sys-surface-bright);
-
-  .footer-item {
-    display: flex;
-    justify-content: center;
-
-    .footer-btn {
-      color: var(--mat-sys-on-surface-variant);
-
-      &:hover {
-        background-color: var(--mat-sys-surface-variant);
-      }
-    }
-  }
-}
-
-// Main Content Area (no longer contains toolbar)
-.main-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
 }
 
 // User Menu
@@ -327,67 +97,321 @@
   }
 }
 
-// Page Content
+// ==========================================
+// SIDEBAR CONTAINER
+// ==========================================
+.sidebar-container {
+  width: 100%;
+  height: calc(100vh - 64px);
+  margin-top: 64px;
+  overflow: hidden;
+}
+
+// ==========================================
+// MINIMAL ICON SIDEBAR
+// ==========================================
+.sidebar {
+  width: $sidebar-width;
+  background-color: $sidebar-bg;
+  border-right: 1px solid $sidebar-border;
+  display: flex;
+  flex-direction: column;
+  transition: none;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+// ==========================================
+// SIDEBAR CONTENT
+// ==========================================
+.sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $sidebar-border;
+    border-radius: 2px;
+
+    &:hover {
+      background: #4a4a4a;
+    }
+  }
+}
+
+// ==========================================
+// ACTION BUTTON (Orange FAB at top)
+// ==========================================
+.sidebar-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0 24px 0;
+
+  .action-button {
+    width: $action-button-size;
+    height: $action-button-size;
+    background-color: $action-button-bg;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background-color: $action-button-hover;
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// ==========================================
+// NAVIGATION ITEMS
+// ==========================================
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+}
+
+.nav-item-wrapper {
+  position: relative;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $nav-item-size;
+  height: $nav-item-size;
+  border-radius: 12px;
+  text-decoration: none;
+  color: $icon-color;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $sidebar-bg-hover;
+    color: $icon-hover;
+
+    .nav-item__icon {
+      transform: scale(1.1);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.nav-item--active {
+    background-color: $sidebar-bg-hover;
+    color: $icon-active;
+
+    // Active indicator (left accent)
+    &::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 24px;
+      background-color: $icon-active;
+      border-radius: 0 2px 2px 0;
+    }
+  }
+}
+
+.nav-item__icon {
+  font-size: $icon-size;
+  width: $icon-size;
+  height: $icon-size;
+  flex-shrink: 0;
+  color: inherit;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ==========================================
+// SIDEBAR FOOTER (User Profile)
+// ==========================================
+.sidebar-footer {
+  border-top: 1px solid $sidebar-border;
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: $sidebar-bg;
+}
+
+.user-profile-button {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: $user-avatar-size;
+  height: $user-avatar-size;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: scale(1.05);
+
+    .user-avatar {
+      background-color: #4a4a4a;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.user-avatar {
+  width: $user-avatar-size;
+  height: $user-avatar-size;
+  border-radius: 50%;
+  background-color: $user-avatar-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+
+  .user-initials {
+    font-size: 14px;
+    font-weight: 600;
+    color: $icon-color;
+    letter-spacing: 0.5px;
+  }
+}
+
+.user-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  background-color: $sidebar-bg;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: $status-online;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  }
+}
+
+// ==========================================
+// PROFILE MENU
+// ==========================================
+.profile-menu-header {
+  padding: 16px;
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: $user-avatar-bg;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .profile-initials {
+        font-size: 16px;
+        font-weight: 600;
+        color: $icon-color;
+      }
+    }
+
+    .profile-text {
+      flex: 1;
+
+      .profile-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+        margin-bottom: 2px;
+      }
+
+      .profile-status {
+        font-size: 12px;
+        color: $status-online;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        &::before {
+          content: '';
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: $status-online;
+        }
+      }
+    }
+  }
+}
+
+// ==========================================
+// MAIN CONTENT AREA
+// ==========================================
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-left: $sidebar-width;
+  overflow: hidden;
+}
+
 .page-content {
   flex: 1;
   overflow-y: auto;
   background-color: var(--mat-sys-surface-container-lowest);
 }
 
-// Collapsed State Styles
-.sidebar--collapsed {
-  .section-header {
-    display: none;
-  }
-
-  .nav-item {
-    justify-content: center;
-    padding: 12px 8px;
-    min-width: 48px;
-
-    .nav-item__content,
-    .nav-item__expand-icon {
-      display: none;
-    }
-  }
-
-  .nav-children {
-    display: none;
-  }
-
-  .sidebar-footer .footer-item {
-    .footer-btn .mat-icon {
-      transform: rotate(180deg);
-    }
-  }
-}
-
-// Responsive Design
-@media (max-width: 768px) {
-  // On mobile, Material Sidenav should handle the overlay behavior automatically
-  // We just ensure the menu toggle is always visible and accessible
-  .main-toolbar {
-    .menu-toggle {
-      display: flex !important;
-    }
-  }
-
-  // Ensure proper mobile behavior for the sidebar
-  .sidebar {
-    // Material Sidenav will handle the positioning and transitions
-    // We just ensure good mobile UX
-    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
-  }
-}
-
-// Note: Sidebar toggle is now controlled by [opened] binding and *ngIf in HTML
-// No need for additional CSS hiding rules
-
-// Animations
+// ==========================================
+// ANIMATIONS
+// ==========================================
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateX(-8px);
   }
   to {
     opacity: 1;
@@ -395,19 +419,66 @@
   }
 }
 
-.nav-item,
-.nav-child-item {
-  animation: slideIn 0.3s ease-out;
+.nav-item {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
 
-// Focus and Accessibility
+// Stagger animation for nav items
+@for $i from 1 through 20 {
+  .nav-item-wrapper:nth-child(#{$i}) .nav-item {
+    animation-delay: #{$i * 0.03}s;
+  }
+}
+
+// ==========================================
+// TOOLTIP CUSTOMIZATION
+// ==========================================
+::ng-deep {
+  .mat-mdc-tooltip {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// ==========================================
+// FOCUS STATES (Accessibility)
+// ==========================================
 .nav-item:focus-visible,
-.nav-child-item:focus-visible {
-  outline: 2px solid var(--mat-sys-primary);
+.user-profile-button:focus-visible,
+.action-button:focus-visible {
+  outline: 2px solid $icon-active;
   outline-offset: 2px;
 }
 
-// High contrast mode support
+// ==========================================
+// RESPONSIVE DESIGN
+// ==========================================
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.sidebar--mobile-open {
+      transform: translateX(0);
+    }
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .main-toolbar .logo-container {
+    margin-left: 16px;
+  }
+}
+
+// ==========================================
+// HIGH CONTRAST MODE
+// ==========================================
 @media (prefers-contrast: high) {
   .sidebar {
     border-right-width: 2px;
@@ -418,13 +489,15 @@
   }
 }
 
-// Dark mode support
+// ==========================================
+// DARK MODE ENHANCEMENT
+// ==========================================
 @media (prefers-color-scheme: dark) {
   .sidebar {
-    background-color: var(--mat-sys-surface-container-low);
+    background-color: #171717;
   }
 
   .sidebar-footer {
-    background-color: var(--mat-sys-surface-container);
+    background-color: #171717;
   }
 }
