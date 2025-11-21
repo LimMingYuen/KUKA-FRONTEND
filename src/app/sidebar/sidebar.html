@@ -1,38 +1,3 @@
-<!-- Top Toolbar -->
-<mat-toolbar class="main-toolbar" color="primary">
-  <!-- Logo -->
-  <div class="logo-container">
-    <mat-icon class="kuka-logo">precision_manufacturing</mat-icon>
-    <span class="logo-text">KUKA GUI</span>
-  </div>
-
-  <span class="toolbar-spacer"></span>
-
-  <!-- User Menu -->
-  <div class="user-section">
-    <button mat-icon-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
-    </button>
-
-    <mat-menu #userMenu="matMenu" xPosition="before">
-      <mat-card-content class="user-info">
-        <div class="user-details">
-          <mat-icon class="user-avatar">account_circle</mat-icon>
-          <div class="user-text">
-            <div class="user-name">Administrator</div>
-            <div class="user-role">System Admin</div>
-          </div>
-        </div>
-      </mat-card-content>
-      <mat-divider></mat-divider>
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>Logout</span>
-      </button>
-    </mat-menu>
-  </div>
-</mat-toolbar>
-
 <mat-sidenav-container class="sidebar-container">
   <!-- Minimal Icon Sidebar Navigation -->
   <mat-sidenav

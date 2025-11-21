@@ -4,11 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { NavigationService } from '../services/navigation.service';
@@ -25,11 +22,8 @@ import { Subject, takeUntil } from 'rxjs';
     MatIconModule,
     MatButtonModule,
     MatSidenavModule,
-    MatToolbarModule,
     MatTooltipModule,
     MatDividerModule,
-    MatExpansionModule,
-    MatCardModule,
     MatMenuModule
   ],
   templateUrl: './sidebar.html',
