@@ -1,13 +1,5 @@
 <!-- Top Toolbar -->
 <mat-toolbar class="main-toolbar" color="primary">
-  <button mat-icon-button
-          class="menu-toggle"
-          (click)="toggleSidebar()"
-          [matTooltip]="navigationService.sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
-          matTooltipPosition="below">
-    <mat-icon>menu</mat-icon>
-  </button>
-
   <!-- Logo -->
   <div class="logo-container">
     <mat-icon class="kuka-logo">precision_manufacturing</mat-icon>
@@ -42,87 +34,77 @@
 </mat-toolbar>
 
 <mat-sidenav-container class="sidebar-container">
-  <!-- Sidebar Navigation -->
+  <!-- Minimal Icon Sidebar Navigation -->
   <mat-sidenav
     class="sidebar"
-    [ngClass]="getSidebarClasses()"
-    [opened]="!navigationService.sidebarCollapsed()"
+    [opened]="true"
     [mode]="'side'"
     [disableClose]="true">
 
-    <!-- Navigation Items -->
+    <!-- Sidebar Content -->
     <div class="sidebar-content">
+      <!-- New Action Button (Create/Add) -->
+      <div class="sidebar-action">
+        <button mat-fab
+                class="action-button"
+                [routerLink]="'/dashboard'"
+                matTooltip="Dashboard"
+                matTooltipPosition="right">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <!-- Navigation Icons -->
       <nav class="sidebar-nav">
-        <div class="nav-section" *ngFor="let section of sidebarSections; trackBy: trackBySectionId">
-          <!-- Section Header -->
-          <div class="section-header" *ngIf="!navigationService.sidebarCollapsed()">
-            <span class="section-label">{{ section.label }}</span>
-          </div>
-
-          <!-- Section Items -->
-          <div class="nav-items">
-            <div *ngFor="let item of section.items; trackBy: trackByItemId" class="nav-item-wrapper">
-              <!-- Main Item -->
-              <a class="nav-item"
-                 [routerLink]="item.route"
-                 routerLinkActive="nav-item--active"
-                 [routerLinkActiveOptions]="{ exact: true }"
-                 [ngClass]="getItemClasses(item)"
-                 (click)="navigateToRoute(item)"
-                 (keydown)="onKeydown($event, item)"
-                 [attr.aria-label]="item.label"
-                 [attr.aria-expanded]="isItemExpanded(item.id)"
-                 [attr.aria-disabled]="item.disabled || false">
-
-                <!-- Icon -->
-                <mat-icon class="nav-item__icon">{{ item.icon }}</mat-icon>
-
-                <!-- Label -->
-                <div class="nav-item__content" *ngIf="!navigationService.sidebarCollapsed()">
-                  <span class="nav-item__label">{{ item.label }}</span>
-                </div>
-
-                <!-- Expand Icon for items with children -->
-                <mat-icon *ngIf="item.children && item.children.length > 0 && !navigationService.sidebarCollapsed()"
-                         class="nav-item__expand-icon"
-                         [class.nav-item__expand-icon--expanded]="isItemExpanded(item.id)">
-                  {{ isItemExpanded(item.id) ? 'expand_less' : 'expand_more' }}
-                </mat-icon>
-              </a>
-
-              <!-- Children Items (Expanded) -->
-              <div class="nav-children"
-                   *ngIf="item.children && item.children.length > 0 && isItemExpanded(item.id) && !navigationService.sidebarCollapsed()">
-                <a *ngFor="let child of item.children; trackBy: trackByItemId"
-                   class="nav-child-item"
-                   [routerLink]="child.route"
-                   routerLinkActive="nav-child-item--active"
-                   [routerLinkActiveOptions]="{ exact: true }"
-                   [class.nav-child-item--active]="isRouteActive(child.route)"
-                   (click)="navigateToRoute(child)"
-                   [attr.aria-label]="child.label">
-
-                  <mat-icon class="nav-child-item__icon">{{ child.icon }}</mat-icon>
-                  <span class="nav-child-item__label">{{ child.label }}</span>
-                </a>
-              </div>
-            </div>
+        <div *ngFor="let section of sidebarSections; trackBy: trackBySectionId">
+          <div *ngFor="let item of section.items; trackBy: trackByItemId" class="nav-item-wrapper">
+            <a class="nav-item"
+               [routerLink]="item.route"
+               routerLinkActive="nav-item--active"
+               [routerLinkActiveOptions]="{ exact: true }"
+               [matTooltip]="item.label"
+               matTooltipPosition="right"
+               [attr.aria-label]="item.label"
+               [attr.aria-disabled]="item.disabled || false">
+              <mat-icon class="nav-item__icon">{{ item.icon }}</mat-icon>
+            </a>
           </div>
         </div>
       </nav>
     </div>
 
-    <!-- Sidebar Footer -->
+    <!-- User Profile at Bottom -->
     <div class="sidebar-footer">
-      <div class="footer-item" *ngIf="!navigationService.sidebarCollapsed()">
-        <button mat-icon-button
-                class="footer-btn"
-                (click)="toggleSidebar()"
-                matTooltip="Collapse sidebar"
-                matTooltipPosition="right">
-          <mat-icon>chevron_left</mat-icon>
+      <button class="user-profile-button"
+              [matMenuTriggerFor]="profileMenu"
+              matTooltip="Profile & Settings"
+              matTooltipPosition="right">
+        <div class="user-avatar">
+          <span class="user-initials">{{ getUserInitials() }}</span>
+        </div>
+        <div class="user-status">
+          <div class="status-indicator"></div>
+        </div>
+      </button>
+
+      <mat-menu #profileMenu="matMenu" xPosition="after" yPosition="above">
+        <div class="profile-menu-header">
+          <div class="profile-info">
+            <div class="profile-avatar">
+              <span class="profile-initials">{{ getUserInitials() }}</span>
+            </div>
+            <div class="profile-text">
+              <div class="profile-name">{{ getUserName() }}</div>
+              <div class="profile-status">Online</div>
+            </div>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
         </button>
-      </div>
+      </mat-menu>
     </div>
   </mat-sidenav>
 

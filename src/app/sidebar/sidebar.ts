@@ -211,4 +211,27 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   public trackByItemId(index: number, item: SidebarItem): string {
     return item.id;
   }
+
+  /**
+   * Get user initials for avatar
+   */
+  public getUserInitials(): string {
+    const user = this.authService.currentUser();
+    if (user?.username) {
+      const names = user.username.split(' ');
+      if (names.length >= 2) {
+        return (names[0][0] + names[1][0]).toUpperCase();
+      }
+      return user.username.substring(0, 2).toUpperCase();
+    }
+    return 'LM';
+  }
+
+  /**
+   * Get user name
+   */
+  public getUserName(): string {
+    const user = this.authService.currentUser();
+    return user?.username || 'User';
+  }
 }
