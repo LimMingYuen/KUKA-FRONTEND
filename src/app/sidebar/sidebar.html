@@ -1,3 +1,46 @@
+<!-- Top Toolbar -->
+<mat-toolbar class="main-toolbar" color="primary">
+  <button mat-icon-button
+          class="menu-toggle"
+          (click)="toggleSidebar()"
+          [matTooltip]="navigationService.sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+          matTooltipPosition="below">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <!-- Logo -->
+  <div class="logo-container">
+    <mat-icon class="kuka-logo">precision_manufacturing</mat-icon>
+    <span class="logo-text">KUKA GUI</span>
+  </div>
+
+  <span class="toolbar-spacer"></span>
+
+  <!-- User Menu -->
+  <div class="user-section">
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before">
+      <mat-card-content class="user-info">
+        <div class="user-details">
+          <mat-icon class="user-avatar">account_circle</mat-icon>
+          <div class="user-text">
+            <div class="user-name">Administrator</div>
+            <div class="user-role">System Admin</div>
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </div>
+</mat-toolbar>
+
 <mat-sidenav-container class="sidebar-container">
   <!-- Sidebar Navigation -->
   <mat-sidenav
@@ -6,23 +49,6 @@
     [opened]="!navigationService.sidebarCollapsed()"
     [mode]="'side'"
     [disableClose]="true">
-
-    <!-- Sidebar Header -->
-    <div class="sidebar-header">
-      <div class="logo-container">
-        <mat-icon class="kuka-logo">precision_manufacturing</mat-icon>
-        <span class="logo-text" *ngIf="!navigationService.sidebarCollapsed()">KUKA GUI</span>
-      </div>
-      <button mat-icon-button
-              class="toggle-btn"
-              (click)="toggleSidebar()"
-              mat-tooltip="Collapse sidebar"
-              *ngIf="!navigationService.sidebarCollapsed()">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-    </div>
-
-    <mat-divider></mat-divider>
 
     <!-- Navigation Items -->
     <div class="sidebar-content">
@@ -102,43 +128,6 @@
 
   <!-- Main Content Area -->
   <mat-sidenav-content class="main-content">
-    <!-- Top Toolbar -->
-    <mat-toolbar class="main-toolbar" color="primary">
-      <button mat-icon-button
-              class="menu-toggle"
-              (click)="toggleSidebar()"
-              [matTooltip]="navigationService.sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
-              matTooltipPosition="below">
-        <mat-icon>menu</mat-icon>
-      </button>
-
-      <span class="toolbar-spacer"></span>
-
-      <!-- User Menu -->
-      <div class="user-section">
-        <button mat-icon-button [matMenuTriggerFor]="userMenu">
-          <mat-icon>account_circle</mat-icon>
-        </button>
-
-        <mat-menu #userMenu="matMenu" xPosition="before">
-          <mat-card-content class="user-info">
-            <div class="user-details">
-              <mat-icon class="user-avatar">account_circle</mat-icon>
-              <div class="user-text">
-                <div class="user-name">Administrator</div>
-                <div class="user-role">System Admin</div>
-              </div>
-            </div>
-          </mat-card-content>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            <span>Logout</span>
-          </button>
-        </mat-menu>
-      </div>
-    </mat-toolbar>
-
     <!-- Page Content -->
     <div class="page-content">
       <router-outlet></router-outlet>

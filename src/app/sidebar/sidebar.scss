@@ -1,9 +1,55 @@
 @use '@angular/material' as mat;
 
-// Main container
+// Main Toolbar (now at the top, outside sidenav-container)
+.main-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 64px;
+  box-sizing: border-box;
+
+  .menu-toggle {
+    margin-right: 16px;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .kuka-logo {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+    }
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+  }
+}
+
+// Main container (now below toolbar)
 .sidebar-container {
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 64px);
+  margin-top: 64px;
   overflow: hidden;
 }
 
@@ -31,49 +77,7 @@
   }
 }
 
-// Sidebar Header
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  background-color: var(--mat-sys-surface-bright);
-  height: 64px; // Match toolbar height exactly
-  box-sizing: border-box;
-
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    overflow: hidden;
-
-    .kuka-logo {
-      font-size: 32px;
-      color: var(--mat-sys-primary);
-      flex-shrink: 0;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-      white-space: nowrap;
-      opacity: 1;
-      transition: opacity 0.2s ease;
-    }
-  }
-
-  .toggle-btn {
-    flex-shrink: 0;
-    color: var(--mat-sys-on-surface-variant);
-
-    &:hover {
-      background-color: var(--mat-sys-surface-variant);
-    }
-  }
-}
+// Sidebar Header - removed (now in main toolbar)
 
 // Sidebar Content
 .sidebar-content {
@@ -285,36 +289,12 @@
   }
 }
 
-// Main Content Area
+// Main Content Area (no longer contains toolbar)
 .main-content {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
-}
-
-// Main Toolbar
-.main-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 64px; // Match sidebar header height exactly
-  box-sizing: border-box;
-
-  .menu-toggle {
-    margin-right: 16px;
-    display: flex; // Always show the toolbar menu toggle for better UX
-  }
-
-  .toolbar-spacer {
-    flex: 1 1 auto;
-  }
-
-  .user-section {
-    display: flex;
-    align-items: center;
-  }
 }
 
 // User Menu
@@ -356,20 +336,6 @@
 
 // Collapsed State Styles
 .sidebar--collapsed {
-  .sidebar-header {
-    justify-content: center;
-    padding: 16px 8px;
-
-    .logo-container .logo-text {
-      opacity: 0;
-      width: 0;
-    }
-
-    .toggle-btn {
-      display: none;
-    }
-  }
-
   .section-header {
     display: none;
   }
@@ -456,10 +422,6 @@
 @media (prefers-color-scheme: dark) {
   .sidebar {
     background-color: var(--mat-sys-surface-container-low);
-  }
-
-  .sidebar-header {
-    background-color: var(--mat-sys-surface-container);
   }
 
   .sidebar-footer {
