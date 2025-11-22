@@ -82,67 +82,19 @@
   gap: 8px;
   align-items: flex-end;
   flex: 1;
-  min-width: 320px;
+  min-width: 400px;
 }
 
 .datetime-filter-group .date-field {
-  flex: 2;
+  flex: 3;
   min-width: 180px;
 }
 
-/* Native Time Field Styling */
-.native-time-field {
+/* Time Select Fields */
+.time-select-field {
   flex: 1;
-  min-width: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.time-label {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
-  font-weight: 400;
-  padding-left: 4px;
-}
-
-.time-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.23);
-  border-radius: 4px;
-  font-size: 16px;
-  font-family: inherit;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: transparent;
-  transition: border-color 0.2s ease;
-  cursor: pointer;
-  height: 56px;
-  box-sizing: border-box;
-}
-
-.time-input:hover {
-  border-color: rgba(0, 0, 0, 0.87);
-}
-
-.time-input:focus {
-  outline: none;
-  border-color: #1976d2;
-  border-width: 2px;
-  padding: 13px 15px; /* Adjust padding to account for thicker border */
-}
-
-.time-input::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.7;
-  padding: 4px;
-  margin-left: 4px;
-}
-
-.time-input::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.04);
-  border-radius: 50%;
+  min-width: 80px;
+  max-width: 100px;
 }
 
 .grouping-toggle {
@@ -407,13 +359,14 @@
     min-width: 100%;
   }
 
-  .datetime-filter-group .date-field,
-  .native-time-field {
+  .datetime-filter-group .date-field {
+    flex: 1;
     min-width: 0;
   }
 
-  .time-input {
-    font-size: 14px;
+  .time-select-field {
+    min-width: 70px;
+    max-width: 80px;
   }
 
   .kpi-container {

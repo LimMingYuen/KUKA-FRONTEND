@@ -64,9 +64,15 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   public selectedRobotId: string = '';
   public startDate: Date;
   public endDate: Date;
-  public startTime: string = '00:00';
-  public endTime: string = '23:59';
+  public startHour: string = '00';
+  public startMinute: string = '00';
+  public endHour: string = '23';
+  public endMinute: string = '59';
   public groupBy: 'hour' | 'day' = 'day';
+
+  // Time selector options
+  public hours: string[] = [];
+  public minutes: string[] = [];
 
   // Chart data and options
   public utilizationChartData: any;
@@ -78,6 +84,10 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(public analyticsService: RobotAnalyticsService) {
+    // Initialize time selector options
+    this.hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+    this.minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+
     // Initialize default date range
     const defaultRange = getDefaultDateRange();
     this.startDate = defaultRange.start;
@@ -153,8 +163,8 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
 
     const request: UtilizationRequest = {
       robotId: this.selectedRobotId,
-      start: this.combineDateAndTime(this.startDate, this.startTime),
-      end: this.combineDateAndTime(this.endDate, this.endTime),
+      start: this.combineDateAndTime(this.startDate, this.startHour, this.startMinute),
+      end: this.combineDateAndTime(this.endDate, this.endHour, this.endMinute),
       groupBy: this.groupBy
     };
 
@@ -170,15 +180,21 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   /**
    * Combine date and time into a single Date object
    */
-  private combineDateAndTime(date: Date, time: string): Date {
-    if (!date || !time) {
+  private combineDateAndTime(date: Date, hour: string, minute: string): Date {
+    if (!date || hour === null || minute === null) {
       return date;
     }
 
-    const [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
     const combined = new Date(date);
-    combined.setHours(hours, minutes, 0, 0);
+    combined.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
     return combined;
+  }
+
+  /**
+   * Handle time change from hour/minute selectors
+   */
+  public onTimeChange(): void {
+    this.onFiltersChange();
   }
 
   /**
