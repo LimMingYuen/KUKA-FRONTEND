@@ -45,13 +45,18 @@
             <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
-          <div class="native-time-field">
-            <label class="time-label">Start Time</label>
-            <input class="time-input"
-                   type="time"
-                   [(ngModel)]="startTime"
-                   (ngModelChange)="onFiltersChange()">
-          </div>
+          <mat-form-field appearance="outline" class="filter-field time-select-field">
+            <mat-label>Hour</mat-label>
+            <mat-select [(value)]="startHour" (selectionChange)="onTimeChange()">
+              <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-field time-select-field">
+            <mat-label>Min</mat-label>
+            <mat-select [(value)]="startMinute" (selectionChange)="onTimeChange()">
+              <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
 
         <div class="datetime-filter-group">
@@ -61,13 +66,18 @@
             <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
-          <div class="native-time-field">
-            <label class="time-label">End Time</label>
-            <input class="time-input"
-                   type="time"
-                   [(ngModel)]="endTime"
-                   (ngModelChange)="onFiltersChange()">
-          </div>
+          <mat-form-field appearance="outline" class="filter-field time-select-field">
+            <mat-label>Hour</mat-label>
+            <mat-select [(value)]="endHour" (selectionChange)="onTimeChange()">
+              <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-field time-select-field">
+            <mat-label>Min</mat-label>
+            <mat-select [(value)]="endMinute" (selectionChange)="onTimeChange()">
+              <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
 
         <div class="filter-field small">
