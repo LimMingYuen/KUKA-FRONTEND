@@ -11,6 +11,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { Subject, takeUntil } from 'rxjs';
 import { Chart, ChartData, ChartOptions, registerables } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -48,6 +49,7 @@ Chart.register(...registerables);
     MatInputModule,
     MatButtonToggleModule,
     MatProgressSpinnerModule,
+    MatExpansionModule,
     BaseChartDirective
   ],
   templateUrl: './robot-analytics.component.html',
@@ -59,6 +61,7 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   public isLoading = false;
   public error: string | null = null;
   public availableRobots: RobotInfo[] = [];
+  public filtersExpanded = true; // Expanded by default on first load
 
   // Filter values
   public selectedRobotId: string = '';

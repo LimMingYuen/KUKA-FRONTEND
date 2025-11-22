@@ -49,11 +49,36 @@
   gap: 8px;
 }
 
-/* Filters Section */
-.filters-card {
+/* Filters Expansion Panel */
+.filters-panel {
   margin-bottom: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.filters-panel ::ng-deep .mat-expansion-panel-header {
+  padding: 16px 24px;
+}
+
+.filters-panel ::ng-deep .mat-expansion-panel-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.filters-panel ::ng-deep .mat-expansion-panel-header-description {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.filter-summary {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .filters-content {
