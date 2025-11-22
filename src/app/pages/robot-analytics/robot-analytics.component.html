@@ -24,8 +24,23 @@
     </div>
   </div>
 
-  <!-- Filters Card -->
-  <mat-card class="filters-card">
+  <!-- Filters Expansion Panel -->
+  <mat-expansion-panel [(expanded)]="filtersExpanded" class="filters-panel">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>filter_list</mat-icon>
+        <span>Filters</span>
+      </mat-panel-title>
+      <mat-panel-description>
+        <span *ngIf="!filtersExpanded" class="filter-summary">
+          {{ selectedRobotId ? 'Robot ' + selectedRobotId : 'No robot' }} |
+          {{ startDate | date:'MM/dd/yyyy' }} {{ startHour }}:{{ startMinute }} -
+          {{ endDate | date:'MM/dd/yyyy' }} {{ endHour }}:{{ endMinute }} |
+          {{ groupBy === 'day' ? 'Daily' : 'Hourly' }}
+        </span>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
     <div class="filters-content">
       <div class="filters-row">
         <mat-form-field appearance="outline" class="filter-field">
@@ -88,7 +103,7 @@
         </div>
       </div>
     </div>
-  </mat-card>
+  </mat-expansion-panel>
 
   <!-- Loading State -->
   <div class="loading-container" *ngIf="isLoading">
