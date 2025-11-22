@@ -31,6 +31,7 @@ $nav-item-size: 48px;
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  border-radius: 0 !important;
 }
 
 // ==========================================
@@ -40,6 +41,7 @@ $nav-item-size: 48px;
   width: $sidebar-width-collapsed;
   background-color: $sidebar-bg;
   border-right: 1px solid $sidebar-border;
+  border-radius: 0 !important;
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -357,6 +359,7 @@ $nav-item-size: 48px;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  border-radius: 0 !important;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.main-content--sidebar-collapsed {
@@ -372,6 +375,7 @@ $nav-item-size: 48px;
   flex: 1;
   overflow-y: auto;
   background-color: var(--mat-sys-surface-container-lowest);
+  border-radius: 0 !important;
 }
 
 // ==========================================
@@ -451,5 +455,34 @@ $nav-item-size: 48px;
 
   .nav-item--active::before {
     width: 4px;
+  }
+}
+
+// ==========================================
+// OVERRIDE MATERIAL ROUNDED CORNERS
+// ==========================================
+::ng-deep {
+  .mat-drawer-container {
+    border-radius: 0 !important;
+  }
+
+  .mat-drawer {
+    border-radius: 0 !important;
+  }
+
+  .mat-drawer-content {
+    border-radius: 0 !important;
+  }
+
+  .mat-sidenav-container {
+    border-radius: 0 !important;
+  }
+
+  .mat-sidenav {
+    border-radius: 0 !important;
+  }
+
+  .mat-sidenav-content {
+    border-radius: 0 !important;
   }
 }
