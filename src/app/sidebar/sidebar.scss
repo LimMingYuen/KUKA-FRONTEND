@@ -99,6 +99,19 @@ $nav-item-size: 48px;
   justify-content: center;
   align-items: center;
   padding: 8px 0 24px 0;
+  transition: justify-content 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // When sidebar is expanded, move button to the right
+  .sidebar--expanded & {
+    justify-content: flex-end;
+    padding-right: 12px;
+  }
+
+  // When sidebar is collapsed, keep button centered
+  .sidebar--collapsed & {
+    justify-content: center;
+    padding-right: 0;
+  }
 
   .action-button {
     width: $action-button-size;
