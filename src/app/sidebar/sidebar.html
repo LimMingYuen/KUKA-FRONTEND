@@ -76,7 +76,7 @@
   </mat-sidenav>
 
   <!-- Main Content Area -->
-  <mat-sidenav-content class="main-content">
+  <mat-sidenav-content class="main-content" [ngClass]="{'main-content--sidebar-expanded': !sidebarCollapsed, 'main-content--sidebar-collapsed': sidebarCollapsed}">
     <!-- Page Content -->
     <div class="page-content">
       <router-outlet></router-outlet>
