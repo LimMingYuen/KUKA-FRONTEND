@@ -1,20 +1,20 @@
 @use '@angular/material' as mat;
 
 // ==========================================
-// CLAUDE-INSPIRED MINIMAL SIDEBAR
+// MINIMAL SIDEBAR - MATERIAL BLUE THEME
 // ==========================================
 
-// Color Palette - Dark Theme
-$sidebar-bg: #1f1f1f;
-$sidebar-bg-hover: #2a2a2a;
-$sidebar-border: #3a3a3a;
-$icon-color: #e0e0e0;
-$icon-hover: #ffffff;
-$icon-active: #ff6b35;
-$action-button-bg: #ff6b35;
-$action-button-hover: #ff7f50;
+// Color Palette - Light Theme with Blue Primary
+$sidebar-bg: var(--mat-sys-surface-container);
+$sidebar-bg-hover: var(--mat-sys-surface-container-highest);
+$sidebar-border: var(--mat-sys-outline-variant);
+$icon-color: var(--mat-sys-on-surface-variant);
+$icon-hover: var(--mat-sys-on-surface);
+$icon-active: var(--mat-sys-primary);
+$action-button-bg: var(--mat-sys-primary);
+$action-button-hover: var(--mat-sys-primary-container);
 $status-online: #10b981;
-$user-avatar-bg: #3a3a3a;
+$user-avatar-bg: var(--mat-sys-surface-container-high);
 
 // Dimensions
 $sidebar-width: 72px;
@@ -71,11 +71,11 @@ $nav-item-size: 48px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: $sidebar-border;
+    background: var(--mat-sys-outline-variant);
     border-radius: 2px;
 
     &:hover {
-      background: #4a4a4a;
+      background: var(--mat-sys-outline);
     }
   }
 }
@@ -93,13 +93,14 @@ $nav-item-size: 48px;
     width: $action-button-size;
     height: $action-button-size;
     background-color: $action-button-bg;
-    color: white;
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    color: var(--mat-sys-on-primary);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
       background-color: $action-button-hover;
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      color: var(--mat-sys-on-primary-container);
+      box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
       transform: translateY(-2px);
     }
 
@@ -214,7 +215,7 @@ $nav-item-size: 48px;
     transform: scale(1.05);
 
     .user-avatar {
-      background-color: #4a4a4a;
+      background-color: var(--mat-sys-surface-container-highest);
     }
   }
 
@@ -236,7 +237,7 @@ $nav-item-size: 48px;
   .user-initials {
     font-size: 14px;
     font-weight: 600;
-    color: $icon-color;
+    color: var(--mat-sys-on-surface);
     letter-spacing: 0.5px;
   }
 }
@@ -268,9 +269,10 @@ $nav-item-size: 48px;
 ::ng-deep {
   .action-menu {
     .mat-mdc-menu-panel {
-      background-color: #2a2a2a;
+      background-color: var(--mat-sys-surface-container-high);
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--mat-sys-outline-variant);
       margin-left: 12px;
       min-width: 220px;
     }
@@ -280,7 +282,7 @@ $nav-item-size: 48px;
     }
 
     .mat-mdc-menu-item {
-      color: $icon-color;
+      color: var(--mat-sys-on-surface);
       border-radius: 8px;
       margin: 2px 0;
       padding: 0 12px;
@@ -288,8 +290,8 @@ $nav-item-size: 48px;
       transition: all 0.2s ease;
 
       &:hover {
-        background-color: $sidebar-bg-hover;
-        color: $icon-hover;
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
       }
 
       mat-icon {
@@ -304,7 +306,7 @@ $nav-item-size: 48px;
     }
 
     .mat-divider {
-      border-top-color: $sidebar-border;
+      border-top-color: var(--mat-sys-outline-variant);
       margin: 8px 0;
     }
   }
@@ -333,7 +335,7 @@ $nav-item-size: 48px;
       .profile-initials {
         font-size: 16px;
         font-weight: 600;
-        color: $icon-color;
+        color: var(--mat-sys-on-surface);
       }
     }
 
@@ -363,6 +365,13 @@ $nav-item-size: 48px;
         }
       }
     }
+  }
+}
+
+::ng-deep {
+  .mat-mdc-menu-panel {
+    background-color: var(--mat-sys-surface-container-high);
+    border: 1px solid var(--mat-sys-outline-variant);
   }
 }
 
@@ -413,12 +422,12 @@ $nav-item-size: 48px;
 // ==========================================
 ::ng-deep {
   .mat-mdc-tooltip {
-    background-color: #2a2a2a;
-    color: #ffffff;
+    background-color: var(--mat-sys-inverse-surface);
+    color: var(--mat-sys-inverse-on-surface);
     font-size: 12px;
     padding: 6px 12px;
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -428,7 +437,7 @@ $nav-item-size: 48px;
 .nav-item:focus-visible,
 .user-profile-button:focus-visible,
 .action-button:focus-visible {
-  outline: 2px solid $icon-active;
+  outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
@@ -460,18 +469,5 @@ $nav-item-size: 48px;
 
   .nav-item--active::before {
     width: 4px;
-  }
-}
-
-// ==========================================
-// DARK MODE ENHANCEMENT
-// ==========================================
-@media (prefers-color-scheme: dark) {
-  .sidebar {
-    background-color: #171717;
-  }
-
-  .sidebar-footer {
-    background-color: #171717;
   }
 }
