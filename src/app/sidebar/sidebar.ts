@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 
 import { NavigationService } from '../services/navigation.service';
 import { AuthService } from '../services/auth.service';
@@ -30,12 +30,15 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrl: './sidebar.scss'
 })
 export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('actionMenuTrigger') actionMenuTrigger!: MatMenuTrigger;
+
   public sidebarSections: SidebarSection[] = [];
 
   // Reactive state
   public activeRoute = '';
   public sidebarCollapsed = false;
   public expandedItems = new Set<string>();
+  public isActionMenuOpen = false;
 
   private destroy$ = new Subject<void>();
 
@@ -71,6 +74,21 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Initialize expanded items based on active route
     this.expandActiveItems();
+
+    // Subscribe to action menu events
+    if (this.actionMenuTrigger) {
+      this.actionMenuTrigger.menuOpened
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.isActionMenuOpen = true;
+        });
+
+      this.actionMenuTrigger.menuClosed
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.isActionMenuOpen = false;
+        });
+    }
   }
 
   ngOnDestroy(): void {
@@ -108,10 +126,13 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Navigate to a specific route
    */
-  public navigateToRoute(item: SidebarItem): void {
-    if (item.disabled) return;
-
-    this.navigationService.navigateToRoute(item.route);
+  public navigateToRoute(itemOrRoute: SidebarItem | string): void {
+    if (typeof itemOrRoute === 'string') {
+      this.router.navigate([itemOrRoute]);
+    } else {
+      if (itemOrRoute.disabled) return;
+      this.navigationService.navigateToRoute(itemOrRoute.route);
+    }
   }
 
   /**
