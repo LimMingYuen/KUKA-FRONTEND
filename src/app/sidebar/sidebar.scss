@@ -356,16 +356,15 @@ $nav-item-size: 48px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin-left: $sidebar-width-collapsed;
   overflow: hidden;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.main-content--sidebar-collapsed {
-    margin-left: $sidebar-width-collapsed;
+    margin-left: $sidebar-width-collapsed !important;
   }
 
   &.main-content--sidebar-expanded {
-    margin-left: $sidebar-width-expanded;
+    margin-left: $sidebar-width-expanded !important;
   }
 }
 
