@@ -90,9 +90,59 @@
   min-width: 180px;
 }
 
-.datetime-filter-group .time-field {
+/* Native Time Field Styling */
+.native-time-field {
   flex: 1;
   min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 400;
+  padding-left: 4px;
+}
+
+.time-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: transparent;
+  transition: border-color 0.2s ease;
+  cursor: pointer;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.time-input:hover {
+  border-color: rgba(0, 0, 0, 0.87);
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  border-width: 2px;
+  padding: 13px 15px; /* Adjust padding to account for thicker border */
+}
+
+.time-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 4px;
+  margin-left: 4px;
+}
+
+.time-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 50%;
 }
 
 .grouping-toggle {
@@ -358,8 +408,12 @@
   }
 
   .datetime-filter-group .date-field,
-  .datetime-filter-group .time-field {
+  .native-time-field {
     min-width: 0;
+  }
+
+  .time-input {
+    font-size: 14px;
   }
 
   .kpi-container {
@@ -425,33 +479,3 @@
   height: auto;
 }
 
-/* Time Input Styling */
-::ng-deep .time-field input[type="time"] {
-  cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  font-family: inherit;
-  font-size: 14px;
-  padding: 8px 0;
-}
-
-::ng-deep .time-field input[type="time"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  margin-left: 4px;
-  opacity: 0.6;
-}
-
-::ng-deep .time-field input[type="time"]:hover::-webkit-calendar-picker-indicator {
-  opacity: 1;
-}
-
-::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-fields-wrapper {
-  padding: 0;
-}
-
-::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-text,
-::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-hour-field,
-::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-minute-field {
-  padding: 2px;
-}
