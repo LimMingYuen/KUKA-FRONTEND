@@ -24,86 +24,11 @@ $user-avatar-size: 40px;
 $nav-item-size: 48px;
 
 // ==========================================
-// TOP TOOLBAR
-// ==========================================
-.main-toolbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  height: 64px;
-  box-sizing: border-box;
-
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: $sidebar-width + 16px; // Offset for sidebar
-
-    .kuka-logo {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: white;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: white;
-      white-space: nowrap;
-    }
-  }
-
-  .toolbar-spacer {
-    flex: 1 1 auto;
-  }
-
-  .user-section {
-    display: flex;
-    align-items: center;
-  }
-}
-
-// User Menu
-.user-info {
-  padding: 16px;
-
-  .user-details {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    .user-avatar {
-      font-size: 32px;
-      width: 40px;
-      height: 40px;
-      color: var(--mat-sys-primary);
-    }
-
-    .user-text {
-      .user-name {
-        font-weight: 500;
-        color: var(--mat-sys-on-surface);
-      }
-
-      .user-role {
-        font-size: 12px;
-        color: var(--mat-sys-on-surface-variant);
-      }
-    }
-  }
-}
-
-// ==========================================
 // SIDEBAR CONTAINER
 // ==========================================
 .sidebar-container {
   width: 100%;
-  height: calc(100vh - 64px);
-  margin-top: 64px;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -119,7 +44,7 @@ $nav-item-size: 48px;
   transition: none;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
   position: fixed;
-  top: 64px;
+  top: 0;
   left: 0;
   bottom: 0;
   z-index: 999;
@@ -469,10 +394,6 @@ $nav-item-size: 48px;
 
   .main-content {
     margin-left: 0;
-  }
-
-  .main-toolbar .logo-container {
-    margin-left: 16px;
   }
 }
 
