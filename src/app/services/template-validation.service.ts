@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { SavedCustomMissionsService } from './saved-custom-missions.service';
+import { WorkflowTemplateService } from './workflow-template.service';
 import { SavedCustomMissionDto } from '../models/saved-custom-missions.models';
 
 /**
@@ -67,7 +67,7 @@ export class TemplateValidationService {
 
   constructor(
     private http: HttpClient,
-    private savedCustomMissionsService: SavedCustomMissionsService
+    private workflowTemplateService: WorkflowTemplateService
   ) {}
 
   /**
@@ -92,7 +92,7 @@ export class TemplateValidationService {
    * Check if a mission type is used by any templates
    */
   public checkMissionTypeUsage(missionTypeValue: string): Observable<ConfigurationUsageResult> {
-    return this.savedCustomMissionsService.getAllSavedCustomMissions().pipe(
+    return this.workflowTemplateService.getAllSavedCustomMissions().pipe(
       map(templates => {
         const affectedTemplates = templates
           .filter(t => t.missionType === missionTypeValue)
@@ -124,7 +124,7 @@ export class TemplateValidationService {
    * Check if a robot type is used by any templates
    */
   public checkRobotTypeUsage(robotTypeValue: string): Observable<ConfigurationUsageResult> {
-    return this.savedCustomMissionsService.getAllSavedCustomMissions().pipe(
+    return this.workflowTemplateService.getAllSavedCustomMissions().pipe(
       map(templates => {
         const affectedTemplates = templates
           .filter(t => t.robotType === robotTypeValue)
@@ -156,7 +156,7 @@ export class TemplateValidationService {
    * Check if a resume strategy is used by any templates
    */
   public checkResumeStrategyUsage(strategyValue: string): Observable<ConfigurationUsageResult> {
-    return this.savedCustomMissionsService.getAllSavedCustomMissions().pipe(
+    return this.workflowTemplateService.getAllSavedCustomMissions().pipe(
       map(templates => {
         const affectedTemplates: { id: number; name: string }[] = [];
 

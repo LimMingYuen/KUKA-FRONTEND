@@ -19,13 +19,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { MissionsService } from '../../services/missions.service';
 import { WorkflowService } from '../../services/workflow.service';
-import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
 import { MissionHistoryService } from '../../services/mission-history.service';
 import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.service';
 import { MapZonesService } from '../../services/map-zones.service';
 import { QrCodesService } from '../../services/qr-codes.service';
 import { WorkflowDisplayData } from '../../models/workflow.models';
-import { SavedCustomMissionsDisplayData, MissionStepData } from '../../models/saved-custom-missions.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
 import { MissionHistoryRequest, UpdateMissionHistoryRequest } from '../../models/mission-history.models';
 import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
@@ -34,7 +32,6 @@ import { QrCodeWithUuidDto } from '../../models/qr-code.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
 import { SelectWorkflowsDialogComponent, SelectWorkflowsDialogData, SelectWorkflowsDialogResult } from '../../shared/dialogs/select-workflows-dialog/select-workflows-dialog.component';
-import { SelectCustomMissionsDialogComponent, SelectCustomMissionsDialogData, SelectCustomMissionsDialogResult } from '../../shared/dialogs/select-custom-missions-dialog/select-custom-missions-dialog.component';
 
 @Component({
   selector: 'app-mission-control',
@@ -64,7 +61,6 @@ import { SelectCustomMissionsDialogComponent, SelectCustomMissionsDialogData, Se
 export class MissionControlComponent implements OnInit, OnDestroy {
   // Data
   public workflows: WorkflowDisplayData[] = [];
-  public customMissions: SavedCustomMissionsDisplayData[] = [];
   public zoneMappings: WorkflowZoneMapping[] = [];
 
   // Grouped workflows by zone
@@ -73,26 +69,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public selectedWorkflowIds: Set<number> = new Set();
   public expandedZones: Set<string> = new Set();
 
-  // Grouped custom missions by zone
-  public mapZonesWithNodes: MapZoneWithNodesDto[] = [];
-  public qrCodesWithUuid: QrCodeWithUuidDto[] = [];
-  public customMissionsByZone: Map<string, SavedCustomMissionsDisplayData[]> = new Map();
-  public filteredCustomMissionsByZone: Map<string, SavedCustomMissionsDisplayData[]> = new Map();
-  public selectedCustomMissionIds: Set<number> = new Set();
-  public expandedCustomZones: Set<string> = new Set();
-
-  // Store job execution state for each workflow/mission
+  // Store job execution state for each workflow
   public workflowJobs: Map<number, {
-    missionCode: string;
-    requestId?: string;
-    workflowName?: string;
-    workflowId?: number;
-    savedMissionId?: number;
-    jobData?: JobData;
-    robotData?: RobotData;
-  }> = new Map();
-
-  public customMissionJobs: Map<number, {
     missionCode: string;
     requestId?: string;
     workflowName?: string;
@@ -104,7 +82,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   // Loading states
   public isLoadingWorkflows = false;
-  public isLoadingCustomMissions = false;
   public isLoadingZoneMappings = false;
   public triggeringMissions: Set<number> = new Set();
   public cancellingMissions: Set<number> = new Set();
@@ -124,18 +101,14 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   constructor(
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
-    private customMissionsService: SavedCustomMissionsService,
     private missionHistoryService: MissionHistoryService,
     private workflowNodeCodesService: WorkflowNodeCodesService,
-    private mapZonesService: MapZonesService,
-    private qrCodesService: QrCodesService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.loadWorkflowsAndZones();
-    this.loadCustomMissionsAndZones();
   }
 
   /**
@@ -316,157 +289,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     this.robotQueryErrorCount.clear();
   }
 
-  /**
-   * Load custom missions, map zones, and QR codes together, then group by zone
-   */
-  loadCustomMissionsAndZones(): void {
-    this.isLoadingCustomMissions = true;
-
-    forkJoin({
-      customMissions: this.customMissionsService.getAllSavedCustomMissions(),
-      mapZones: this.mapZonesService.getMapZonesWithNodes(),
-      qrCodes: this.qrCodesService.getQrCodesWithUuid()
-    }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (result) => {
-          this.customMissions = result.customMissions;
-          this.mapZonesWithNodes = result.mapZones;
-          this.qrCodesWithUuid = result.qrCodes;
-          this.groupCustomMissionsByZone();
-          this.isLoadingCustomMissions = false;
-        },
-        error: (error) => {
-          console.error('Error loading custom missions and zones:', error);
-          this.isLoadingCustomMissions = false;
-          this.snackBar.open('Failed to load custom missions', 'Close', { duration: 3000 });
-        }
-      });
-  }
-
-  /**
-   * Group custom missions by zone based on MissionStepsJson
-   */
-  groupCustomMissionsByZone(): void {
-    const grouped = new Map<string, SavedCustomMissionsDisplayData[]>();
-
-    this.customMissions.forEach(mission => {
-      const zoneName = this.findZoneForCustomMission(mission) || 'Uncategorized';
-
-      if (!grouped.has(zoneName)) {
-        grouped.set(zoneName, []);
-        this.expandedCustomZones.add(zoneName);
-      }
-      grouped.get(zoneName)!.push(mission);
-    });
-
-    // Sort zones alphabetically, keep "Uncategorized" at the end
-    const sortedGrouped = new Map<string, SavedCustomMissionsDisplayData[]>();
-    const sortedKeys = Array.from(grouped.keys()).sort((a, b) => {
-      if (a === 'Uncategorized') return 1;
-      if (b === 'Uncategorized') return -1;
-      return a.localeCompare(b);
-    });
-
-    sortedKeys.forEach(key => {
-      sortedGrouped.set(key, grouped.get(key)!);
-    });
-
-    this.customMissionsByZone = sortedGrouped;
-
-    // Apply filter if any missions are selected, otherwise show all
-    this.applyCustomMissionFilter();
-  }
-
-  /**
-   * Apply custom mission filter based on selected IDs
-   */
-  applyCustomMissionFilter(): void {
-    if (this.selectedCustomMissionIds.size === 0) {
-      // No filter - show all missions
-      this.filteredCustomMissionsByZone = new Map(this.customMissionsByZone);
-    } else {
-      // Filter to show only selected missions
-      const filtered = new Map<string, SavedCustomMissionsDisplayData[]>();
-
-      this.customMissionsByZone.forEach((missions, zoneName) => {
-        const selectedMissions = missions.filter(m => this.selectedCustomMissionIds.has(m.id));
-        if (selectedMissions.length > 0) {
-          filtered.set(zoneName, selectedMissions);
-        }
-      });
-
-      this.filteredCustomMissionsByZone = filtered;
-    }
-  }
-
-  /**
-   * Open custom mission selection dialog
-   */
-  openSelectCustomMissionsDialog(): void {
-    const dialogRef = this.dialog.open(SelectCustomMissionsDialogComponent, {
-      width: '600px',
-      maxHeight: '80vh',
-      data: {
-        missionsByZone: this.customMissionsByZone,
-        selectedIds: this.selectedCustomMissionIds
-      } as SelectCustomMissionsDialogData
-    });
-
-    dialogRef.afterClosed().subscribe((result: SelectCustomMissionsDialogResult | undefined) => {
-      if (result) {
-        this.selectedCustomMissionIds = result.selectedIds;
-        this.applyCustomMissionFilter();
-      }
-    });
-  }
-
-  /**
-   * Clear custom mission filter
-   */
-  clearCustomMissionFilter(): void {
-    this.selectedCustomMissionIds.clear();
-    this.applyCustomMissionFilter();
-  }
-
-  /**
-   * Find zone for custom mission by parsing MissionStepsJson
-   */
-  private findZoneForCustomMission(mission: SavedCustomMissionsDisplayData): string | null {
-    if (!mission.missionStepsJson) {
-      return null;
-    }
-
-    try {
-      const steps: MissionStepData[] = JSON.parse(mission.missionStepsJson);
-
-      // Get the first step (sequence 0)
-      const firstStep = steps.find(step => step.sequence === 0) || steps[0];
-
-      if (!firstStep || !firstStep.position) {
-        return null;
-      }
-
-      // Handle based on step type
-      if (firstStep.type && firstStep.type.toUpperCase().includes('AREA')) {
-        // For NODE_AREA type, position is the ZoneCode
-        // Match directly against zone.zoneCode to get zoneName
-        for (const zone of this.mapZonesWithNodes) {
-          if (zone.zoneCode === firstStep.position) {
-            return zone.zoneName;
-          }
-        }
-      } else if (firstStep.type && firstStep.type.toUpperCase() === 'NODE_POINT') {
-        // For NODE_POINT type, use the position value directly as category name
-        // e.g., "Sim1-1-1" becomes the category
-        return firstStep.position;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error parsing mission steps:', error);
-      return null;
-    }
-  }
 
   /**
    * Extract last number after the final dash from a node code
@@ -501,12 +323,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Check if custom zone is expanded
-   */
-  isCustomZoneExpanded(zoneName: string): boolean {
-    return this.expandedCustomZones.has(zoneName);
-  }
 
   /**
    * Trigger sync workflow mission
@@ -568,55 +384,13 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Trigger custom mission
-   */
-  triggerCustomMission(mission: SavedCustomMissionsDisplayData): void {
-    const id = mission.id;
-    this.triggeringMissions.add(id);
-
-    // You would need to get the full mission data with missionData array
-    // For now, using the trigger endpoint from the service
-    this.customMissionsService.triggerSavedCustomMission(id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.triggeringMissions.delete(id);
-          this.snackBar.open(`Custom mission "${mission.missionName}" triggered successfully!`, 'Close', { duration: 3000 });
-          // If response contains missionCode, start polling
-          if (response && (response as any).missionCode) {
-            const missionCode = (response as any).missionCode;
-            const requestId = (response as any).requestId || this.generateRequestId();
-
-            // Initialize job tracking for this custom mission
-            this.customMissionJobs.set(id, {
-              missionCode: missionCode,
-              requestId: requestId,
-              workflowName: mission.missionName,
-              savedMissionId: id
-            });
-
-            // Start polling job status
-            this.startJobPolling(id, missionCode, 'custom');
-          }
-        },
-        error: (error) => {
-          this.triggeringMissions.delete(id);
-          // Handle HTTP/network errors
-          const errorMsg = this.extractErrorMessage(error);
-          this.snackBar.open(`Error triggering custom mission: ${errorMsg}`, 'Close', { duration: 8000 });
-          console.error('Error triggering custom mission:', error);
-        }
-      });
-  }
 
   /**
    * Start polling for job and robot status
-   * @param id - Workflow ID or Custom Mission ID
+   * @param id - Workflow ID
    * @param missionCode - Mission code to query
-   * @param type - 'workflow' or 'custom'
    */
-  startJobPolling(id: number, missionCode: string, type: 'workflow' | 'custom'): void {
+  startJobPolling(id: number, missionCode: string): void {
     // Don't start if already polling
     if (this.pollingSubscriptions.has(missionCode)) {
       return;
@@ -638,22 +412,21 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
               const jobData = response.data[0];
 
-              // Update the appropriate job map
-              const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-              const currentJob = jobsMap.get(id);
+              // Update workflow job map
+              const currentJob = this.workflowJobs.get(id);
               if (currentJob) {
                 currentJob.jobData = jobData;
               }
 
               // Query robot status if robotId is available
               if (jobData.robotId) {
-                this.queryRobotStatus(id, jobData.robotId, type);
+                this.queryRobotStatus(id, jobData.robotId);
               }
 
               // Stop polling if job is in terminal state
               if (MissionsUtils.isJobTerminal(jobData.status)) {
                 // Create mission history record with completion data
-                this.createMissionHistoryOnCompletion(id, missionCode, jobData, type);
+                this.createMissionHistoryOnCompletion(id, missionCode, jobData);
                 this.stopJobPolling(missionCode);
               }
             } else if (!response.success) {
@@ -675,11 +448,10 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Query robot status
-   * @param id - Workflow ID or Custom Mission ID
+   * @param id - Workflow ID
    * @param robotId - Robot ID to query
-   * @param type - 'workflow' or 'custom'
    */
-  private queryRobotStatus(id: number, robotId: string, type: 'workflow' | 'custom'): void {
+  private queryRobotStatus(id: number, robotId: string): void {
     this.missionsService.queryRobots({
       robotId: robotId
     }).subscribe({
@@ -690,9 +462,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
           const robotData = response.data[0];
 
-          // Update the appropriate job map
-          const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-          const currentJob = jobsMap.get(id);
+          // Update workflow job map
+          const currentJob = this.workflowJobs.get(id);
           if (currentJob) {
             currentJob.robotData = robotData;
           }
@@ -729,15 +500,13 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   private createMissionHistoryOnCompletion(
     id: number,
     missionCode: string,
-    jobData: JobData,
-    type: 'workflow' | 'custom'
+    jobData: JobData
   ): void {
     // Get job metadata from tracking map
-    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-    const jobInfo = jobsMap.get(id);
+    const jobInfo = this.workflowJobs.get(id);
 
     if (!jobInfo) {
-      console.error(`No job info found for ${type} ID ${id}`);
+      console.error(`No job info found for workflow ID ${id}`);
       return;
     }
 
@@ -799,22 +568,20 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    */
   refresh(): void {
     this.loadWorkflowsAndZones();
-    this.loadCustomMissionsAndZones();
   }
 
   /**
    * Check if workflow has active job
    */
-  hasActiveJob(id: number, type: 'workflow' | 'custom'): boolean {
-    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-    return jobsMap.has(id);
+  hasActiveJob(id: number): boolean {
+    return this.workflowJobs.has(id);
   }
 
   /**
    * Get active job count for badge
    */
-  getActiveJobCount(type: 'workflow' | 'custom'): number {
-    return type === 'workflow' ? this.workflowJobs.size : this.customMissionJobs.size;
+  getActiveJobCount(): number {
+    return this.workflowJobs.size;
   }
 
   /**
@@ -831,19 +598,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refresh single custom mission job status
-   */
-  refreshCustomMissionStatus(mission: SavedCustomMissionsDisplayData): void {
-    const job = this.customMissionJobs.get(mission.id);
-    if (job && job.missionCode) {
-      this.snackBar.open('Refreshing job status...', '', { duration: 1000 });
-      // Polling will automatically update the status
-    } else {
-      this.snackBar.open('No active job for this mission', 'Close', { duration: 2000 });
-    }
-  }
-
-  /**
    * View workflow details (placeholder for future implementation)
    */
   viewWorkflowDetails(workflow: WorkflowDisplayData): void {
@@ -852,24 +606,15 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * View custom mission details (placeholder for future implementation)
-   */
-  viewCustomMissionDetails(mission: SavedCustomMissionsDisplayData): void {
-    this.snackBar.open(`View details for: ${mission.missionName}`, 'Close', { duration: 2000 });
-    // TODO: Open dialog or navigate to details page
-  }
-
-  /**
    * Cancel mission - opens dialog to select cancel mode
    */
-  cancelMission(id: number, type: 'workflow' | 'custom', event?: Event): void {
+  cancelMission(id: number, event?: Event): void {
     // Prevent event propagation if called from button
     if (event) {
       event.stopPropagation();
     }
 
-    const jobsMap = type === 'workflow' ? this.workflowJobs : this.customMissionJobs;
-    const job = jobsMap.get(id);
+    const job = this.workflowJobs.get(id);
 
     if (!job || !job.missionCode) {
       this.snackBar.open('No active mission to cancel', 'Close', { duration: 2000 });

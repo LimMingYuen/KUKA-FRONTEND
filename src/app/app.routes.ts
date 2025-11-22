@@ -45,12 +45,6 @@ export const routes: Routes = [
     title: 'Mission History - KUKA GUI'
   },
   {
-    path: 'saved-custom-missions',
-    loadComponent: () => import('./pages/saved-custom-missions/saved-custom-missions.component').then(m => m.SavedCustomMissionsComponent),
-    canActivate: [authGuard],
-    title: 'Saved Custom Missions - KUKA GUI'
-  },
-  {
     path: 'mission-control',
     loadComponent: () => import('./pages/mission-control/mission-control.component').then(m => m.MissionControlComponent),
     canActivate: [authGuard],
@@ -75,7 +69,7 @@ export const routes: Routes = [
     title: 'Role Management - KUKA GUI'
   },
   {
-    path: 'create-workflow-template',
+    path: 'workflow-templates',
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],
     title: 'Workflow Templates - KUKA GUI'

@@ -18,7 +18,7 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class SavedCustomMissionsService {
+export class WorkflowTemplateService {
   private readonly API_URL = 'http://localhost:5109/api';
   private readonly SAVED_CUSTOM_MISSIONS_ENDPOINT = '/saved-custom-missions';
 
