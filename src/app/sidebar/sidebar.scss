@@ -475,27 +475,18 @@ $nav-item-size: 48px;
 // OVERRIDE MATERIAL ROUNDED CORNERS
 // ==========================================
 ::ng-deep {
-  .mat-drawer-container {
-    border-radius: 0 !important;
-  }
-
-  .mat-drawer {
-    border-radius: 0 !important;
-  }
-
-  .mat-drawer-content {
-    border-radius: 0 !important;
-  }
-
-  .mat-sidenav-container {
-    border-radius: 0 !important;
-  }
-
-  .mat-sidenav {
-    border-radius: 0 !important;
-  }
-
-  .mat-sidenav-content {
+  .mat-drawer-container,
+  .mat-drawer-container *,
+  .mat-drawer,
+  .mat-drawer *,
+  .mat-drawer-content,
+  .mat-drawer-content *,
+  .mat-sidenav-container,
+  .mat-sidenav-container *,
+  .mat-sidenav,
+  .mat-sidenav *,
+  .mat-sidenav-content,
+  .mat-sidenav-content * {
     border-radius: 0 !important;
   }
 }
