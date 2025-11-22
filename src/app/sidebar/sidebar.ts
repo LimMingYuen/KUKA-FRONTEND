@@ -30,15 +30,12 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrl: './sidebar.scss'
 })
 export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('actionMenuTrigger') actionMenuTrigger!: MatMenuTrigger;
-
   public sidebarSections: SidebarSection[] = [];
 
   // Reactive state
   public activeRoute = '';
-  public sidebarCollapsed = false;
+  public sidebarCollapsed = true; // Start collapsed
   public expandedItems = new Set<string>();
-  public isActionMenuOpen = false;
 
   private destroy$ = new Subject<void>();
 
@@ -74,21 +71,6 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Initialize expanded items based on active route
     this.expandActiveItems();
-
-    // Subscribe to action menu events
-    if (this.actionMenuTrigger) {
-      this.actionMenuTrigger.menuOpened
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.isActionMenuOpen = true;
-        });
-
-      this.actionMenuTrigger.menuClosed
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.isActionMenuOpen = false;
-        });
-    }
   }
 
   ngOnDestroy(): void {
@@ -139,7 +121,7 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
    * Toggle sidebar collapsed state
    */
   public toggleSidebar(): void {
-    this.navigationService.toggleSidebar();
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
   /**

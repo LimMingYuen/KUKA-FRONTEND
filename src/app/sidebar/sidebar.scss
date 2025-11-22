@@ -17,7 +17,8 @@ $status-online: #10b981;
 $user-avatar-bg: var(--mat-sys-surface-container-high);
 
 // Dimensions
-$sidebar-width: 72px;
+$sidebar-width-collapsed: 72px;
+$sidebar-width-expanded: 240px;
 $icon-size: 24px;
 $action-button-size: 48px;
 $user-avatar-size: 40px;
@@ -36,18 +37,26 @@ $nav-item-size: 48px;
 // MINIMAL ICON SIDEBAR
 // ==========================================
 .sidebar {
-  width: $sidebar-width;
+  width: $sidebar-width-collapsed;
   background-color: $sidebar-bg;
   border-right: 1px solid $sidebar-border;
   display: flex;
   flex-direction: column;
-  transition: none;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   z-index: 999;
+
+  &.sidebar--expanded {
+    width: $sidebar-width-expanded;
+  }
+
+  &.sidebar--collapsed {
+    width: $sidebar-width-collapsed;
+  }
 }
 
 // ==========================================
@@ -81,7 +90,7 @@ $nav-item-size: 48px;
 }
 
 // ==========================================
-// ACTION BUTTON (Orange FAB at top)
+// HAMBURGER TOGGLE BUTTON
 // ==========================================
 .sidebar-action {
   display: flex;
@@ -112,11 +121,6 @@ $nav-item-size: 48px;
       font-size: 24px;
       width: 24px;
       height: 24px;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &.action-button--expanded {
-        transform: rotate(135deg);
-      }
     }
   }
 }
@@ -138,15 +142,17 @@ $nav-item-size: 48px;
 .nav-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: $nav-item-size;
+  justify-content: flex-start;
+  width: 100%;
   height: $nav-item-size;
+  padding: 0 16px;
   border-radius: 12px;
   text-decoration: none;
   color: $icon-color;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   cursor: pointer;
+  gap: 12px;
 
   &:hover {
     background-color: $sidebar-bg-hover;
@@ -178,6 +184,13 @@ $nav-item-size: 48px;
       border-radius: 0 2px 2px 0;
     }
   }
+
+  // Collapsed state - center icon
+  .sidebar--collapsed & {
+    justify-content: center;
+    padding: 0;
+    width: $nav-item-size;
+  }
 }
 
 .nav-item__icon {
@@ -187,6 +200,16 @@ $nav-item-size: 48px;
   flex-shrink: 0;
   color: inherit;
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item__label {
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  color: inherit;
 }
 
 // ==========================================
@@ -264,55 +287,6 @@ $nav-item-size: 48px;
 }
 
 // ==========================================
-// ACTION MENU
-// ==========================================
-::ng-deep {
-  .action-menu {
-    .mat-mdc-menu-panel {
-      background-color: var(--mat-sys-surface-container-high);
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      border: 1px solid var(--mat-sys-outline-variant);
-      margin-left: 12px;
-      min-width: 220px;
-    }
-
-    .mat-mdc-menu-content {
-      padding: 8px;
-    }
-
-    .mat-mdc-menu-item {
-      color: var(--mat-sys-on-surface);
-      border-radius: 8px;
-      margin: 2px 0;
-      padding: 0 12px;
-      height: 44px;
-      transition: all 0.2s ease;
-
-      &:hover {
-        background-color: var(--mat-sys-primary-container);
-        color: var(--mat-sys-on-primary-container);
-      }
-
-      mat-icon {
-        color: inherit;
-        margin-right: 12px;
-      }
-
-      span {
-        font-size: 14px;
-        font-weight: 400;
-      }
-    }
-
-    .mat-divider {
-      border-top-color: var(--mat-sys-outline-variant);
-      margin: 8px 0;
-    }
-  }
-}
-
-// ==========================================
 // PROFILE MENU
 // ==========================================
 .profile-menu-header {
@@ -382,8 +356,13 @@ $nav-item-size: 48px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin-left: $sidebar-width;
+  margin-left: $sidebar-width-collapsed;
   overflow: hidden;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .sidebar--expanded ~ & {
+    margin-left: $sidebar-width-expanded;
+  }
 }
 
 .page-content {
