@@ -76,6 +76,25 @@
   flex: 0 1 150px;
 }
 
+/* DateTime Filter Group */
+.datetime-filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex: 1;
+  min-width: 320px;
+}
+
+.datetime-filter-group .date-field {
+  flex: 2;
+  min-width: 180px;
+}
+
+.datetime-filter-group .time-field {
+  flex: 1;
+  min-width: 120px;
+}
+
 .grouping-toggle {
   margin-bottom: 8px;
 }
@@ -331,6 +350,16 @@
   .filter-field.small {
     width: 100%;
     min-width: 100%;
+  }
+
+  .datetime-filter-group {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .datetime-filter-group .date-field,
+  .datetime-filter-group .time-field {
+    min-width: 0;
   }
 
   .kpi-container {
