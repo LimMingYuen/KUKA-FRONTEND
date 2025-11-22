@@ -46,9 +46,12 @@
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field time-field">
-            <mat-label>Time</mat-label>
-            <input matInput type="time" [(ngModel)]="startTime" (change)="onFiltersChange()">
-            <mat-icon matSuffix>schedule</mat-icon>
+            <mat-label>Start Time</mat-label>
+            <input matInput
+                   type="time"
+                   [(ngModel)]="startTime"
+                   (ngModelChange)="onFiltersChange()"
+                   placeholder="HH:MM">
           </mat-form-field>
         </div>
 
@@ -60,9 +63,12 @@
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="filter-field time-field">
-            <mat-label>Time</mat-label>
-            <input matInput type="time" [(ngModel)]="endTime" (change)="onFiltersChange()">
-            <mat-icon matSuffix>schedule</mat-icon>
+            <mat-label>End Time</mat-label>
+            <input matInput
+                   type="time"
+                   [(ngModel)]="endTime"
+                   (ngModelChange)="onFiltersChange()"
+                   placeholder="HH:MM">
           </mat-form-field>
         </div>
 

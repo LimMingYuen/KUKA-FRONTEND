@@ -424,3 +424,34 @@
   width: 296px;
   height: auto;
 }
+
+/* Time Input Styling */
+::ng-deep .time-field input[type="time"] {
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+::ng-deep .time-field input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+::ng-deep .time-field input[type="time"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-text,
+::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-hour-field,
+::ng-deep .time-field input[type="time"]::-webkit-datetime-edit-minute-field {
+  padding: 2px;
+}
