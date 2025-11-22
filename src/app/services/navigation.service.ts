@@ -58,7 +58,7 @@ export class NavigationService {
             id: 'workflow-templates',
             label: 'Workflow Templates',
             icon: 'assignment',
-            route: '/create-workflow-template'
+            route: '/workflow-templates'
           }
         ]
       },
@@ -101,12 +101,6 @@ export class NavigationService {
             label: 'Mission History',
             icon: 'history',
             route: '/mission-history'
-          },
-          {
-            id: 'saved-custom-missions',
-            label: 'Saved Custom Missions',
-            icon: 'save',
-            route: '/saved-custom-missions'
           },
           {
             id: 'mission-control',

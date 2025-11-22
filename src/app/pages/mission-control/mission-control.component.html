@@ -5,7 +5,7 @@
       <mat-icon>settings_remote</mat-icon>
       Mission Control Center
     </h1>
-    <p class="subtitle">Trigger workflows and custom missions with one click</p>
+    <p class="subtitle">Trigger sync workflows with one click</p>
     <button mat-icon-button (click)="refresh()" matTooltip="Refresh All">
       <mat-icon>refresh</mat-icon>
     </button>
@@ -63,8 +63,8 @@
               <div class="missions-grid">
                 <mat-card *ngFor="let workflow of zone.value" class="mission-card">
                   <mat-card-header>
-                    <div mat-card-avatar class="workflow-icon" [matBadge]="hasActiveJob(workflow.id, 'workflow') ? '!' : ''"
-                         [matBadgeHidden]="!hasActiveJob(workflow.id, 'workflow')" matBadgeColor="accent">
+                    <div mat-card-avatar class="workflow-icon" [matBadge]="hasActiveJob(workflow.id) ? '!' : ''"
+                         [matBadgeHidden]="!hasActiveJob(workflow.id)" matBadgeColor="accent">
                       <mat-icon>account_tree</mat-icon>
                     </div>
                     <mat-card-title>
@@ -153,7 +153,7 @@
                       mat-raised-button
                       color="primary"
                       (click)="triggerWorkflow(workflow)"
-                      [disabled]="isTriggering(workflow.id) || hasActiveJob(workflow.id, 'workflow')"
+                      [disabled]="isTriggering(workflow.id) || hasActiveJob(workflow.id)"
                       class="action-btn trigger-btn">
                       <mat-spinner *ngIf="isTriggering(workflow.id)" diameter="20"></mat-spinner>
                       <mat-icon *ngIf="!isTriggering(workflow.id)">play_arrow</mat-icon>
@@ -163,8 +163,8 @@
                     <button
                       mat-raised-button
                       color="warn"
-                      (click)="cancelMission(workflow.id, 'workflow', $event)"
-                      [disabled]="!hasActiveJob(workflow.id, 'workflow') || isCancelling(workflow.id)"
+                      (click)="cancelMission(workflow.id, $event)"
+                      [disabled]="!hasActiveJob(workflow.id) || isCancelling(workflow.id)"
                       class="action-btn cancel-btn">
                       <mat-spinner *ngIf="isCancelling(workflow.id)" diameter="20"></mat-spinner>
                       <mat-icon *ngIf="!isCancelling(workflow.id)">cancel</mat-icon>
@@ -186,179 +186,6 @@
           <button mat-raised-button color="accent" routerLink="/workflows">
             <mat-icon>sync</mat-icon>
             Go to Workflows Management
-          </button>
-        </div>
-      </div>
-    </mat-tab>
-
-    <!-- Tab 2: Custom Missions -->
-    <mat-tab label="Custom Missions">
-      <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">build</mat-icon>
-        Custom Missions
-        <span class="badge" *ngIf="customMissions.length > 0">{{ customMissions.length }}</span>
-      </ng-template>
-
-      <div class="tab-content">
-        <!-- Filter Actions -->
-        <div class="filter-actions" *ngIf="!isLoadingCustomMissions && customMissions.length > 0">
-          <button mat-stroked-button (click)="openSelectCustomMissionsDialog()" class="filter-btn">
-            <mat-icon>filter_list</mat-icon>
-            <span>Select Missions</span>
-            <span class="filter-badge" *ngIf="selectedCustomMissionIds.size > 0">{{ selectedCustomMissionIds.size }}</span>
-          </button>
-          <button mat-icon-button *ngIf="selectedCustomMissionIds.size > 0" (click)="clearCustomMissionFilter()" matTooltip="Clear filter">
-            <mat-icon>clear</mat-icon>
-          </button>
-        </div>
-
-        <!-- Loading State -->
-        <div *ngIf="isLoadingCustomMissions" class="loading-state">
-          <mat-spinner diameter="50"></mat-spinner>
-          <p>Loading custom missions...</p>
-        </div>
-
-        <!-- Custom Missions Grouped by Zone -->
-        <div *ngIf="!isLoadingCustomMissions && customMissions.length > 0" class="zone-sections">
-          <mat-accordion multi>
-            <mat-expansion-panel
-              *ngFor="let zone of filteredCustomMissionsByZone | keyvalue"
-              [expanded]="isCustomZoneExpanded(zone.key)"
-              (opened)="expandedCustomZones.add(zone.key)"
-              (closed)="expandedCustomZones.delete(zone.key)"
-              class="zone-panel">
-              <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <mat-icon>location_on</mat-icon>
-                  {{ zone.key }}
-                </mat-panel-title>
-                <mat-panel-description>
-                  {{ zone.value.length }} mission{{ zone.value.length !== 1 ? 's' : '' }}
-                </mat-panel-description>
-              </mat-expansion-panel-header>
-
-              <div class="missions-grid">
-                <mat-card *ngFor="let mission of zone.value" class="mission-card">
-                  <mat-card-header>
-                    <div mat-card-avatar class="custom-mission-icon" [matBadge]="hasActiveJob(mission.id, 'custom') ? '!' : ''"
-                         [matBadgeHidden]="!hasActiveJob(mission.id, 'custom')" matBadgeColor="accent">
-                      <mat-icon>build_circle</mat-icon>
-                    </div>
-                    <mat-card-title>
-                      <span class="title-text">{{ mission.missionName }}</span>
-                    </mat-card-title>
-                  </mat-card-header>
-
-                  <mat-card-content>
-                    <!-- Job Status Expansion Panel (shown when custom mission is triggered) -->
-                    <mat-expansion-panel *ngIf="customMissionJobs.get(mission.id) as job" class="job-status-panel" [expanded]="true">
-                      <mat-expansion-panel-header>
-                        <mat-panel-title>
-                          <mat-icon>work</mat-icon>
-                          <span>Active Job Status</span>
-                        </mat-panel-title>
-                        <mat-panel-description *ngIf="job.jobData">
-                          <mat-chip [color]="MissionsUtils.getJobStatusColor(job.jobData.status)" selected>
-                            {{ MissionsUtils.getJobStatusText(job.jobData.status) }}
-                          </mat-chip>
-                        </mat-panel-description>
-                      </mat-expansion-panel-header>
-
-                      <!-- Job Details List -->
-                      <mat-list class="job-details-list">
-                        <mat-list-item *ngIf="job.jobData?.robotId">
-                          <mat-icon matListItemIcon color="primary">smart_toy</mat-icon>
-                          <div matListItemTitle>Robot ID</div>
-                          <div matListItemLine class="highlight-value">{{ job.jobData?.robotId }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.currentLocation">
-                          <mat-icon matListItemIcon color="primary">location_on</mat-icon>
-                          <div matListItemTitle>Current Location</div>
-                          <div matListItemLine class="highlight-value">{{ job.robotData?.currentLocation }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.nodeCode">
-                          <mat-icon matListItemIcon color="primary">pin_drop</mat-icon>
-                          <div matListItemTitle>Current Node Code</div>
-                          <div matListItemLine class="highlight-value">{{ job.robotData?.nodeCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.jobData?.mapCode">
-                          <mat-icon matListItemIcon>map</mat-icon>
-                          <div matListItemTitle>Map Code</div>
-                          <div matListItemLine>{{ job.jobData?.mapCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.jobData?.targetCellCode">
-                          <mat-icon matListItemIcon>flag</mat-icon>
-                          <div matListItemTitle>Target Node</div>
-                          <div matListItemLine>{{ job.jobData?.targetCellCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.batteryLevel !== undefined">
-                          <mat-icon matListItemIcon [color]="(job.robotData?.batteryLevel ?? 0) > 20 ? 'primary' : 'warn'">battery_charging_full</mat-icon>
-                          <div matListItemTitle>Battery Level</div>
-                          <div matListItemLine>
-                            <div class="battery-info">
-                              <span class="battery-text">{{ job.robotData?.batteryLevel }}%</span>
-                              <mat-progress-bar mode="determinate" [value]="job.robotData?.batteryLevel ?? 0"
-                                               [color]="(job.robotData?.batteryLevel ?? 0) > 20 ? 'primary' : 'warn'">
-                              </mat-progress-bar>
-                            </div>
-                          </div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="!job.jobData">
-                          <mat-icon matListItemIcon>hourglass_empty</mat-icon>
-                          <div matListItemTitle>Mission Code</div>
-                          <div matListItemLine>
-                            {{ job.missionCode }}
-                            <mat-chip color="accent">Querying...</mat-chip>
-                          </div>
-                        </mat-list-item>
-                      </mat-list>
-                    </mat-expansion-panel>
-                  </mat-card-content>
-
-                  <mat-card-actions class="card-actions">
-                    <button
-                      mat-raised-button
-                      color="primary"
-                      (click)="triggerCustomMission(mission)"
-                      [disabled]="isTriggering(mission.id) || hasActiveJob(mission.id, 'custom')"
-                      class="action-btn trigger-btn">
-                      <mat-spinner *ngIf="isTriggering(mission.id)" diameter="20"></mat-spinner>
-                      <mat-icon *ngIf="!isTriggering(mission.id)">play_arrow</mat-icon>
-                      <span *ngIf="!isTriggering(mission.id)">Trigger</span>
-                      <span *ngIf="isTriggering(mission.id)">Triggering...</span>
-                    </button>
-                    <button
-                      mat-raised-button
-                      color="warn"
-                      (click)="cancelMission(mission.id, 'custom', $event)"
-                      [disabled]="!hasActiveJob(mission.id, 'custom') || isCancelling(mission.id)"
-                      class="action-btn cancel-btn">
-                      <mat-spinner *ngIf="isCancelling(mission.id)" diameter="20"></mat-spinner>
-                      <mat-icon *ngIf="!isCancelling(mission.id)">cancel</mat-icon>
-                      <span *ngIf="!isCancelling(mission.id)">Cancel</span>
-                      <span *ngIf="isCancelling(mission.id)">Cancelling...</span>
-                    </button>
-                  </mat-card-actions>
-                </mat-card>
-              </div>
-            </mat-expansion-panel>
-          </mat-accordion>
-        </div>
-
-        <!-- Empty State -->
-        <div *ngIf="!isLoadingCustomMissions && customMissions.length === 0" class="empty-state">
-          <mat-icon>build_circle</mat-icon>
-          <h3>No Custom Missions Available</h3>
-          <p>No custom missions found. Please create custom missions from the Saved Custom Missions page.</p>
-          <button mat-raised-button color="accent" routerLink="/saved-custom-missions">
-            <mat-icon>add_circle</mat-icon>
-            Create Custom Mission
           </button>
         </div>
       </div>

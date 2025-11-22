@@ -7,7 +7,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
-import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { WorkflowTemplateService } from '../../services/workflow-template.service';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { WORKFLOW_TEMPLATE_TABLE_CONFIG } from './workflow-template-table.config';
 import { WorkflowTemplateDialogComponent, WorkflowTemplateDialogData } from './workflow-template-dialog.component';
@@ -42,7 +42,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private savedCustomMissionsService: SavedCustomMissionsService,
+    private workflowTemplateService: WorkflowTemplateService,
     private dialog: MatDialog
   ) {
     // Configure empty state action
@@ -63,7 +63,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    */
   private loadWorkflowTemplates(): void {
     this.isLoading = true;
-    this.savedCustomMissionsService.getAllSavedCustomMissions()
+    this.workflowTemplateService.getAllSavedCustomMissions()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (templates) => {
@@ -155,7 +155,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    * Create new template
    */
   private createTemplate(request: any): void {
-    this.savedCustomMissionsService.saveMissionAsTemplate(request)
+    this.workflowTemplateService.saveMissionAsTemplate(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -171,7 +171,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    * Update existing template
    */
   private updateTemplate(id: number, request: any): void {
-    this.savedCustomMissionsService.updateWorkflowTemplate(id, request)
+    this.workflowTemplateService.updateWorkflowTemplate(id, request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -209,7 +209,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
     const message = `Are you sure you want to delete workflow template "${template.missionName}"? This action cannot be undone.`;
 
     if (confirm(message)) {
-      this.savedCustomMissionsService.deleteSavedCustomMission(template.id)
+      this.workflowTemplateService.deleteSavedCustomMission(template.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
