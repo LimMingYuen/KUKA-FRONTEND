@@ -365,7 +365,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           });
 
           // Start polling job status
-          this.startJobPolling(id, request.missionCode, 'workflow');
+          this.startJobPolling(id, request.missionCode);
         } else {
           // Handle API error response (success: false)
           const errorMsg = response.message || 'Unknown error occurred';
@@ -665,7 +665,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
               // Stop polling for this mission
               this.stopJobPolling(job.missionCode);
               // Remove from tracking
-              jobsMap.delete(id);
+              this.workflowJobs.delete(id);
               this.snackBar.open(`Mission cancelled successfully (${result.cancelMode})`, 'Close', { duration: 3000 });
             }
           },
