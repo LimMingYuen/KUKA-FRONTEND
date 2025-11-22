@@ -14,7 +14,7 @@
   max-width: 100%;
   margin: 0;
   background-color: var(--mat-sys-surface-container-lowest) !important;
-  border-radius: 12px !important;
+  border-radius: 0 !important;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   border: 1px solid var(--mat-sys-outline-variant) !important;
@@ -46,7 +46,7 @@
         background-color: var(--mat-sys-primary-container) !important;
         color: var(--mat-sys-on-primary-container) !important;
         padding: 4px 12px !important;
-        border-radius: 16px !important;
+        border-radius: 0 !important;
       }
     }
 
@@ -78,7 +78,7 @@
       mat-form-field {
         .mat-mdc-form-field-flex {
           background-color: var(--mat-sys-surface-container) !important;
-          border-radius: 8px !important;
+          border-radius: 0 !important;
         }
 
         .mat-mdc-text-field-wrapper {
