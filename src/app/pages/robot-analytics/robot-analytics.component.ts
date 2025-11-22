@@ -64,6 +64,8 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   public selectedRobotId: string = '';
   public startDate: Date;
   public endDate: Date;
+  public startTime: string = '00:00';
+  public endTime: string = '23:59';
   public groupBy: 'hour' | 'day' = 'day';
 
   // Chart data and options
@@ -151,8 +153,8 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
 
     const request: UtilizationRequest = {
       robotId: this.selectedRobotId,
-      start: this.startDate,
-      end: this.endDate,
+      start: this.combineDateAndTime(this.startDate, this.startTime),
+      end: this.combineDateAndTime(this.endDate, this.endTime),
       groupBy: this.groupBy
     };
 
@@ -163,6 +165,20 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
           console.error('Error loading analytics:', error);
         }
       });
+  }
+
+  /**
+   * Combine date and time into a single Date object
+   */
+  private combineDateAndTime(date: Date, time: string): Date {
+    if (!date || !time) {
+      return date;
+    }
+
+    const [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
+    const combined = new Date(date);
+    combined.setHours(hours, minutes, 0, 0);
+    return combined;
   }
 
   /**
