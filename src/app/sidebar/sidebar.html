@@ -2,46 +2,22 @@
   <!-- Minimal Icon Sidebar Navigation -->
   <mat-sidenav
     class="sidebar"
+    [ngClass]="{'sidebar--collapsed': sidebarCollapsed, 'sidebar--expanded': !sidebarCollapsed}"
     [opened]="true"
     [mode]="'side'"
     [disableClose]="true">
 
     <!-- Sidebar Content -->
     <div class="sidebar-content">
-      <!-- New Action Button (Create/Add) -->
+      <!-- Hamburger Toggle Button -->
       <div class="sidebar-action">
         <button mat-fab
                 class="action-button"
-                [matMenuTriggerFor]="actionMenu"
-                #actionMenuTrigger="matMenuTrigger"
-                matTooltip="Quick Actions"
+                (click)="toggleSidebar()"
+                [matTooltip]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
                 matTooltipPosition="right">
-          <mat-icon [class.action-button--expanded]="isActionMenuOpen">{{ isActionMenuOpen ? 'close' : 'add' }}</mat-icon>
+          <mat-icon>menu</mat-icon>
         </button>
-
-        <mat-menu #actionMenu="matMenu" class="action-menu" xPosition="after">
-          <button mat-menu-item (click)="navigateToRoute('/mobile-robots')">
-            <mat-icon>smart_toy</mat-icon>
-            <span>Add Mobile Robot</span>
-          </button>
-          <button mat-menu-item (click)="navigateToRoute('/saved-custom-missions')">
-            <mat-icon>playlist_add</mat-icon>
-            <span>Create Mission</span>
-          </button>
-          <button mat-menu-item (click)="navigateToRoute('/workflows')">
-            <mat-icon>account_tree</mat-icon>
-            <span>New Workflow</span>
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="navigateToRoute('/qr-codes')">
-            <mat-icon>qr_code_scanner</mat-icon>
-            <span>Scan QR Code</span>
-          </button>
-          <button mat-menu-item (click)="navigateToRoute('/warehouse-management')">
-            <mat-icon>warehouse</mat-icon>
-            <span>Manage Warehouse</span>
-          </button>
-        </mat-menu>
       </div>
 
       <!-- Navigation Icons -->
@@ -52,11 +28,12 @@
                [routerLink]="item.route"
                routerLinkActive="nav-item--active"
                [routerLinkActiveOptions]="{ exact: true }"
-               [matTooltip]="item.label"
+               [matTooltip]="sidebarCollapsed ? item.label : ''"
                matTooltipPosition="right"
                [attr.aria-label]="item.label"
                [attr.aria-disabled]="item.disabled || false">
               <mat-icon class="nav-item__icon">{{ item.icon }}</mat-icon>
+              <span class="nav-item__label" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
             </a>
           </div>
         </div>
