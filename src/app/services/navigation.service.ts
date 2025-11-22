@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { SidebarItem, SidebarSection, NavigationState } from '../models/sidebar.models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class NavigationService {
   public expandedItems = signal<Set<string>>(new Set());
 
   private destroy$ = new Subject<void>();
+  private authService = inject(AuthService);
 
   constructor(private router: Router) {
     this.initializeNavigation();
@@ -40,9 +42,17 @@ export class NavigationService {
   }
 
   /**
-   * Get sidebar navigation items configuration
+   * Get sidebar navigation items configuration (filtered by user permissions)
    */
   public getSidebarItems(): SidebarSection[] {
+    const allSections = this.getAllSidebarSections();
+    return this.filterSectionsByPermissions(allSections);
+  }
+
+  /**
+   * Get all sidebar sections (unfiltered)
+   */
+  private getAllSidebarSections(): SidebarSection[] {
     return [
       {
         id: 'main',
@@ -217,6 +227,45 @@ export class NavigationService {
       expandedItems: this.expandedItems(),
       sidebarCollapsed: this.sidebarCollapsed()
     };
+  }
+
+  /**
+   * Filter sidebar sections by user permissions
+   */
+  private filterSectionsByPermissions(sections: SidebarSection[]): SidebarSection[] {
+    // If user is not authenticated, return empty array
+    if (!this.authService.isLoggedIn()) {
+      return [];
+    }
+
+    // Filter sections and their items
+    return sections
+      .map(section => ({
+        ...section,
+        items: this.filterItemsByPermissions(section.items)
+      }))
+      .filter(section => section.items.length > 0); // Remove empty sections
+  }
+
+  /**
+   * Filter sidebar items by user permissions
+   */
+  private filterItemsByPermissions(items: SidebarItem[]): SidebarItem[] {
+    return items
+      .filter(item => {
+        // Check if user can access this route
+        return this.authService.canAccessPage(item.route);
+      })
+      .map(item => {
+        // If item has children, filter them recursively
+        if (item.children && item.children.length > 0) {
+          return {
+            ...item,
+            children: this.filterItemsByPermissions(item.children)
+          };
+        }
+        return item;
+      });
   }
 
   /**

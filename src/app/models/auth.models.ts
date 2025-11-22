@@ -18,7 +18,12 @@ export interface ApiResponse<T> {
 }
 
 export interface User {
+  id?: number;
   username: string;
+  nickname?: string;
   token: string;
   isAuthenticated: boolean;
+  isSuperAdmin?: boolean;
+  roles?: string[];
+  allowedPages?: string[];
 }

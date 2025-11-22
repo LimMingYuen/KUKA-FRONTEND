@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, catchError, map } from 'rxjs';
@@ -10,6 +10,7 @@ import {
   ApiResponse,
   User
 } from '../models/auth.models';
+import { PageInitializationService } from './page-initialization.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,8 @@ export class AuthService {
   public currentUser = signal<User | null>(null);
   public isAuthenticated = signal<boolean>(false);
   public isLoading = signal<boolean>(false);
+
+  private pageInitService = inject(PageInitializationService);
 
   constructor(
     private http: HttpClient,
@@ -38,16 +41,22 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<boolean> {
     this.isLoading.set(true);
 
-    return this.http.post<ApiResponse<LoginResponseData>>(
+    return this.http.post<ApiResponse<any>>(
       `${this.API_URL}/Auth/login`,
       credentials
     ).pipe(
       map(response => {
         if (response.success && response.data?.token) {
+          const userData = response.data.user || {};
           const user: User = {
-            username: response.data.username || credentials.username,
+            id: userData.id,
+            username: userData.username || credentials.username,
+            nickname: userData.nickname,
             token: response.data.token,
-            isAuthenticated: true
+            isAuthenticated: true,
+            isSuperAdmin: userData.isSuperAdmin || false,
+            roles: userData.roles || [],
+            allowedPages: userData.allowedPages || []
           };
 
           // Store token and user data
@@ -57,6 +66,11 @@ export class AuthService {
           // Update reactive state
           this.currentUser.set(user);
           this.isAuthenticated.set(true);
+
+          // Initialize pages in the background (don't wait for it)
+          this.pageInitService.initializePages().catch(err => {
+            console.warn('Page initialization failed (non-critical):', err);
+          });
 
           this.snackBar.open('Login successful!', 'Close', {
             duration: 3000,
@@ -157,5 +171,69 @@ export class AuthService {
    */
   isLoggedIn(): boolean {
     return this.isAuthenticated();
+  }
+
+  /**
+   * Check if user can access a specific page path
+   */
+  canAccessPage(pagePath: string): boolean {
+    const user = this.currentUser();
+
+    if (!user || !this.isAuthenticated()) {
+      return false;
+    }
+
+    // SuperAdmin can access everything
+    if (user.isSuperAdmin) {
+      return true;
+    }
+
+    // Check if page is in user's allowed pages
+    const normalizedPath = pagePath.toLowerCase().trim();
+    return user.allowedPages?.some(
+      (allowedPath) => allowedPath.toLowerCase().trim() === normalizedPath
+    ) || false;
+  }
+
+  /**
+   * Check if user has a specific role
+   */
+  hasRole(roleCode: string): boolean {
+    const user = this.currentUser();
+    if (!user || !this.isAuthenticated()) {
+      return false;
+    }
+
+    return user.roles?.includes(roleCode.toUpperCase()) || false;
+  }
+
+  /**
+   * Check if user has any of the specified roles
+   */
+  hasAnyRole(roleCodes: string[]): boolean {
+    const user = this.currentUser();
+    if (!user || !this.isAuthenticated()) {
+      return false;
+    }
+
+    return roleCodes.some((roleCode) =>
+      user.roles?.includes(roleCode.toUpperCase())
+    );
+  }
+
+  /**
+   * Check if user is a SuperAdmin
+   */
+  isSuperAdmin(): boolean {
+    const user = this.currentUser();
+    return user?.isSuperAdmin || false;
+  }
+
+  /**
+   * Get user's allowed page paths
+   */
+  getAllowedPages(): string[] {
+    const user = this.currentUser();
+    return user?.allowedPages || [];
   }
 }
