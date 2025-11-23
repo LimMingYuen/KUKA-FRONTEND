@@ -227,30 +227,5 @@
 
     </mat-card-content>
 
-    <!-- Card Actions -->
-    <mat-card-actions class="card-actions">
-      <button mat-button (click)="viewMobileRobot(robot)" matTooltip="View details">
-        <mat-icon>visibility</mat-icon>
-        View
-      </button>
-      <button mat-button (click)="editMobileRobot(robot)" matTooltip="Edit robot">
-        <mat-icon>edit</mat-icon>
-        Edit
-      </button>
-      <button mat-icon-button [matMenuTriggerFor]="moreMenu" matTooltip="More options">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-      <mat-menu #moreMenu="matMenu">
-        <button mat-menu-item (click)="exportMobileRobot(robot)">
-          <mat-icon>download</mat-icon>
-          <span>Export</span>
-        </button>
-        <button mat-menu-item class="danger-action" (click)="deleteMobileRobot(robot)">
-          <mat-icon>delete</mat-icon>
-          <span>Delete</span>
-        </button>
-      </mat-menu>
-    </mat-card-actions>
-
   </mat-card>
 </div>
