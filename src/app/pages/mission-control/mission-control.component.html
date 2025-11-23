@@ -14,38 +14,50 @@
   <!-- Main Content with Tabs -->
   <mat-tab-group animationDuration="300ms" class="mission-tabs">
 
-    <!-- Tab 1: Sync Workflows -->
-    <mat-tab label="Sync Workflows">
+    <!-- Tab 1: All Mission Templates -->
+    <mat-tab label="Mission Templates">
       <ng-template mat-tab-label>
-        <mat-icon class="tab-icon">sync</mat-icon>
-        Sync Workflows
-        <span class="badge" *ngIf="workflows.length > 0">{{ workflows.length }}</span>
+        <mat-icon class="tab-icon">bookmark</mat-icon>
+        Mission Templates
+        <span class="badge" *ngIf="savedTemplates.length > 0">{{ savedTemplates.length }}</span>
       </ng-template>
 
       <div class="tab-content">
         <!-- Filter Actions -->
-        <div class="filter-actions" *ngIf="!isLoadingWorkflows && workflows.length > 0">
+        <div class="filter-actions" *ngIf="!isLoadingTemplates && savedTemplates.length > 0">
           <button mat-stroked-button (click)="openSelectWorkflowsDialog()" class="filter-btn">
             <mat-icon>filter_list</mat-icon>
-            <span>Select Workflows</span>
-            <span class="filter-badge" *ngIf="selectedWorkflowIds.size > 0">{{ selectedWorkflowIds.size }}</span>
+            <span>Select Templates</span>
+            <span class="filter-badge" *ngIf="selectedTemplateIds.size > 0">{{ selectedTemplateIds.size }}</span>
           </button>
-          <button mat-icon-button *ngIf="selectedWorkflowIds.size > 0" (click)="clearWorkflowFilter()" matTooltip="Clear filter">
+          <button mat-icon-button *ngIf="selectedTemplateIds.size > 0" (click)="clearWorkflowFilter()" matTooltip="Clear filter">
             <mat-icon>clear</mat-icon>
           </button>
         </div>
 
         <!-- Loading State -->
-        <div *ngIf="isLoadingWorkflows" class="loading-state">
+        <div *ngIf="isLoadingTemplates" class="loading-state">
           <mat-spinner diameter="50"></mat-spinner>
-          <p>Loading workflows...</p>
+          <p>Loading saved templates...</p>
         </div>
 
-        <!-- Workflows Grouped by Zone -->
-        <div *ngIf="!isLoadingWorkflows && workflows.length > 0" class="zone-sections">
+        <!-- Empty State -->
+        <div *ngIf="!isLoadingTemplates && savedTemplates.length === 0" class="empty-state">
+          <mat-icon class="empty-icon">bookmark_border</mat-icon>
+          <h2>No Mission Templates</h2>
+          <p>Create mission templates using the Mission Submit dialog's "Save as Template" feature.</p>
+          <ul style="text-align: left; display: inline-block; margin-top: 16px;">
+            <li><strong>Sync Workflow Templates:</strong> Use Sync Workflow tab (no mission steps needed)</li>
+            <li><strong>Custom Mission Templates:</strong> Use Custom Mission tab (define mission steps)</li>
+          </ul>
+          <p class="hint" style="margin-top: 16px;">Click "Submit Mission" → Configure → "Save as Template"</p>
+        </div>
+
+        <!-- Templates Grouped by Zone -->
+        <div *ngIf="!isLoadingTemplates && savedTemplates.length > 0" class="zone-sections">
           <mat-accordion multi>
             <mat-expansion-panel
-              *ngFor="let zone of filteredWorkflowsByZone | keyvalue"
+              *ngFor="let zone of filteredTemplatesByZone | keyvalue"
               [expanded]="isZoneExpanded(zone.key)"
               (opened)="expandedZones.add(zone.key)"
               (closed)="expandedZones.delete(zone.key)"
@@ -56,29 +68,44 @@
                   {{ zone.key }}
                 </mat-panel-title>
                 <mat-panel-description>
-                  {{ zone.value.length }} workflow{{ zone.value.length !== 1 ? 's' : '' }}
+                  {{ zone.value.length }} template{{ zone.value.length !== 1 ? 's' : '' }}
                 </mat-panel-description>
               </mat-expansion-panel-header>
 
               <div class="missions-grid">
-                <mat-card *ngFor="let workflow of zone.value" class="mission-card">
+                <mat-card *ngFor="let template of zone.value" class="mission-card">
                   <mat-card-header>
-                    <div mat-card-avatar class="workflow-icon" [matBadge]="hasActiveJob(workflow.id) ? '!' : ''"
-                         [matBadgeHidden]="!hasActiveJob(workflow.id)" matBadgeColor="accent">
-                      <mat-icon>account_tree</mat-icon>
+                    <div mat-card-avatar class="workflow-icon" [matBadge]="hasActiveJob(template.id) ? '!' : ''"
+                         [matBadgeHidden]="!hasActiveJob(template.id)" matBadgeColor="accent">
+                      <mat-icon>bookmark</mat-icon>
                     </div>
                     <mat-card-title>
-                      <span class="title-text">{{ workflow.name }}</span>
-                      <mat-chip [class]="'status-chip-' + workflow.status">
-                        <mat-icon matChipAvatar>{{ workflow.status === 1 ? 'check_circle' : 'cancel' }}</mat-icon>
-                        {{ workflow.statusText }}
+                      <span class="title-text">{{ template.missionName }}</span>
+                      <mat-chip class="status-chip-active">
+                        <mat-icon matChipAvatar>label</mat-icon>
+                        {{ template.robotType }}
                       </mat-chip>
                     </mat-card-title>
+                    <mat-card-subtitle>
+                      <!-- Sync Workflow Info -->
+                      <div *ngIf="isSyncWorkflow(template)" style="display: flex; align-items: center; gap: 8px;">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">account_tree</mat-icon>
+                        <strong>Workflow:</strong> {{ getWorkflowName(template.templateCode) }}
+                      </div>
+                      <!-- Custom Mission Info -->
+                      <div *ngIf="!isSyncWorkflow(template)" style="display: flex; align-items: center; gap: 8px;">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">build</mat-icon>
+                        <strong>Custom Mission:</strong> {{ getMissionStepsCount(template) }} step{{ getMissionStepsCount(template) !== 1 ? 's' : '' }}
+                      </div>
+                      <div *ngIf="template.description" style="margin-top: 4px;">
+                        {{ template.description }}
+                      </div>
+                    </mat-card-subtitle>
                   </mat-card-header>
 
                   <mat-card-content>
-                    <!-- Job Status Expansion Panel (shown when workflow is triggered) -->
-                    <mat-expansion-panel *ngIf="workflowJobs.get(workflow.id) as job" class="job-status-panel" [expanded]="true">
+                    <!-- Job Status Expansion Panel (shown when template is triggered) -->
+                    <mat-expansion-panel *ngIf="workflowJobs.get(template.id) as job" class="job-status-panel" [expanded]="true">
                       <mat-expansion-panel-header>
                         <mat-panel-title>
                           <mat-icon>work</mat-icon>
@@ -152,41 +179,30 @@
                     <button
                       mat-raised-button
                       color="primary"
-                      (click)="triggerWorkflow(workflow)"
-                      [disabled]="isTriggering(workflow.id) || hasActiveJob(workflow.id)"
+                      (click)="triggerWorkflow(template)"
+                      [disabled]="isTriggering(template.id) || hasActiveJob(template.id)"
                       class="action-btn trigger-btn">
-                      <mat-spinner *ngIf="isTriggering(workflow.id)" diameter="20"></mat-spinner>
-                      <mat-icon *ngIf="!isTriggering(workflow.id)">play_arrow</mat-icon>
-                      <span *ngIf="!isTriggering(workflow.id)">Trigger</span>
-                      <span *ngIf="isTriggering(workflow.id)">Triggering...</span>
+                      <mat-spinner *ngIf="isTriggering(template.id)" diameter="20"></mat-spinner>
+                      <mat-icon *ngIf="!isTriggering(template.id)">play_arrow</mat-icon>
+                      <span *ngIf="!isTriggering(template.id)">Trigger</span>
+                      <span *ngIf="isTriggering(template.id)">Triggering...</span>
                     </button>
                     <button
                       mat-raised-button
                       color="warn"
-                      (click)="cancelMission(workflow.id, $event)"
-                      [disabled]="!hasActiveJob(workflow.id) || isCancelling(workflow.id)"
+                      (click)="cancelMission(template.id, $event)"
+                      [disabled]="!hasActiveJob(template.id) || isCancelling(template.id)"
                       class="action-btn cancel-btn">
-                      <mat-spinner *ngIf="isCancelling(workflow.id)" diameter="20"></mat-spinner>
-                      <mat-icon *ngIf="!isCancelling(workflow.id)">cancel</mat-icon>
-                      <span *ngIf="!isCancelling(workflow.id)">Cancel</span>
-                      <span *ngIf="isCancelling(workflow.id)">Cancelling...</span>
+                      <mat-spinner *ngIf="isCancelling(template.id)" diameter="20"></mat-spinner>
+                      <mat-icon *ngIf="!isCancelling(template.id)">cancel</mat-icon>
+                      <span *ngIf="!isCancelling(template.id)">Cancel</span>
+                      <span *ngIf="isCancelling(template.id)">Cancelling...</span>
                     </button>
                   </mat-card-actions>
                 </mat-card>
               </div>
             </mat-expansion-panel>
           </mat-accordion>
-        </div>
-
-        <!-- Empty State -->
-        <div *ngIf="!isLoadingWorkflows && workflows.length === 0" class="empty-state">
-          <mat-icon>account_tree</mat-icon>
-          <h3>No Workflows Available</h3>
-          <p>No sync workflows found. Please sync workflows from the Workflows Management page.</p>
-          <button mat-raised-button color="accent" routerLink="/workflows">
-            <mat-icon>sync</mat-icon>
-            Go to Workflows Management
-          </button>
         </div>
       </div>
     </mat-tab>

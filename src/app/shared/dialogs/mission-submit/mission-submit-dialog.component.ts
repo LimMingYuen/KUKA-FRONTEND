@@ -18,8 +18,10 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { MissionsService } from '../../../services/missions.service';
 import { WorkflowService } from '../../../services/workflow.service';
+import { SavedCustomMissionsService } from '../../../services/saved-custom-missions.service';
 import { SubmitMissionRequest, MissionPriority, MissionStepData, JobData, MissionsUtils } from '../../../models/missions.models';
 import { WorkflowDisplayData } from '../../../models/workflow.models';
+import { SavedCustomMissionDto, SaveMissionAsTemplateRequest } from '../../../models/saved-custom-missions.models';
 import { Subject, takeUntil, interval } from 'rxjs';
 
 export interface MissionSubmitDialogData {
@@ -61,10 +63,14 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
   public selectedTab = 0; // 0 = Sync Workflow, 1 = Custom Mission
   public isSubmitting = false;
   public isLoadingWorkflows = false;
+  public isLoadingSavedTemplates = false;
+  public isSavingTemplate = false;
   public isPollingJobs = false;
 
   // Data
   public workflows: WorkflowDisplayData[] = [];
+  public savedTemplates: SavedCustomMissionDto[] = [];
+  public selectedSavedTemplate: SavedCustomMissionDto | null = null;
   public submittedMissionCode: string | null = null;
   public jobStatus: JobData | null = null;
 
@@ -106,6 +112,7 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private missionsService: MissionsService,
     private workflowService: WorkflowService,
+    private savedCustomMissionsService: SavedCustomMissionsService,
     public dialogRef: MatDialogRef<MissionSubmitDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: MissionSubmitDialogData
   ) {
@@ -160,6 +167,9 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
     // Load workflows for sync workflow dropdown
     this.loadWorkflows();
 
+    // Load saved templates for sync workflow
+    this.loadSavedTemplates();
+
     // Add initial mission step for custom form
     this.addMissionStep();
   }
@@ -185,6 +195,133 @@ export class MissionSubmitDialogComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading workflows:', error);
           this.isLoadingWorkflows = false;
+        }
+      });
+  }
+
+  /**
+   * Load saved sync workflow templates
+   */
+  loadSavedTemplates(): void {
+    this.isLoadingSavedTemplates = true;
+    this.savedCustomMissionsService.getSyncWorkflowTemplates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (templates) => {
+          this.savedTemplates = templates;
+          this.isLoadingSavedTemplates = false;
+        },
+        error: (error) => {
+          console.error('Error loading saved templates:', error);
+          this.isLoadingSavedTemplates = false;
+        }
+      });
+  }
+
+  /**
+   * Handle saved template selection
+   */
+  onSavedTemplateSelected(template: SavedCustomMissionDto | null): void {
+    if (!template) {
+      // Reset form if "None" selected
+      return;
+    }
+
+    // Parse robot models and IDs from comma-separated strings
+    const robotModels = template.robotModels ?
+      (typeof template.robotModels === 'string' ?
+        template.robotModels.split(',').map(s => s.trim()).filter(s => s) :
+        template.robotModels) : [];
+
+    const robotIds = template.robotIds ?
+      (typeof template.robotIds === 'string' ?
+        template.robotIds.split(',').map(s => s.trim()).filter(s => s) :
+        template.robotIds) : [];
+
+    // Populate form with saved template values
+    this.syncForm.patchValue({
+      orgId: template.orgId || 'UNIVERSAL',
+      missionType: template.missionType || 'RACK_MOVE',
+      viewBoardType: template.viewBoardType || '',
+      robotModels: robotModels,
+      robotIds: robotIds,
+      robotType: template.robotType || 'LIFT',
+      priority: parseInt(template.priority) || 1,
+      containerModelCode: template.containerModelCode || '',
+      containerCode: template.containerCode || '',
+      templateCode: template.templateCode || '',
+      lockRobotAfterFinish: template.lockRobotAfterFinish || false,
+      unlockRobotId: template.unlockRobotId || '',
+      unlockMissionCode: template.unlockMissionCode || '',
+      idleNode: template.idleNode || ''
+    });
+  }
+
+  /**
+   * Save current mission configuration as template (works for both sync and custom missions)
+   */
+  onSaveAsTemplate(): void {
+    // Determine which form to use based on selected tab
+    const isSync = this.selectedTab === 0;
+    const form = isSync ? this.syncForm : this.customForm;
+
+    if (form.invalid) {
+      return;
+    }
+
+    // Prompt for template name and description
+    const templateName = prompt('Enter template name:');
+    if (!templateName || templateName.trim() === '') {
+      return;
+    }
+
+    const description = prompt('Enter template description (optional):') || '';
+
+    this.isSavingTemplate = true;
+    const formValue = form.value;
+
+    // Prepare mission data (empty for sync workflow, filled for custom mission)
+    let missionData: any[] = [];
+    if (!isSync) {
+      // Custom mission - include mission steps
+      missionData = formValue.missionSteps || [];
+    }
+
+    const request: SaveMissionAsTemplateRequest = {
+      missionName: templateName.trim(),
+      description: description.trim(),
+      missionTemplate: {
+        orgId: formValue.orgId,
+        missionType: formValue.missionType,
+        viewBoardType: formValue.viewBoardType || '',
+        robotModels: formValue.robotModels || [],
+        robotIds: formValue.robotIds || [],
+        robotType: formValue.robotType,
+        priority: formValue.priority,
+        containerModelCode: formValue.containerModelCode || null,
+        containerCode: formValue.containerCode || null,
+        templateCode: formValue.templateCode || null,
+        lockRobotAfterFinish: formValue.lockRobotAfterFinish || false,
+        unlockRobotId: formValue.unlockRobotId || null,
+        unlockMissionCode: formValue.unlockMissionCode || null,
+        idleNode: formValue.idleNode || null,
+        missionData: missionData
+      }
+    };
+
+    this.missionsService.saveMissionAsTemplate(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isSavingTemplate = false;
+          if (response.success) {
+            // Reload saved templates to show the new one
+            this.loadSavedTemplates();
+          }
+        },
+        error: (error) => {
+          console.error('Error saving template:', error);
+          this.isSavingTemplate = false;
         }
       });
   }

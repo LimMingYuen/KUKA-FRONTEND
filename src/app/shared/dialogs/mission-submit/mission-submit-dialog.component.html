@@ -16,6 +16,29 @@
           </p>
 
           <form [formGroup]="syncForm" class="mission-form">
+            <!-- Saved Template Selection -->
+            <mat-card class="section-card saved-template-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>bookmark</mat-icon>
+                  Load Saved Template (Optional)
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field appearance="outline">
+                  <mat-label>Saved Templates</mat-label>
+                  <mat-select [(value)]="selectedSavedTemplate" (selectionChange)="onSavedTemplateSelected($event.value)" [disabled]="isLoadingSavedTemplates">
+                    <mat-option [value]="null">-- None (Manual Entry) --</mat-option>
+                    <mat-option *ngFor="let template of savedTemplates" [value]="template">
+                      {{ template.missionName }} ({{ template.description || 'No description' }})
+                    </mat-option>
+                  </mat-select>
+                  <mat-spinner *ngIf="isLoadingSavedTemplates" diameter="20" matSuffix></mat-spinner>
+                  <mat-hint>Load a previously saved workflow configuration</mat-hint>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+
             <!-- Workflow Selection -->
             <mat-card class="section-card">
               <mat-card-header>
@@ -391,6 +414,12 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
     Cancel
+  </button>
+  <button *ngIf="!submittedMissionCode" mat-button color="accent" (click)="onSaveAsTemplate()"
+    [disabled]="(selectedTab === 0 ? syncForm.invalid : customForm.invalid) || isSavingTemplate">
+    <mat-icon>bookmark_add</mat-icon>
+    <span *ngIf="!isSavingTemplate">Save as Template</span>
+    <span *ngIf="isSavingTemplate">Saving...</span>
   </button>
   <button *ngIf="!submittedMissionCode" mat-raised-button color="primary" (click)="onSubmit()"
     [disabled]="(selectedTab === 0 ? syncForm.invalid : customForm.invalid) || isSubmitting">

@@ -18,17 +18,15 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { MissionsService } from '../../services/missions.service';
+import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { MissionHistoryService } from '../../services/mission-history.service';
 import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.service';
-import { MapZonesService } from '../../services/map-zones.service';
-import { QrCodesService } from '../../services/qr-codes.service';
+import { SavedCustomMissionDto } from '../../models/saved-custom-missions.models';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
-import { MissionHistoryRequest, UpdateMissionHistoryRequest } from '../../models/mission-history.models';
+import { MissionHistoryRequest } from '../../models/mission-history.models';
 import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
-import { MapZoneWithNodesDto } from '../../models/map-zone.models';
-import { QrCodeWithUuidDto } from '../../models/qr-code.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
 import { SelectWorkflowsDialogComponent, SelectWorkflowsDialogData, SelectWorkflowsDialogResult } from '../../shared/dialogs/select-workflows-dialog/select-workflows-dialog.component';
@@ -60,13 +58,14 @@ import { SelectWorkflowsDialogComponent, SelectWorkflowsDialogData, SelectWorkfl
 })
 export class MissionControlComponent implements OnInit, OnDestroy {
   // Data
+  public savedTemplates: SavedCustomMissionDto[] = [];
   public workflows: WorkflowDisplayData[] = [];
   public zoneMappings: WorkflowZoneMapping[] = [];
 
-  // Grouped workflows by zone
-  public workflowsByZone: Map<string, WorkflowDisplayData[]> = new Map();
-  public filteredWorkflowsByZone: Map<string, WorkflowDisplayData[]> = new Map();
-  public selectedWorkflowIds: Set<number> = new Set();
+  // Grouped templates by zone (using templateCode zone mapping)
+  public templatesByZone: Map<string, SavedCustomMissionDto[]> = new Map();
+  public filteredTemplatesByZone: Map<string, SavedCustomMissionDto[]> = new Map();
+  public selectedTemplateIds: Set<number> = new Set();
   public expandedZones: Set<string> = new Set();
 
   // Store job execution state for each workflow
@@ -81,7 +80,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }> = new Map();
 
   // Loading states
-  public isLoadingWorkflows = false;
+  public isLoadingTemplates = false;
   public isLoadingZoneMappings = false;
   public triggeringMissions: Set<number> = new Set();
   public cancellingMissions: Set<number> = new Set();
@@ -100,6 +99,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   constructor(
     private missionsService: MissionsService,
+    private savedCustomMissionsService: SavedCustomMissionsService,
     private workflowService: WorkflowService,
     private missionHistoryService: MissionHistoryService,
     private workflowNodeCodesService: WorkflowNodeCodesService,
@@ -112,62 +112,86 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load workflows and zone mappings together, then group by zone
+   * Load ALL saved templates (both sync workflow and custom mission templates)
    */
   loadWorkflowsAndZones(): void {
-    this.isLoadingWorkflows = true;
+    this.isLoadingTemplates = true;
     this.isLoadingZoneMappings = true;
 
     forkJoin({
+      templates: this.savedCustomMissionsService.getAllSavedMissions(),
       workflows: this.workflowService.getWorkflows(),
       zoneMappings: this.workflowNodeCodesService.getZoneMappings()
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
+          // Convert display data back to DTO format for internal use
+          this.savedTemplates = result.templates.map(displayData => ({
+            id: displayData.id,
+            missionName: displayData.missionName,
+            description: displayData.description === '-' ? null : displayData.description,
+            missionType: displayData.missionType,
+            robotType: displayData.robotType,
+            priority: displayData.priority,
+            robotModels: displayData.robotModels === '-' ? '' : displayData.robotModels,
+            robotIds: displayData.robotIds === '-' ? '' : displayData.robotIds,
+            containerModelCode: displayData.containerModelCode === '-' ? null : displayData.containerModelCode,
+            containerCode: displayData.containerCode === '-' ? null : displayData.containerCode,
+            idleNode: displayData.idleNode === '-' ? null : displayData.idleNode,
+            orgId: displayData.orgId === '-' ? null : displayData.orgId,
+            viewBoardType: displayData.viewBoardType === '-' ? null : displayData.viewBoardType,
+            templateCode: displayData.templateCode === '-' ? null : displayData.templateCode,
+            lockRobotAfterFinish: displayData.lockRobotAfterFinish,
+            unlockRobotId: displayData.unlockRobotId === '-' ? null : displayData.unlockRobotId,
+            unlockMissionCode: displayData.unlockMissionCode === '-' ? null : displayData.unlockMissionCode,
+            missionStepsJson: displayData.missionStepsJson,
+            createdBy: displayData.createdBy,
+            createdUtc: displayData.createdUtc,
+            updatedUtc: displayData.updatedUtc === '-' ? null : displayData.updatedUtc,
+            scheduleSummary: {
+              totalSchedules: displayData.activeSchedules,
+              activeSchedules: displayData.activeSchedules,
+              nextRunUtc: displayData.nextRunUtc === '-' ? null : displayData.nextRunUtc,
+              lastStatus: displayData.lastStatus === '-' ? null : displayData.lastStatus,
+              lastRunUtc: displayData.lastRunUtc === '-' ? null : displayData.lastRunUtc
+            }
+          }));
           this.workflows = result.workflows;
           this.zoneMappings = result.zoneMappings;
-          this.groupWorkflowsByZone();
-          this.isLoadingWorkflows = false;
+          this.groupTemplatesByZone();
+          this.isLoadingTemplates = false;
           this.isLoadingZoneMappings = false;
         },
         error: (error) => {
-          console.error('Error loading workflows and zones:', error);
-          this.isLoadingWorkflows = false;
+          console.error('Error loading saved templates and zones:', error);
+          this.isLoadingTemplates = false;
           this.isLoadingZoneMappings = false;
-          this.snackBar.open('Failed to load workflows', 'Close', { duration: 3000 });
+          this.snackBar.open('Failed to load saved templates', 'Close', { duration: 3000 });
         }
       });
   }
 
   /**
-   * Group workflows by zone name using zone mappings
+   * Group saved templates by zone name using zone mappings
    */
-  groupWorkflowsByZone(): void {
-    // Create a map from externalWorkflowId to zoneName
-    const zoneMap = new Map<number, string>();
-    this.zoneMappings.forEach(mapping => {
-      zoneMap.set(mapping.externalWorkflowId, mapping.zoneName);
-    });
+  groupTemplatesByZone(): void {
+    // Group templates by zone based on their templateCode
+    const grouped = new Map<string, SavedCustomMissionDto[]>();
 
-    // Group workflows by zone
-    const grouped = new Map<string, WorkflowDisplayData[]>();
-
-    this.workflows.forEach(workflow => {
-      // Get zone name from mapping (using workflow's external code/id)
-      // The workflow.id corresponds to the internal database ID
-      // We need to find the zone mapping by matching externalWorkflowId
-      const zoneName = this.findZoneForWorkflow(workflow, zoneMap) || 'Uncategorized';
+    this.savedTemplates.forEach(template => {
+      // Find zone name by matching template's templateCode with zone mappings
+      const zoneName = this.findZoneForTemplate(template) || 'Uncategorized';
 
       if (!grouped.has(zoneName)) {
         grouped.set(zoneName, []);
         // Expand all zones by default
         this.expandedZones.add(zoneName);
       }
-      grouped.get(zoneName)!.push(workflow);
+      grouped.get(zoneName)!.push(template);
     });
 
     // Sort zones alphabetically, but keep "Uncategorized" at the end
-    const sortedGrouped = new Map<string, WorkflowDisplayData[]>();
+    const sortedGrouped = new Map<string, SavedCustomMissionDto[]>();
     const sortedKeys = Array.from(grouped.keys()).sort((a, b) => {
       if (a === 'Uncategorized') return 1;
       if (b === 'Uncategorized') return -1;
@@ -178,86 +202,107 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       sortedGrouped.set(key, grouped.get(key)!);
     });
 
-    this.workflowsByZone = sortedGrouped;
+    this.templatesByZone = sortedGrouped;
 
-    // Apply filter if any workflows are selected, otherwise show all
-    this.applyWorkflowFilter();
+    // Apply filter if any templates are selected, otherwise show all
+    this.applyTemplateFilter();
   }
 
   /**
-   * Apply workflow filter based on selected IDs
+   * Apply template filter based on selected IDs
    */
-  applyWorkflowFilter(): void {
-    if (this.selectedWorkflowIds.size === 0) {
-      // No filter - show all workflows
-      this.filteredWorkflowsByZone = new Map(this.workflowsByZone);
+  applyTemplateFilter(): void {
+    if (this.selectedTemplateIds.size === 0) {
+      // No filter - show all templates
+      this.filteredTemplatesByZone = new Map(this.templatesByZone);
     } else {
-      // Filter to show only selected workflows
-      const filtered = new Map<string, WorkflowDisplayData[]>();
+      // Filter to show only selected templates
+      const filtered = new Map<string, SavedCustomMissionDto[]>();
 
-      this.workflowsByZone.forEach((workflows, zoneName) => {
-        const selectedWorkflows = workflows.filter(w => this.selectedWorkflowIds.has(w.id));
-        if (selectedWorkflows.length > 0) {
-          filtered.set(zoneName, selectedWorkflows);
+      this.templatesByZone.forEach((templates, zoneName) => {
+        const selectedTemplates = templates.filter(t => this.selectedTemplateIds.has(t.id));
+        if (selectedTemplates.length > 0) {
+          filtered.set(zoneName, selectedTemplates);
         }
       });
 
-      this.filteredWorkflowsByZone = filtered;
+      this.filteredTemplatesByZone = filtered;
     }
   }
 
   /**
-   * Open workflow selection dialog
+   * Open template selection dialog
+   * TODO: Create a generic dialog for both workflows and templates
    */
   openSelectWorkflowsDialog(): void {
-    const dialogRef = this.dialog.open(SelectWorkflowsDialogComponent, {
-      width: '600px',
-      maxHeight: '80vh',
-      data: {
-        workflowsByZone: this.workflowsByZone,
-        selectedIds: this.selectedWorkflowIds
-      } as SelectWorkflowsDialogData
-    });
-
-    dialogRef.afterClosed().subscribe((result: SelectWorkflowsDialogResult | undefined) => {
-      if (result) {
-        this.selectedWorkflowIds = result.selectedIds;
-        this.applyWorkflowFilter();
-      }
-    });
+    this.snackBar.open('Template filtering coming soon!', 'Close', { duration: 2000 });
+    // Temporarily disabled until we create a generic selection dialog
+    // that works with both WorkflowDisplayData and SavedCustomMissionDto
   }
 
   /**
-   * Get selected workflow count text
+   * Get selected template count text
    */
   getSelectedWorkflowText(): string {
-    if (this.selectedWorkflowIds.size === 0) {
+    if (this.selectedTemplateIds.size === 0) {
       return 'All';
     }
-    return `${this.selectedWorkflowIds.size}`;
+    return `${this.selectedTemplateIds.size}`;
   }
 
   /**
-   * Clear workflow filter
+   * Clear template filter
    */
   clearWorkflowFilter(): void {
-    this.selectedWorkflowIds.clear();
-    this.applyWorkflowFilter();
+    this.selectedTemplateIds.clear();
+    this.applyTemplateFilter();
   }
 
   /**
-   * Find zone name for a workflow by matching with zone mappings
+   * Find zone name for a saved template by matching templateCode with zone mappings
    */
-  private findZoneForWorkflow(workflow: WorkflowDisplayData, zoneMap: Map<number, string>): string | null {
-    // First try to match by checking if any zone mapping has matching workflow code
+  private findZoneForTemplate(template: SavedCustomMissionDto): string | null {
+    // Try to match by templateCode with zone mapping workflow codes
     for (const mapping of this.zoneMappings) {
-      if (mapping.workflowCode === workflow.code) {
+      if (mapping.workflowCode === template.templateCode) {
         return mapping.zoneName;
       }
     }
 
-    // If no match by code, return null (will go to Uncategorized)
+    // If no match, return null (will go to Uncategorized)
     return null;
+  }
+
+  /**
+   * Get workflow name from workflow code
+   */
+  getWorkflowName(templateCode: string | null): string {
+    if (!templateCode) {
+      return 'No workflow selected';
+    }
+
+    const workflow = this.workflows.find(w => w.code === templateCode);
+    return workflow ? workflow.name : templateCode;
+  }
+
+  /**
+   * Check if template is a sync workflow (empty mission steps)
+   */
+  isSyncWorkflow(template: SavedCustomMissionDto): boolean {
+    const stepsJson = template.missionStepsJson?.trim();
+    return !stepsJson || stepsJson === '[]';
+  }
+
+  /**
+   * Get mission steps count for custom missions
+   */
+  getMissionStepsCount(template: SavedCustomMissionDto): number {
+    try {
+      const steps = JSON.parse(template.missionStepsJson || '[]');
+      return Array.isArray(steps) ? steps.length : 0;
+    } catch {
+      return 0;
+    }
   }
 
   /**
@@ -325,43 +370,54 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
 
   /**
-   * Trigger sync workflow mission
+   * Trigger sync workflow mission from saved template
    */
-  triggerWorkflow(workflow: WorkflowDisplayData): void {
-    const id = workflow.id;
+  triggerWorkflow(template: SavedCustomMissionDto): void {
+    const id = template.id;
     this.triggeringMissions.add(id);
 
+    // Parse robot models and IDs from comma-separated strings
+    const robotModels = template.robotModels ?
+      (typeof template.robotModels === 'string' ?
+        template.robotModels.split(',').map(s => s.trim()).filter(s => s) :
+        template.robotModels) : [];
+
+    const robotIds = template.robotIds ?
+      (typeof template.robotIds === 'string' ?
+        template.robotIds.split(',').map(s => s.trim()).filter(s => s) :
+        template.robotIds) : [];
+
     const request = {
-      orgId: 'UNIVERSAL',
+      orgId: template.orgId || 'UNIVERSAL',
       requestId: this.generateRequestId(),
       missionCode: this.generateMissionCode(),
-      missionType: 'RACK_MOVE',
-      viewBoardType: '',
-      robotModels: [], // Empty - let AMR system assign based on template
-      robotIds: [], // Empty - let AMR system assign based on template
-      robotType: 'LIFT',
-      priority: 1, // Priority: 1-4 (1 = highest priority)
-      containerModelCode: '',
-      containerCode: '',
-      templateCode: workflow.code, // WorkflowCode from WorkflowDiagrams table
-      lockRobotAfterFinish: false,
-      unlockRobotId: '',
-      unlockMissionCode: '',
-      idleNode: ''
+      missionType: template.missionType || 'RACK_MOVE',
+      viewBoardType: template.viewBoardType || '',
+      robotModels: robotModels,
+      robotIds: robotIds,
+      robotType: template.robotType || 'LIFT',
+      priority: parseInt(template.priority) || 1,
+      containerModelCode: template.containerModelCode || '',
+      containerCode: template.containerCode || '',
+      templateCode: template.templateCode || '',
+      lockRobotAfterFinish: template.lockRobotAfterFinish || false,
+      unlockRobotId: template.unlockRobotId || '',
+      unlockMissionCode: template.unlockMissionCode || '',
+      idleNode: template.idleNode || ''
     };
 
     this.missionsService.submitMission(request).subscribe({
       next: (response) => {
         this.triggeringMissions.delete(id);
         if (response.success) {
-          this.snackBar.open(`Workflow "${workflow.name}" triggered successfully!`, 'Close', { duration: 3000 });
+          this.snackBar.open(`Template "${template.missionName}" triggered successfully!`, 'Close', { duration: 3000 });
 
-          // Initialize job tracking for this workflow
+          // Initialize job tracking for this template
           this.workflowJobs.set(id, {
             missionCode: request.missionCode,
             requestId: request.requestId,
-            workflowName: workflow.name,
-            workflowId: workflow.id
+            workflowName: template.missionName,
+            savedMissionId: template.id
           });
 
           // Start polling job status
@@ -370,16 +426,16 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           // Handle API error response (success: false)
           const errorMsg = response.message || 'Unknown error occurred';
           const errorCode = response.code ? `[${response.code}]` : '';
-          this.snackBar.open(`Failed to trigger workflow ${errorCode}: ${errorMsg}`, 'Close', { duration: 8000 });
-          console.error('Workflow trigger failed:', response);
+          this.snackBar.open(`Failed to trigger template ${errorCode}: ${errorMsg}`, 'Close', { duration: 8000 });
+          console.error('Template trigger failed:', response);
         }
       },
       error: (error) => {
         this.triggeringMissions.delete(id);
         // Handle HTTP/network errors
         const errorMsg = this.extractErrorMessage(error);
-        this.snackBar.open(`Error triggering workflow: ${errorMsg}`, 'Close', { duration: 8000 });
-        console.error('Error triggering workflow:', error);
+        this.snackBar.open(`Error triggering template: ${errorMsg}`, 'Close', { duration: 8000 });
+        console.error('Error triggering template:', error);
       }
     });
   }
@@ -585,23 +641,23 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refresh single workflow job status
+   * Refresh single template job status
    */
-  refreshWorkflowStatus(workflow: WorkflowDisplayData): void {
-    const job = this.workflowJobs.get(workflow.id);
+  refreshWorkflowStatus(template: SavedCustomMissionDto): void {
+    const job = this.workflowJobs.get(template.id);
     if (job && job.missionCode) {
       this.snackBar.open('Refreshing job status...', '', { duration: 1000 });
       // Polling will automatically update the status
     } else {
-      this.snackBar.open('No active job for this workflow', 'Close', { duration: 2000 });
+      this.snackBar.open('No active job for this template', 'Close', { duration: 2000 });
     }
   }
 
   /**
-   * View workflow details (placeholder for future implementation)
+   * View template details (placeholder for future implementation)
    */
-  viewWorkflowDetails(workflow: WorkflowDisplayData): void {
-    this.snackBar.open(`View details for: ${workflow.name}`, 'Close', { duration: 2000 });
+  viewWorkflowDetails(template: SavedCustomMissionDto): void {
+    this.snackBar.open(`View details for: ${template.missionName}`, 'Close', { duration: 2000 });
     // TODO: Open dialog or navigate to details page
   }
 
