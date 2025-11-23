@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 
 import { MobileRobotsService } from '../../services/mobile-robots.service';
@@ -31,7 +30,6 @@ import { toObservable } from '@angular/core/rxjs-interop';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    MatMenuModule,
     MatDividerModule
   ],
   templateUrl: './mobile-robots.component.html',
@@ -156,50 +154,6 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
   clearSearch(): void {
     this.searchTerm = '';
     this.applyFilter();
-  }
-
-  /**
-   * View mobile robot details
-   */
-  viewMobileRobot(robot: MobileRobotDisplayData): void {
-    // TODO: Implement view dialog or navigation
-    console.log('View robot:', robot.robotId);
-  }
-
-  /**
-   * Edit mobile robot
-   */
-  editMobileRobot(robot: MobileRobotDisplayData): void {
-    // TODO: Implement edit dialog or form
-    console.log('Edit robot:', robot.robotId);
-  }
-
-  /**
-   * Export mobile robot data
-   */
-  exportMobileRobot(robot: MobileRobotDisplayData): void {
-    // TODO: Implement export functionality
-    console.log('Export robot:', robot.robotId);
-  }
-
-  /**
-   * Delete mobile robot
-   */
-  deleteMobileRobot(robot: MobileRobotDisplayData): void {
-    // TODO: Implement delete confirmation dialog
-    if (confirm(`Are you sure you want to delete mobile robot "${robot.robotId}"?`)) {
-      this.mobileRobotsService.deleteMobileRobot(robot.robotId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            // Reload data after successful deletion
-            this.loadMobileRobots();
-          },
-          error: (error) => {
-            // Error handling is managed by the service
-          }
-        });
-    }
   }
 
   /**
