@@ -195,16 +195,47 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
 
   /**
    * Handle time change from hour/minute selectors
+   * Note: No longer auto-loads data, user must click Search button
    */
   public onTimeChange(): void {
-    this.onFiltersChange();
+    // Removed auto-load - user must click Search button
   }
 
   /**
    * Handle filter changes
+   * Note: No longer auto-loads data, user must click Search button
    */
   public onFiltersChange(): void {
+    // Removed auto-load - user must click Search button
+  }
+
+  /**
+   * Apply filters and load analytics data
+   * This is triggered by the Search button
+   */
+  public applyFilters(): void {
     this.loadDefaultData();
+
+    // Auto-collapse filters after search to show results
+    this.filtersExpanded = false;
+  }
+
+  /**
+   * Reset filters to default values
+   */
+  public resetFilters(): void {
+    const defaultRange = getDefaultDateRange();
+    this.startDate = defaultRange.start;
+    this.endDate = defaultRange.end;
+    this.startHour = '00';
+    this.startMinute = '00';
+    this.endHour = '23';
+    this.endMinute = '59';
+    this.groupBy = 'day';
+
+    // Optionally clear the current data
+    this.utilizationData = null;
+    this.error = null;
   }
 
   /**

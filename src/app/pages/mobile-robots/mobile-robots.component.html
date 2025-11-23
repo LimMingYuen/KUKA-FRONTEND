@@ -1,9 +1,36 @@
+<!-- Page Header -->
+<div class="page-header">
+  <div class="header-left">
+    <h1 class="page-title">
+      <mat-icon class="title-icon">smart_toy</mat-icon>
+      Mobile Robots Management
+    </h1>
+    <span class="robot-count-badge">{{ mobileRobots.length }} robots</span>
+  </div>
+  <div class="header-actions">
+    <button mat-icon-button
+            (click)="refreshMobileRobots()"
+            matTooltip="Refresh robots"
+            [disabled]="isLoading">
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-raised-button
+            color="primary"
+            (click)="syncMobileRobots()"
+            [disabled]="isSyncing"
+            matTooltip="Sync robots from external system">
+      <mat-icon>sync</mat-icon>
+      <span class="button-text">{{ isSyncing ? 'Syncing...' : 'Sync Robots' }}</span>
+      <mat-spinner *ngIf="isSyncing" diameter="20" class="button-spinner"></mat-spinner>
+    </button>
+  </div>
+</div>
+
 <!-- Sync Result Banner -->
-<div class="sync-result"
-     *ngIf="lastSyncResult">
-  <mat-card class="sync-result-card" [style.background]="'linear-gradient(135deg, #2196f3, #1976d2)'" [style.color]="'white'">
+<div class="sync-result" *ngIf="lastSyncResult">
+  <mat-card class="sync-result-card">
     <div class="sync-result-content">
-      <mat-icon class="sync-icon">smart_toy</mat-icon>
+      <mat-icon class="sync-icon">check_circle</mat-icon>
       <div class="sync-details">
         <h3>Sync Completed Successfully</h3>
         <p>
@@ -21,90 +48,209 @@
   </mat-card>
 </div>
 
-<!-- Generic Table Component -->
-<app-generic-table class="mobile-robot-table"
-  [data]="mobileRobots"
-  [config]="tableConfig"
-  [loading]="isLoading"
-  [empty]="mobileRobots.length === 0"
-  (action)="onTableAction($event)"
-  (sortChange)="onSortChange($event)"
-  (pageChange)="onPageChange($event)"
-  (filterChange)="onFilterChange($event)">
-</app-generic-table>
+<!-- Search Bar -->
+<div class="search-section">
+  <mat-form-field class="search-field" appearance="outline">
+    <mat-label>Search robots by ID, type, status, map code...</mat-label>
+    <input matInput
+           [(ngModel)]="searchTerm"
+           (ngModelChange)="onSearchChange()"
+           placeholder="Type to search...">
+    <mat-icon matPrefix>search</mat-icon>
+    <button mat-icon-button matSuffix
+            *ngIf="searchTerm"
+            (click)="clearSearch()"
+            matTooltip="Clear search">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+</div>
 
-<!-- Custom Robot ID Cell Template -->
-<ng-template #robotIdCell let-data let-column="column">
-  <span class="robot-id" [matTooltip]="data.robotId">
-    {{ data.robotId }}
-  </span>
-</ng-template>
+<!-- Loading State -->
+<div class="loading-container" *ngIf="isLoading">
+  <mat-spinner diameter="48"></mat-spinner>
+  <p class="loading-text">Loading mobile robots...</p>
+</div>
 
-<!-- Custom Status Cell Template -->
-<ng-template #statusCell let-data let-column="column">
-  <span class="status-badge"
-        [ngClass]="getStatusClass(data.status)"
-        [matTooltip]="'Status: ' + data.statusText">
-    {{ data.statusText }}
-  </span>
-</ng-template>
+<!-- Empty State -->
+<div class="empty-state" *ngIf="!isLoading && filteredRobots.length === 0 && !searchTerm">
+  <mat-icon class="empty-icon">smart_toy</mat-icon>
+  <h3>No Mobile Robots Found</h3>
+  <p>There are no mobile robots in the system. Click "Sync Robots" to fetch robots from the external system.</p>
+  <button mat-raised-button
+          color="primary"
+          (click)="syncMobileRobots()"
+          [disabled]="isSyncing">
+    <mat-icon>sync</mat-icon>
+    Sync Robots
+  </button>
+</div>
 
-<!-- Custom Battery Level Cell Template -->
-<ng-template #batteryCell let-data let-column="column">
-  <span class="battery-indicator"
-        [ngClass]="getBatteryClass(data.batteryLevel)"
-        [matTooltip]="'Battery: ' + data.batteryLevel + '%'">
-    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 80">battery_full</mat-icon>
-    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 50 && data.batteryLevel < 80">battery_6_bar</mat-icon>
-    <mat-icon class="battery-icon" *ngIf="data.batteryLevel >= 20 && data.batteryLevel < 50">battery_3_bar</mat-icon>
-    <mat-icon class="battery-icon" *ngIf="data.batteryLevel < 20">battery_1_bar</mat-icon>
-    {{ data.batteryLevel }}%
-  </span>
-</ng-template>
+<!-- No Search Results -->
+<div class="empty-state" *ngIf="!isLoading && filteredRobots.length === 0 && searchTerm">
+  <mat-icon class="empty-icon">search_off</mat-icon>
+  <h3>No Results Found</h3>
+  <p>No mobile robots match your search "{{ searchTerm }}"</p>
+  <button mat-stroked-button (click)="clearSearch()">
+    <mat-icon>clear</mat-icon>
+    Clear Search
+  </button>
+</div>
 
-<!-- Custom Map Code Cell Template -->
-<ng-template #mapCodeCell let-data let-column="column">
-  <span class="map-code" [matTooltip]="getCellValue(data, column)">
-    {{ getCellValue(data, column) }}
-  </span>
-</ng-template>
+<!-- Robot Cards Grid -->
+<div class="robot-cards-grid" *ngIf="!isLoading && filteredRobots.length > 0">
+  <mat-card class="robot-card" *ngFor="let robot of filteredRobots">
 
-<!-- Custom Floor Cell Template -->
-<ng-template #floorCell let-data let-column="column">
-  <span class="floor-badge"
-        [ngClass]="getFloorClass(data.floorNumber)"
-        [matTooltip]="'Floor: ' + data.floorNumber">
-    {{ data.floorDisplay }}
-  </span>
-</ng-template>
+    <!-- Card Header with Robot Icon and ID -->
+    <div class="card-header">
+      <div class="robot-icon-container">
+        <mat-icon class="robot-icon">smart_toy</mat-icon>
+      </div>
+      <div class="robot-header-info">
+        <h3 class="robot-id" [matTooltip]="robot.robotId">{{ robot.robotId }}</h3>
+        <span class="robot-type">{{ robot.robotTypeCode }}</span>
+      </div>
+      <span class="status-badge"
+            [ngClass]="getStatusClass(robot.status)"
+            [matTooltip]="'Status: ' + robot.statusText">
+        {{ robot.statusText }}
+      </span>
+    </div>
 
-<!-- Custom Coordinates Cell Template -->
-<ng-template #coordinatesCell let-data let-column="column">
-  <span class="coordinates" [matTooltip]="'Position: X=' + data.xCoordinate + ', Y=' + data.yCoordinate">
-    {{ data.coordinatesText }}
-  </span>
-</ng-template>
+    <mat-divider></mat-divider>
 
-<!-- Custom Orientation Cell Template -->
-<ng-template #orientationCell let-data let-column="column">
-  <span class="orientation" [matTooltip]="'Robot orientation: ' + data.robotOrientation + ' degrees'">
-    <mat-icon class="orientation-icon">navigation</mat-icon>
-    {{ data.orientationText }}
-  </span>
-</ng-template>
+    <!-- Card Content -->
+    <mat-card-content class="card-content">
 
-<!-- Custom Node Number Cell Template -->
-<ng-template #nodeCell let-data let-column="column">
-  <span class="node-number" [matTooltip]="'Current node: ' + data.lastNodeNumber">
-    {{ data.nodeDisplay }}
-  </span>
-</ng-template>
+      <!-- Battery Level -->
+      <div class="info-row">
+        <div class="info-label">
+          <mat-icon class="info-icon">battery_charging_full</mat-icon>
+          Battery
+        </div>
+        <div class="info-value">
+          <span class="battery-indicator"
+                [ngClass]="getBatteryClass(robot.batteryLevel)"
+                [matTooltip]="'Battery: ' + robot.batteryLevel + '%'">
+            <mat-icon class="battery-icon" *ngIf="robot.batteryLevel >= 80">battery_full</mat-icon>
+            <mat-icon class="battery-icon" *ngIf="robot.batteryLevel >= 50 && robot.batteryLevel < 80">battery_6_bar</mat-icon>
+            <mat-icon class="battery-icon" *ngIf="robot.batteryLevel >= 20 && robot.batteryLevel < 50">battery_3_bar</mat-icon>
+            <mat-icon class="battery-icon" *ngIf="robot.batteryLevel < 20">battery_1_bar</mat-icon>
+            {{ robot.batteryLevel }}%
+          </span>
+        </div>
+      </div>
 
-<!-- Custom Reliability Cell Template -->
-<ng-template #reliabilityCell let-data let-column="column">
-  <span class="reliability-badge"
-        [ngClass]="getReliabilityClass(data.reliability)"
-        [matTooltip]="'Reliability: ' + data.reliabilityText + ' (' + data.reliability + '%)'">
-    {{ data.reliabilityText }}
-  </span>
-</ng-template>
+      <!-- Reliability -->
+      <div class="info-row">
+        <div class="info-label">
+          <mat-icon class="info-icon">trending_up</mat-icon>
+          Reliability
+        </div>
+        <div class="info-value">
+          <span class="reliability-badge"
+                [ngClass]="getReliabilityClass(robot.reliability)"
+                [matTooltip]="'Reliability: ' + robot.reliabilityText + ' (' + robot.reliability + '%)'">
+            {{ robot.reliabilityText }}
+          </span>
+        </div>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <!-- Location Information -->
+      <div class="info-section-title">
+        <mat-icon>location_on</mat-icon>
+        Location
+      </div>
+
+      <!-- Map Code -->
+      <div class="info-row">
+        <div class="info-label">Map Code</div>
+        <div class="info-value">
+          <span class="map-code" [matTooltip]="robot.mapCode">{{ robot.mapCode }}</span>
+        </div>
+      </div>
+
+      <!-- Floor -->
+      <div class="info-row">
+        <div class="info-label">Floor</div>
+        <div class="info-value">
+          <span class="floor-badge"
+                [ngClass]="getFloorClass(robot.floorNumber)"
+                [matTooltip]="'Floor: ' + robot.floorNumber">
+            {{ robot.floorDisplay }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Current Node -->
+      <div class="info-row">
+        <div class="info-label">Current Node</div>
+        <div class="info-value">
+          <span class="node-number" [matTooltip]="'Current node: ' + robot.lastNodeNumber">
+            {{ robot.nodeDisplay }}
+          </span>
+        </div>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <!-- Position Information -->
+      <div class="info-section-title">
+        <mat-icon>my_location</mat-icon>
+        Position
+      </div>
+
+      <!-- Coordinates -->
+      <div class="info-row">
+        <div class="info-label">Coordinates</div>
+        <div class="info-value">
+          <span class="coordinates"
+                [matTooltip]="'Position: X=' + robot.xCoordinate + ', Y=' + robot.yCoordinate">
+            {{ robot.coordinatesText }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Orientation -->
+      <div class="info-row">
+        <div class="info-label">Orientation</div>
+        <div class="info-value">
+          <span class="orientation"
+                [matTooltip]="'Robot orientation: ' + robot.robotOrientation + ' degrees'">
+            <mat-icon class="orientation-icon">navigation</mat-icon>
+            {{ robot.orientationText }}
+          </span>
+        </div>
+      </div>
+
+    </mat-card-content>
+
+    <!-- Card Actions -->
+    <mat-card-actions class="card-actions">
+      <button mat-button (click)="viewMobileRobot(robot)" matTooltip="View details">
+        <mat-icon>visibility</mat-icon>
+        View
+      </button>
+      <button mat-button (click)="editMobileRobot(robot)" matTooltip="Edit robot">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="moreMenu" matTooltip="More options">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item (click)="exportMobileRobot(robot)">
+          <mat-icon>download</mat-icon>
+          <span>Export</span>
+        </button>
+        <button mat-menu-item class="danger-action" (click)="deleteMobileRobot(robot)">
+          <mat-icon>delete</mat-icon>
+          <span>Delete</span>
+        </button>
+      </mat-menu>
+    </mat-card-actions>
+
+  </mat-card>
+</div>

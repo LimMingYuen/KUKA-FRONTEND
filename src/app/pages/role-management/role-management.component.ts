@@ -8,12 +8,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatListModule } from '@angular/material/list';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { TableConfig, ActionEvent } from '../../shared/models/table.models';
 import { RoleDto, RoleCreateRequest, RoleUpdateRequest } from '../../models/role.models';
 import { RoleService } from '../../services/role.service';
+import { PermissionService } from '../../services/permission.service';
+import { PageDto, RolePermissionBulkSetRequest } from '../../models/permission.models';
 import { ROLE_MANAGEMENT_TABLE_CONFIG } from './role-management-table.config';
 
 @Component({
@@ -103,7 +108,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
    */
   private openAddDialog(): void {
     const dialogRef = this.dialog.open(RoleFormDialogComponent, {
-      width: '500px',
+      width: '800px',
       data: { mode: 'create' }
     });
 
@@ -119,7 +124,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
    */
   private openEditDialog(role: RoleDto): void {
     const dialogRef = this.dialog.open(RoleFormDialogComponent, {
-      width: '500px',
+      width: '800px',
       data: { mode: 'edit', role }
     });
 
@@ -240,55 +245,104 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatIconModule
+    MatIconModule,
+    MatTabsModule,
+    MatSlideToggleModule,
+    MatListModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add Role' : 'Edit Role' }}</h2>
     <mat-dialog-content>
-      <form [formGroup]="roleForm" class="role-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Role Name</mat-label>
-          <input matInput formControlName="name" placeholder="Enter role name" required />
-          <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
-            Role name is required
-          </mat-error>
-        </mat-form-field>
+      <mat-tab-group>
+        <!-- Basic Info Tab -->
+        <mat-tab label="Basic Info">
+          <form [formGroup]="roleForm" class="role-form">
+            <mat-form-field appearance="outline">
+              <mat-label>Role Name</mat-label>
+              <input matInput formControlName="name" placeholder="Enter role name" required />
+              <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
+                Role name is required
+              </mat-error>
+            </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Role Code</mat-label>
-          <input
-            matInput
-            formControlName="roleCode"
-            placeholder="e.g., ADMIN, OPERATOR"
-            required
-          />
-          <mat-error *ngIf="roleForm.get('roleCode')?.hasError('required')">
-            Role code is required
-          </mat-error>
-          <mat-hint>Unique identifier for the role (uppercase recommended)</mat-hint>
-        </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Role Code</mat-label>
+              <input
+                matInput
+                formControlName="roleCode"
+                placeholder="e.g., ADMIN, OPERATOR"
+                required
+              />
+              <mat-error *ngIf="roleForm.get('roleCode')?.hasError('required')">
+                Role code is required
+              </mat-error>
+              <mat-hint>Unique identifier for the role (uppercase recommended)</mat-hint>
+            </mat-form-field>
 
-        <div class="checkbox-field">
-          <mat-checkbox formControlName="isProtected">Protected Role</mat-checkbox>
-          <p class="checkbox-hint">Protected roles cannot be deleted</p>
-        </div>
-      </form>
+            <div class="checkbox-field">
+              <mat-checkbox formControlName="isProtected">Protected Role</mat-checkbox>
+              <p class="checkbox-hint">Protected roles cannot be deleted</p>
+            </div>
+          </form>
+        </mat-tab>
+
+        <!-- Permissions Tab -->
+        <mat-tab label="Permissions">
+          <div class="permissions-container">
+            <div *ngIf="data.mode === 'create'" class="permissions-disabled-message">
+              <mat-icon>info</mat-icon>
+              <p>Save the role first to assign page permissions</p>
+            </div>
+
+            <div *ngIf="data.mode === 'edit' && !isLoadingPages">
+              <h3>Page Access Control</h3>
+              <p class="permissions-hint">Toggle access for each page</p>
+
+              <mat-list class="permissions-list">
+                <mat-list-item *ngFor="let page of allPages">
+                  <mat-icon matListItemIcon>{{ page.pageIcon || 'web' }}</mat-icon>
+                  <div matListItemTitle>{{ page.pageName }}</div>
+                  <div matListItemLine class="page-path">{{ page.pagePath }}</div>
+                  <mat-slide-toggle
+                    matListItemMeta
+                    [checked]="rolePermissions.get(page.id) || false"
+                    (change)="onPermissionToggle(page.id, $event.checked)">
+                  </mat-slide-toggle>
+                </mat-list-item>
+              </mat-list>
+            </div>
+
+            <div *ngIf="isLoadingPages" class="loading-container">
+              <p>Loading pages...</p>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!roleForm.valid">
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!roleForm.valid || isSaving">
         {{ data.mode === 'create' ? 'Create' : 'Save' }}
       </button>
     </mat-dialog-actions>
   `,
   styles: [
     `
+      mat-dialog-content {
+        padding: 0;
+        min-height: 400px;
+      }
+
+      mat-tab-group {
+        min-height: 400px;
+      }
+
       .role-form {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         min-width: 400px;
-        padding: 1rem 0;
+        padding: 1.5rem 1rem;
       }
 
       mat-form-field {
@@ -304,15 +358,81 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         font-size: 0.75rem;
         color: rgba(0, 0, 0, 0.6);
       }
+
+      .permissions-container {
+        padding: 1.5rem 1rem;
+        min-height: 350px;
+      }
+
+      .permissions-disabled-message {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .permissions-disabled-message mat-icon {
+        color: #ff9800;
+      }
+
+      .permissions-hint {
+        margin: 0 0 1rem 0;
+        font-size: 0.875rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .permissions-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .permissions-list mat-list-item {
+        height: auto;
+        min-height: 64px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      }
+
+      .permissions-list mat-list-item:last-child {
+        border-bottom: none;
+      }
+
+      .page-path {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        font-weight: 500;
+      }
     `
   ]
 })
-export class RoleFormDialogComponent {
+export class RoleFormDialogComponent implements OnInit, OnDestroy {
   roleForm: FormGroup;
+  allPages: PageDto[] = [];
+  rolePermissions = new Map<number, boolean>();
+  isLoadingPages = false;
+  isSaving = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<RoleFormDialogComponent>,
+    private permissionService: PermissionService,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; role?: RoleDto }
   ) {
     this.roleForm = this.fb.group({
@@ -320,6 +440,71 @@ export class RoleFormDialogComponent {
       roleCode: [data.role?.roleCode || '', Validators.required],
       isProtected: [data.role?.isProtected || false]
     });
+  }
+
+  ngOnInit(): void {
+    if (this.data.mode === 'edit' && this.data.role) {
+      this.loadPages();
+      this.loadRolePermissions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load all available pages
+   */
+  private loadPages(): void {
+    this.isLoadingPages = true;
+    this.permissionService
+      .getAllPages()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (pages) => {
+          this.allPages = pages;
+          this.isLoadingPages = false;
+        },
+        error: (err) => {
+          console.error('Error loading pages:', err);
+          this.snackBar.open('Failed to load pages', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoadingPages = false;
+        }
+      });
+  }
+
+  /**
+   * Load existing role permissions
+   */
+  private loadRolePermissions(): void {
+    if (!this.data.role) return;
+
+    this.permissionService
+      .getRolePermissionsByRoleId(this.data.role.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (permissions) => {
+          this.rolePermissions.clear();
+          permissions.forEach((perm) => {
+            this.rolePermissions.set(perm.pageId, perm.canAccess);
+          });
+        },
+        error: (err) => {
+          console.error('Error loading role permissions:', err);
+        }
+      });
+  }
+
+  /**
+   * Handle permission toggle change
+   */
+  onPermissionToggle(pageId: number, canAccess: boolean): void {
+    this.rolePermissions.set(pageId, canAccess);
   }
 
   onCancel(): void {
@@ -338,13 +523,65 @@ export class RoleFormDialogComponent {
         };
         this.dialogRef.close(request);
       } else {
+        // Edit mode - save both role info and permissions
+        this.isSaving = true;
+
         const request: RoleUpdateRequest = {
           name: formValue.name,
           roleCode: formValue.roleCode,
           isProtected: formValue.isProtected
         };
-        this.dialogRef.close(request);
+
+        // Close dialog with role update request
+        // Permissions will be saved separately by parent component
+        this.saveRolePermissions()
+          .then(() => {
+            this.dialogRef.close(request);
+          })
+          .catch(() => {
+            this.isSaving = false;
+          });
       }
     }
+  }
+
+  /**
+   * Save role permissions to backend
+   */
+  private async saveRolePermissions(): Promise<void> {
+    if (!this.data.role || this.rolePermissions.size === 0) {
+      return Promise.resolve();
+    }
+
+    const permissionRequest: RolePermissionBulkSetRequest = {
+      roleId: this.data.role.id,
+      pagePermissions: Array.from(this.rolePermissions.entries()).map(([pageId, canAccess]) => ({
+        pageId,
+        canAccess
+      }))
+    };
+
+    return new Promise((resolve, reject) => {
+      this.permissionService
+        .bulkSetRolePermissions(permissionRequest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (result) => {
+            this.snackBar.open(`Permissions updated (${result.modifiedCount} changes)`, 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            resolve();
+          },
+          error: (err) => {
+            console.error('Error saving permissions:', err);
+            this.snackBar.open('Failed to save permissions', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+            reject(err);
+          }
+        });
+    });
   }
 }

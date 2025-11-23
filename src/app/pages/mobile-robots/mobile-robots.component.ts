@@ -1,40 +1,49 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { MobileRobotsService } from '../../services/mobile-robots.service';
 import { MobileRobotDisplayData, MobileRobotSyncResultDto, getReliabilityClass, getFloorClass, getStatusClass, getBatteryClass } from '../../models/mobile-robot.models';
 import { Subject, takeUntil, Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
-import { MOBILE_ROBOT_TABLE_CONFIG } from './mobile-robot-table.config';
-import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 
 @Component({
   selector: 'app-mobile-robots',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatSnackBarModule,
     MatIconModule,
     MatTooltipModule,
     MatButtonModule,
-    GenericTableComponent
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    MatMenuModule,
+    MatDividerModule
   ],
   templateUrl: './mobile-robots.component.html',
   styleUrl: './mobile-robots.component.css'
 })
 export class MobileRobotsComponent implements OnInit, OnDestroy {
-  // Table data
+  // Robot data
   public mobileRobots: MobileRobotDisplayData[] = [];
+  public filteredRobots: MobileRobotDisplayData[] = [];
 
-  // Table configuration
-  public tableConfig = MOBILE_ROBOT_TABLE_CONFIG;
+  // Search
+  public searchTerm: string = '';
 
   // UI state
   public isLoading = false;
@@ -54,9 +63,6 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
     this.loading$ = toObservable(this.mobileRobotsService.isLoading);
     this.syncing$ = toObservable(this.mobileRobotsService.isSyncing);
     this.syncResult$ = toObservable(this.mobileRobotsService.lastSyncResult);
-
-    // Configure empty state action
-    this.tableConfig.empty!.action = () => this.syncMobileRobots();
   }
 
   ngOnInit(): void {
@@ -81,11 +87,6 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
     // Subscribe to syncing state
     this.syncing$.pipe(takeUntil(this.destroy$)).subscribe(syncing => {
       this.isSyncing = syncing;
-      // Update header action loading state
-      const syncAction = this.tableConfig.headerActions?.find(action => action.action === 'sync');
-      if (syncAction) {
-        syncAction.loading = syncing;
-      }
     });
 
     // Subscribe to sync results
@@ -107,6 +108,7 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (mobileRobots) => {
           this.mobileRobots = mobileRobots;
+          this.applyFilter();
         },
         error: (error) => {
           console.error('Error loading mobile robots:', error);
@@ -115,82 +117,75 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle table actions
+   * Apply search filter to robots
    */
-  onTableAction(event: ActionEvent): void {
-    switch (event.action) {
-      case 'view':
-        this.viewMobileRobot(event.row);
-        break;
-      case 'edit':
-        this.editMobileRobot(event.row);
-        break;
-      case 'export':
-        this.exportMobileRobot(event.row);
-        break;
-      case 'delete':
-        this.deleteMobileRobot(event.row);
-        break;
-      case 'refresh':
-        this.refreshMobileRobots();
-        break;
-      case 'sync':
-        this.syncMobileRobots();
-        break;
-      default:
-        // Unknown action - ignore silently
+  private applyFilter(): void {
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      this.filteredRobots = [...this.mobileRobots];
+      return;
     }
+
+    const searchLower = this.searchTerm.toLowerCase().trim();
+
+    this.filteredRobots = this.mobileRobots.filter(robot => {
+      return (
+        robot.robotId.toLowerCase().includes(searchLower) ||
+        robot.robotTypeCode.toLowerCase().includes(searchLower) ||
+        robot.statusText.toLowerCase().includes(searchLower) ||
+        robot.mapCode.toLowerCase().includes(searchLower) ||
+        robot.floorNumber.toLowerCase().includes(searchLower) ||
+        robot.floorDisplay.toLowerCase().includes(searchLower) ||
+        robot.nodeDisplay.toLowerCase().includes(searchLower) ||
+        robot.reliabilityText.toLowerCase().includes(searchLower) ||
+        robot.coordinatesText.toLowerCase().includes(searchLower) ||
+        robot.orientationText.toLowerCase().includes(searchLower)
+      );
+    });
   }
 
   /**
-   * Handle table sort events
+   * Handle search term change
    */
-  onSortChange(event: SortEvent): void {
-    // Sorting is handled by the generic table component
+  onSearchChange(): void {
+    this.applyFilter();
   }
 
   /**
-   * Handle table page events
+   * Clear search filter
    */
-  onPageChange(event: PageEvent): void {
-    // Pagination is handled by the generic table component
-  }
-
-  /**
-   * Handle table filter events
-   */
-  onFilterChange(event: FilterEvent): void {
-    // Filtering is handled by the generic table component
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
   }
 
   /**
    * View mobile robot details
    */
-  private viewMobileRobot(robot: MobileRobotDisplayData): void {
+  viewMobileRobot(robot: MobileRobotDisplayData): void {
     // TODO: Implement view dialog or navigation
-    // Could open a dialog with detailed robot information
+    console.log('View robot:', robot.robotId);
   }
 
   /**
    * Edit mobile robot
    */
-  private editMobileRobot(robot: MobileRobotDisplayData): void {
+  editMobileRobot(robot: MobileRobotDisplayData): void {
     // TODO: Implement edit dialog or form
-    // Could open a dialog with robot editing form
+    console.log('Edit robot:', robot.robotId);
   }
 
   /**
    * Export mobile robot data
    */
-  private exportMobileRobot(robot: MobileRobotDisplayData): void {
+  exportMobileRobot(robot: MobileRobotDisplayData): void {
     // TODO: Implement export functionality
-    // Could export single robot data to CSV/JSON
+    console.log('Export robot:', robot.robotId);
   }
 
   /**
    * Delete mobile robot
    */
-  private deleteMobileRobot(robot: MobileRobotDisplayData): void {
+  deleteMobileRobot(robot: MobileRobotDisplayData): void {
     // TODO: Implement delete confirmation dialog
     if (confirm(`Are you sure you want to delete mobile robot "${robot.robotId}"?`)) {
       this.mobileRobotsService.deleteMobileRobot(robot.robotId)
@@ -210,14 +205,14 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
   /**
    * Refresh mobile robots
    */
-  private refreshMobileRobots(): void {
+  refreshMobileRobots(): void {
     this.loadMobileRobots();
   }
 
   /**
    * Sync mobile robots from external API
    */
-  private syncMobileRobots(): void {
+  syncMobileRobots(): void {
     this.mobileRobotsService.syncMobileRobots()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -232,23 +227,6 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
    */
   clearSyncResult(): void {
     this.mobileRobotsService.clearSyncResult();
-  }
-
-  /**
-   * Get cell value for table display
-   */
-  getCellValue(row: MobileRobotDisplayData, column: any): string {
-    const key = column.key as keyof MobileRobotDisplayData;
-    const value = row[key];
-
-    if (value == null) return '';
-
-    // Apply transform if configured
-    if (column.transform) {
-      return column.transform(value, row);
-    }
-
-    return String(value);
   }
 
   /**

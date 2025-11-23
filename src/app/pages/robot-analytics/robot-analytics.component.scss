@@ -49,81 +49,283 @@
   gap: 8px;
 }
 
-/* Filters Expansion Panel */
-.filters-panel {
+/* Filters Card */
+.filters-card {
   margin-bottom: 24px;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  transition: box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
-.filters-panel ::ng-deep .mat-expansion-panel-header {
-  padding: 16px 24px;
+.filters-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
 }
 
-.filters-panel ::ng-deep .mat-expansion-panel-header-title {
+/* Filters Header */
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filters-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #1976d2;
+  color: white;
+}
+
+.filters-title .title-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.filters-title h2 {
+  margin: 0;
+  font-size: 20px;
   font-weight: 500;
 }
 
-.filters-panel ::ng-deep .mat-expansion-panel-header-description {
-  justify-content: flex-end;
+.collapse-button {
+  color: white;
+}
+
+/* Filters Summary (Collapsed State) */
+.filters-summary {
+  display: flex;
   align-items: center;
-}
-
-.filter-summary {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.filters-content {
+  gap: 12px;
   padding: 16px 24px;
-}
-
-.filters-row {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
   flex-wrap: wrap;
+  background: #f8f9fa;
 }
 
-.filter-field {
-  flex: 1;
-  min-width: 200px;
-}
-
-.filter-field.small {
-  flex: 0 1 150px;
-}
-
-/* DateTime Filter Group */
-.datetime-filter-group {
+.summary-item {
   display: flex;
+  align-items: center;
   gap: 8px;
-  align-items: flex-end;
+  padding: 6px 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  color: #333;
+}
+
+.summary-item mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #667eea;
+}
+
+.summary-divider {
+  color: #ccc;
+  font-weight: 300;
+}
+
+.summary-arrow {
+  color: #667eea;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Filters Content (Expanded State) */
+.filters-content {
+  padding: 24px;
+  background: #fafafa;
+}
+
+/* Filter Sections */
+.filter-section {
+  margin-bottom: 24px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-label mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* DateTime Row */
+.datetime-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* DateTime Groups */
+.datetime-group {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.datetime-group.start {
+  border-left: 4px solid #4caf50;
+}
+
+.datetime-group.end {
+  border-left: 4px solid #f44336;
+}
+
+.datetime-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  font-size: 13px;
+  color: #666;
+}
+
+.datetime-group.start .datetime-label mat-icon {
+  color: #4caf50;
+}
+
+.datetime-group.end .datetime-label mat-icon {
+  color: #f44336;
+}
+
+.datetime-label mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.datetime-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.date-field {
+  width: 100%;
+}
+
+/* Time Fields */
+.time-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-field {
   flex: 1;
-  min-width: 400px;
 }
 
-.datetime-filter-group .date-field {
-  flex: 3;
-  min-width: 180px;
+.time-separator {
+  font-size: 20px;
+  font-weight: bold;
+  color: #667eea;
+  margin: 0 4px;
+  padding-bottom: 12px;
 }
 
-/* Time Select Fields */
-.time-select-field {
-  flex: 1;
-  min-width: 80px;
-  max-width: 100px;
-}
-
+/* Grouping Toggle */
 .grouping-toggle {
-  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.grouping-toggle ::ng-deep .mat-button-toggle {
+  border: none !important;
+  border-radius: 6px !important;
+  flex: 1;
+}
+
+.grouping-toggle ::ng-deep .mat-button-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-weight: 500;
+}
+
+.grouping-toggle ::ng-deep .mat-button-toggle-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.grouping-toggle ::ng-deep .mat-button-toggle-checked mat-icon {
+  color: white !important;
+}
+
+/* Option Icons */
+.option-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+/* Filter Actions */
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 2px solid #e0e0e0;
+  margin-top: 24px;
+}
+
+.search-button {
+  min-width: 180px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.search-button mat-icon {
+  margin-right: 8px;
+}
+
+.search-button:hover:not([disabled]) {
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+.reset-button {
+  min-width: 120px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.reset-button mat-icon {
+  margin-right: 8px;
 }
 
 /* KPI Cards Section */
@@ -369,31 +571,65 @@
     justify-content: flex-start;
   }
 
-  .filters-row {
+  /* Filter Card Mobile */
+  .filters-header {
+    padding: 16px;
+  }
+
+  .filters-title h2 {
+    font-size: 16px;
+  }
+
+  .filters-summary {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
-  .filter-field,
-  .filter-field.small {
-    width: 100%;
-    min-width: 100%;
+  .filters-content {
+    padding: 16px;
   }
 
-  .datetime-filter-group {
-    width: 100%;
-    min-width: 100%;
+  /* DateTime Row Mobile */
+  .datetime-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  .datetime-filter-group .date-field {
-    flex: 1;
+  .datetime-group {
+    padding: 12px;
+  }
+
+  .time-fields {
+    flex-wrap: nowrap;
+  }
+
+  .time-field {
     min-width: 0;
   }
 
-  .time-select-field {
-    min-width: 70px;
-    max-width: 80px;
+  .time-separator {
+    font-size: 16px;
   }
 
+  /* Grouping Toggle Mobile */
+  .grouping-toggle ::ng-deep .mat-button-toggle-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Filter Actions Mobile */
+  .filter-actions {
+    flex-direction: column;
+  }
+
+  .search-button,
+  .reset-button {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  /* Other Mobile Styles */
   .kpi-container {
     grid-template-columns: 1fr;
   }
