@@ -27,10 +27,12 @@ import { AreasService } from '../../services/areas.service';
 import { ShelfDecisionRulesService } from '../../services/shelf-decision-rules.service';
 import { QrCodesService } from '../../services/qr-codes.service';
 import { MapZonesService } from '../../services/map-zones.service';
+import { WorkflowService } from '../../services/workflow.service';
 import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
 import { createQrCodeUniqueIds } from '../../models/qr-code.models';
+import { WorkflowDisplayData } from '../../models/workflow.models';
 import { MissionFlowchartComponent, MissionStepFlowData } from '../../shared/components/mission-flowchart/mission-flowchart.component';
 
 export interface WorkflowTemplateDialogData {
@@ -72,6 +74,31 @@ export interface WorkflowTemplateDialogData {
       </div>
 
       <form [formGroup]="templateForm" class="template-form" [class.loading]="isLoadingConfig()">
+        <!-- Workflow Reference -->
+        <section class="form-section" *ngIf="data.mode === 'create'">
+          <h3>Workflow Reference</h3>
+          <p class="section-description">Select a synced workflow to use as reference for this template. The workflow name and code will be auto-populated.</p>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Workflow</mat-label>
+            <mat-select (selectionChange)="onWorkflowSelected($event.value)">
+              <mat-option [value]="null">-- None (Create without workflow reference) --</mat-option>
+              <mat-option *ngFor="let workflow of availableWorkflows()" [value]="workflow">
+                {{ workflow.name }} ({{ workflow.code }})
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>account_tree</mat-icon>
+            <mat-hint *ngIf="availableWorkflows().length === 0" class="warning-hint">
+              No synced workflows available. Sync workflows first from the Workflows page.
+            </mat-hint>
+            <mat-hint *ngIf="availableWorkflows().length > 0">
+              {{ availableWorkflows().length }} workflow(s) available
+            </mat-hint>
+          </mat-form-field>
+        </section>
+
+        <mat-divider *ngIf="data.mode === 'create'"></mat-divider>
+
         <!-- Basic Information -->
         <section class="form-section">
           <h3>Basic Information</h3>
@@ -188,12 +215,13 @@ export interface WorkflowTemplateDialogData {
           </mat-form-field>
         </section>
 
-        <mat-divider></mat-divider>
+        <!-- Mission Steps - Only shown for custom templates (no workflow reference) -->
+        <ng-container *ngIf="!isWorkflowSelected()">
+          <mat-divider></mat-divider>
 
-        <!-- Mission Steps -->
-        <section class="form-section" [formGroup]="missionTemplate">
-          <div class="section-header">
-            <h3>Mission Steps</h3>
+          <section class="form-section" [formGroup]="missionTemplate">
+            <div class="section-header">
+              <h3>Mission Steps</h3>
             <div class="header-actions">
               <mat-button-toggle-group [value]="viewMode()" (change)="onViewModeChange($event.value)" class="view-toggle">
                 <mat-button-toggle value="form">
@@ -311,7 +339,8 @@ export interface WorkflowTemplateDialogData {
           <div *ngIf="viewMode() === 'flowchart'" class="flowchart-view">
             <app-mission-flowchart [missionSteps]="flowchartData()"></app-mission-flowchart>
           </div>
-        </section>
+          </section>
+        </ng-container>
       </form>
     </mat-dialog-content>
 
@@ -376,6 +405,13 @@ export interface WorkflowTemplateDialogData {
         font-weight: 500;
         margin-bottom: 16px;
         color: #555;
+      }
+
+      .section-description {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 16px;
+        line-height: 1.4;
       }
     }
 
@@ -514,7 +550,9 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
   public mapZonePositions = signal<{ name: string; code: string }[]>([]);
   public availableRobotModels = signal<string[]>([]);
   public availableRobotIds = signal<string[]>([]);
+  public availableWorkflows = signal<WorkflowDisplayData[]>([]);
   public isLoadingConfig = signal<boolean>(false);
+  public isWorkflowSelected = signal<boolean>(false);
 
   // View mode signal
   public viewMode = signal<'form' | 'flowchart'>('form');
@@ -552,7 +590,8 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
     private areasService: AreasService,
     private shelfDecisionRulesService: ShelfDecisionRulesService,
     private qrCodesService: QrCodesService,
-    private mapZonesService: MapZonesService
+    private mapZonesService: MapZonesService,
+    private workflowService: WorkflowService
   ) {}
 
   ngOnInit(): void {
@@ -621,15 +660,20 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       areas: this.areasService.getAreas(),
       shelfRules: this.shelfDecisionRulesService.getShelfDecisionRules(),
       qrCodes: this.qrCodesService.getQrCodes(),
-      mapZones: this.mapZonesService.getMapZones()
+      mapZones: this.mapZonesService.getMapZones(),
+      workflows: this.workflowService.getWorkflows()
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots, areas, shelfRules, qrCodes, mapZones }) => {
+        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots, areas, shelfRules, qrCodes, mapZones, workflows }) => {
           // Filter for active items only
           this.activeMissionTypes.set(missionTypes.filter(mt => mt.isActive));
           this.activeRobotTypes.set(robotTypes.filter(rt => rt.isActive));
           this.activeResumeStrategies.set(resumeStrategies.filter(rs => rs.isActive));
+
+          // Store synced workflows (only active ones)
+          const activeWorkflows = workflows.filter(w => w.status === 1);
+          this.availableWorkflows.set(activeWorkflows);
 
           // Extract unique robot models (robotTypeCode) and robot IDs from mobile robots
           const uniqueRobotModels = [...new Set(mobileRobots.map(r => r.robotTypeCode))].filter(Boolean).sort();
@@ -699,6 +743,12 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
       const robotModels = template.robotModels ? template.robotModels.split(', ').filter(m => m !== '-') : [];
       const robotIds = template.robotIds ? template.robotIds.split(', ').filter(id => id !== '-') : [];
 
+      // Check if this template has a workflow reference (created from synced workflow)
+      // If so, mission steps are handled by the external AMR system
+      if (template.templateCode && template.templateCode !== '-') {
+        this.isWorkflowSelected.set(true);
+      }
+
       this.templateForm.patchValue({
         missionName: template.missionName,
         description: template.description !== '-' ? template.description : ''
@@ -726,26 +776,30 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
         this.missionData.removeAt(0);
       }
 
-      // Add mission steps
-      if (missionSteps.length > 0) {
-        missionSteps.forEach((step: any) => {
-          // Convert zone code to zone name for display if type is NODE_AREA
-          let positionValue = step.position || '';
-          if (step.type === 'NODE_AREA' && positionValue) {
-            positionValue = this.convertZoneCodeToName(positionValue);
-          }
+      // Add mission steps only for custom templates (not workflow-based)
+      // Workflow-based templates don't need mission steps - execution is handled by external AMR system
+      if (!this.isWorkflowSelected()) {
+        if (missionSteps.length > 0) {
+          missionSteps.forEach((step: any) => {
+            // Convert zone code to zone name for display if type is NODE_AREA
+            let positionValue = step.position || '';
+            if (step.type === 'NODE_AREA' && positionValue) {
+              positionValue = this.convertZoneCodeToName(positionValue);
+            }
 
-          this.missionData.push(this.fb.group({
-            sequence: [step.sequence || 0],
-            position: [positionValue, Validators.required],
-            type: [step.type || '', Validators.required],
-            putDown: [step.putDown || '', Validators.required],
-            passStrategy: [step.passStrategy || '', Validators.required],
-            waitingMillis: [step.waitingMillis || 0, Validators.min(0)]
-          }));
-        });
-      } else {
-        this.addMissionStep();
+            this.missionData.push(this.fb.group({
+              sequence: [step.sequence || 0],
+              position: [positionValue, Validators.required],
+              type: [step.type || '', Validators.required],
+              putDown: [step.putDown || '', Validators.required],
+              passStrategy: [step.passStrategy || '', Validators.required],
+              waitingMillis: [step.waitingMillis || 0, Validators.min(0)]
+            }));
+          });
+        } else {
+          // Add default step for custom templates without saved steps
+          this.addMissionStep();
+        }
       }
     } catch (error) {
       console.error('Error populating form:', error);
@@ -885,6 +939,46 @@ export class WorkflowTemplateDialogComponent implements OnInit, OnDestroy {
 
   onViewModeChange(mode: 'form' | 'flowchart'): void {
     this.viewMode.set(mode);
+  }
+
+  /**
+   * Handle workflow selection - auto-populate template name and code
+   * If workflow is selected, mission steps are not required (handled by external AMR)
+   */
+  onWorkflowSelected(workflow: WorkflowDisplayData | null): void {
+    if (workflow) {
+      // Workflow selected - no mission steps needed
+      this.isWorkflowSelected.set(true);
+
+      // Auto-populate template name and templateCode from selected workflow
+      this.templateForm.patchValue({
+        missionName: workflow.name
+      });
+      this.missionTemplate.patchValue({
+        templateCode: workflow.code
+      });
+
+      // Clear mission steps since workflow handles execution
+      while (this.missionData.length > 0) {
+        this.missionData.removeAt(0);
+      }
+    } else {
+      // No workflow selected - mission steps are required (custom template)
+      this.isWorkflowSelected.set(false);
+
+      // Clear the auto-populated values
+      this.templateForm.patchValue({
+        missionName: ''
+      });
+      this.missionTemplate.patchValue({
+        templateCode: ''
+      });
+
+      // Add one default step for custom template
+      if (this.missionData.length === 0) {
+        this.addMissionStep();
+      }
+    }
   }
 
   onCancel(): void {

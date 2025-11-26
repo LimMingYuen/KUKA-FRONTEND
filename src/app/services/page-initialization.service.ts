@@ -90,6 +90,11 @@ export class PageInitializationService {
         pageIcon: 'settings_remote'
       },
       {
+        pagePath: '/queue-monitor',
+        pageName: 'Queue Monitor',
+        pageIcon: 'queue'
+      },
+      {
         pagePath: '/saved-custom-missions',
         pageName: 'Saved Custom Missions',
         pageIcon: 'bookmark'
@@ -113,6 +118,16 @@ export class PageInitializationService {
         pagePath: '/create-workflow-template',
         pageName: 'Create Workflow Template',
         pageIcon: 'add_circle'
+      },
+      {
+        pagePath: '/system-settings',
+        pageName: 'System Settings',
+        pageIcon: 'settings'
+      },
+      {
+        pagePath: '/workflow-schedules',
+        pageName: 'Workflow Schedules',
+        pageIcon: 'schedule'
       }
     ];
   }

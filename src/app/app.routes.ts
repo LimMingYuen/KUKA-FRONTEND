@@ -51,10 +51,28 @@ export const routes: Routes = [
     title: 'Mission Control - KUKA GUI'
   },
   {
+    path: 'queue-monitor',
+    loadComponent: () => import('./pages/queue-monitor/queue-monitor.component').then(m => m.QueueMonitorComponent),
+    canActivate: [authGuard],
+    title: 'Queue Monitor - KUKA GUI'
+  },
+  {
+    path: 'workflow-schedules',
+    loadComponent: () => import('./pages/workflow-schedules/workflow-schedules.component').then(m => m.WorkflowSchedulesComponent),
+    canActivate: [authGuard],
+    title: 'Workflow Schedules - KUKA GUI'
+  },
+  {
     path: 'robot-analytics',
     loadComponent: () => import('./pages/robot-analytics/robot-analytics.component').then(m => m.RobotAnalyticsComponent),
     canActivate: [authGuard],
     title: 'Robot Analytics - KUKA GUI'
+  },
+  {
+    path: 'warehouse-map',
+    loadComponent: () => import('./pages/warehouse-map/warehouse-map.component').then(m => m.WarehouseMapComponent),
+    canActivate: [authGuard],
+    title: 'Warehouse Map - KUKA GUI'
   },
   {
     path: 'user-management',
@@ -67,6 +85,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/role-management/role-management.component').then(m => m.RoleManagementComponent),
     canActivate: [authGuard],
     title: 'Role Management - KUKA GUI'
+  },
+  {
+    path: 'system-settings',
+    loadComponent: () => import('./pages/system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
+    canActivate: [authGuard],
+    title: 'System Settings - KUKA GUI'
   },
   {
     path: 'workflow-templates',

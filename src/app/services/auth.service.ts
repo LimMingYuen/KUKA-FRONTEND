@@ -56,7 +56,8 @@ export class AuthService {
             isAuthenticated: true,
             isSuperAdmin: userData.isSuperAdmin || false,
             roles: userData.roles || [],
-            allowedPages: userData.allowedPages || []
+            allowedPages: userData.allowedPages || [],
+            allowedTemplates: userData.allowedTemplates || []
           };
 
           // Store token and user data
@@ -235,5 +236,32 @@ export class AuthService {
   getAllowedPages(): string[] {
     const user = this.currentUser();
     return user?.allowedPages || [];
+  }
+
+  /**
+   * Check if user can access a specific template by ID
+   */
+  canAccessTemplate(templateId: number): boolean {
+    const user = this.currentUser();
+
+    if (!user || !this.isAuthenticated()) {
+      return false;
+    }
+
+    // SuperAdmin can access all templates
+    if (user.isSuperAdmin) {
+      return true;
+    }
+
+    // Check if template is in user's allowed templates
+    return user.allowedTemplates?.includes(templateId) || false;
+  }
+
+  /**
+   * Get user's allowed template IDs
+   */
+  getAllowedTemplates(): number[] {
+    const user = this.currentUser();
+    return user?.allowedTemplates || [];
   }
 }

@@ -267,14 +267,15 @@ export class WorkflowTemplateService {
     this.isUpdating.set(true);
 
     // Transform the nested request to flat structure expected by API
+    // Backend expects: priority as int, robotModels/robotIds as comma-separated strings
     const updateRequest: SavedCustomMissionUpdateRequest = {
       missionName: request.missionName,
       description: request.description,
       missionType: request.missionTemplate.missionType,
       robotType: request.missionTemplate.robotType,
-      priority: this.mapPriorityNumberToString(request.missionTemplate.priority),
-      robotModels: request.missionTemplate.robotModels,
-      robotIds: request.missionTemplate.robotIds,
+      priority: request.missionTemplate.priority, // Keep as number - backend expects int
+      robotModels: request.missionTemplate.robotModels?.join(', ') || null, // Convert array to comma-separated string
+      robotIds: request.missionTemplate.robotIds?.join(', ') || null, // Convert array to comma-separated string
       containerModelCode: request.missionTemplate.containerModelCode,
       containerCode: request.missionTemplate.containerCode,
       idleNode: request.missionTemplate.idleNode,

@@ -56,9 +56,9 @@ export interface SavedCustomMissionUpdateRequest {
   description: string | null;
   missionType: string;
   robotType: string;
-  priority: string;
-  robotModels: string[];
-  robotIds: string[];
+  priority: number; // Backend expects int (0-10)
+  robotModels: string | null; // Backend expects comma-separated string
+  robotIds: string | null; // Backend expects comma-separated string
   containerModelCode: string | null;
   containerCode: string | null;
   idleNode: string | null;

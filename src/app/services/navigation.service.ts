@@ -101,6 +101,12 @@ export class NavigationService {
             route: '/map-zones'
           },
           {
+            id: 'warehouse-map',
+            label: 'Warehouse Map',
+            icon: 'location_on',
+            route: '/warehouse-map'
+          },
+          {
             id: 'mobile-robots',
             label: 'Mobile Robots',
             icon: 'smart_toy',
@@ -117,6 +123,18 @@ export class NavigationService {
             label: 'Mission Control',
             icon: 'settings_remote',
             route: '/mission-control'
+          },
+          {
+            id: 'queue-monitor',
+            label: 'Queue Monitor',
+            icon: 'queue',
+            route: '/queue-monitor'
+          },
+          {
+            id: 'workflow-schedules',
+            label: 'Workflow Schedules',
+            icon: 'schedule',
+            route: '/workflow-schedules'
           }
         ]
       },
@@ -147,6 +165,12 @@ export class NavigationService {
             label: 'Role Management',
             icon: 'admin_panel_settings',
             route: '/role-management'
+          },
+          {
+            id: 'system-settings',
+            label: 'System Settings',
+            icon: 'settings',
+            route: '/system-settings'
           }
         ]
       }

@@ -18,7 +18,9 @@ import { TableConfig, ActionEvent } from '../../shared/models/table.models';
 import { RoleDto, RoleCreateRequest, RoleUpdateRequest } from '../../models/role.models';
 import { RoleService } from '../../services/role.service';
 import { PermissionService } from '../../services/permission.service';
-import { PageDto, RolePermissionBulkSetRequest } from '../../models/permission.models';
+import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
+import { PageDto, RolePermissionBulkSetRequest, RoleTemplatePermissionBulkSetRequest } from '../../models/permission.models';
+import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { ROLE_MANAGEMENT_TABLE_CONFIG } from './role-management-table.config';
 
 @Component({
@@ -287,7 +289,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         </mat-tab>
 
         <!-- Permissions Tab -->
-        <mat-tab label="Permissions">
+        <mat-tab label="Page Permissions">
           <div class="permissions-container">
             <div *ngIf="data.mode === 'create'" class="permissions-disabled-message">
               <mat-icon>info</mat-icon>
@@ -298,22 +300,65 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
               <h3>Page Access Control</h3>
               <p class="permissions-hint">Toggle access for each page</p>
 
-              <mat-list class="permissions-list">
-                <mat-list-item *ngFor="let page of allPages">
-                  <mat-icon matListItemIcon>{{ page.pageIcon || 'web' }}</mat-icon>
-                  <div matListItemTitle>{{ page.pageName }}</div>
-                  <div matListItemLine class="page-path">{{ page.pagePath }}</div>
+              <div class="permissions-custom-list">
+                <div class="permission-item" *ngFor="let page of allPages">
+                  <div class="permission-item-info">
+                    <mat-icon>{{ page.pageIcon || 'web' }}</mat-icon>
+                    <div class="permission-item-text">
+                      <div class="permission-item-title">{{ page.pageName }}</div>
+                      <div class="permission-item-subtitle">{{ page.pagePath }}</div>
+                    </div>
+                  </div>
                   <mat-slide-toggle
-                    matListItemMeta
                     [checked]="rolePermissions.get(page.id) || false"
                     (change)="onPermissionToggle(page.id, $event.checked)">
                   </mat-slide-toggle>
-                </mat-list-item>
-              </mat-list>
+                </div>
+              </div>
             </div>
 
             <div *ngIf="isLoadingPages" class="loading-container">
               <p>Loading pages...</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Template Permissions Tab -->
+        <mat-tab label="Template Permissions">
+          <div class="permissions-container">
+            <div *ngIf="data.mode === 'create'" class="permissions-disabled-message">
+              <mat-icon>info</mat-icon>
+              <p>Save the role first to assign template permissions</p>
+            </div>
+
+            <div *ngIf="data.mode === 'edit' && !isLoadingTemplates">
+              <h3>Mission Template Access Control</h3>
+              <p class="permissions-hint">Toggle access for each mission template. Users with this role will only see enabled templates in Mission Control.</p>
+
+              <div *ngIf="allTemplates.length === 0" class="empty-message">
+                <mat-icon>assignment</mat-icon>
+                <p>No templates available. Create templates in the Saved Custom Missions page first.</p>
+              </div>
+
+              <div class="permissions-custom-list" *ngIf="allTemplates.length > 0">
+                <div class="permission-item" *ngFor="let template of allTemplates">
+                  <div class="permission-item-info">
+                    <mat-icon>assignment</mat-icon>
+                    <div class="permission-item-text">
+                      <div class="permission-item-title">{{ template.missionName }}</div>
+                      <div class="permission-item-subtitle">{{ template.robotType }} - {{ template.missionType }}</div>
+                    </div>
+                  </div>
+                  <mat-slide-toggle
+                    [checked]="roleTemplatePermissions.get(template.id) || false"
+                    (change)="onTemplatePermissionToggle(template.id, $event.checked)">
+                  </mat-slide-toggle>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="isLoadingTemplates" class="loading-container">
+              <p>Loading templates...</p>
             </div>
           </div>
         </mat-tab>
@@ -404,6 +449,11 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         color: rgba(0, 0, 0, 0.6);
       }
 
+      .template-desc {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
       .loading-container {
         display: flex;
         justify-content: center;
@@ -412,10 +462,77 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         color: rgba(0, 0, 0, 0.6);
       }
 
+      .empty-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 3rem;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .empty-message mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: rgba(0, 0, 0, 0.3);
+      }
+
       h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1.125rem;
         font-weight: 500;
+      }
+
+      .permissions-custom-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .permission-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        gap: 16px;
+      }
+
+      .permission-item:last-child {
+        border-bottom: none;
+      }
+
+      .permission-item-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .permission-item-info mat-icon {
+        color: rgba(0, 0, 0, 0.54);
+        flex-shrink: 0;
+      }
+
+      .permission-item-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .permission-item-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .permission-item-subtitle {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+        margin-top: 2px;
       }
     `
   ]
@@ -423,8 +540,11 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
 export class RoleFormDialogComponent implements OnInit, OnDestroy {
   roleForm: FormGroup;
   allPages: PageDto[] = [];
+  allTemplates: SavedCustomMissionsDisplayData[] = [];
   rolePermissions = new Map<number, boolean>();
+  roleTemplatePermissions = new Map<number, boolean>();
   isLoadingPages = false;
+  isLoadingTemplates = false;
   isSaving = false;
   private destroy$ = new Subject<void>();
 
@@ -432,6 +552,7 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<RoleFormDialogComponent>,
     private permissionService: PermissionService,
+    private savedCustomMissionsService: SavedCustomMissionsService,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; role?: RoleDto }
   ) {
@@ -446,6 +567,8 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
     if (this.data.mode === 'edit' && this.data.role) {
       this.loadPages();
       this.loadRolePermissions();
+      this.loadTemplates();
+      this.loadRoleTemplatePermissions();
     }
   }
 
@@ -501,10 +624,63 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load all available templates
+   */
+  private loadTemplates(): void {
+    this.isLoadingTemplates = true;
+    this.savedCustomMissionsService
+      .getAllSavedMissions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (templates) => {
+          this.allTemplates = templates;
+          this.isLoadingTemplates = false;
+        },
+        error: (err) => {
+          console.error('Error loading templates:', err);
+          this.snackBar.open('Failed to load templates', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoadingTemplates = false;
+        }
+      });
+  }
+
+  /**
+   * Load existing role template permissions
+   */
+  private loadRoleTemplatePermissions(): void {
+    if (!this.data.role) return;
+
+    this.permissionService
+      .getRoleTemplatePermissionsByRoleId(this.data.role.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (permissions) => {
+          this.roleTemplatePermissions.clear();
+          permissions.forEach((perm) => {
+            this.roleTemplatePermissions.set(perm.savedCustomMissionId, perm.canAccess);
+          });
+        },
+        error: (err) => {
+          console.error('Error loading role template permissions:', err);
+        }
+      });
+  }
+
+  /**
    * Handle permission toggle change
    */
   onPermissionToggle(pageId: number, canAccess: boolean): void {
     this.rolePermissions.set(pageId, canAccess);
+  }
+
+  /**
+   * Handle template permission toggle change
+   */
+  onTemplatePermissionToggle(templateId: number, canAccess: boolean): void {
+    this.roleTemplatePermissions.set(templateId, canAccess);
   }
 
   onCancel(): void {
@@ -549,39 +725,72 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
    * Save role permissions to backend
    */
   private async saveRolePermissions(): Promise<void> {
-    if (!this.data.role || this.rolePermissions.size === 0) {
+    if (!this.data.role) {
       return Promise.resolve();
     }
 
-    const permissionRequest: RolePermissionBulkSetRequest = {
-      roleId: this.data.role.id,
-      pagePermissions: Array.from(this.rolePermissions.entries()).map(([pageId, canAccess]) => ({
-        pageId,
-        canAccess
-      }))
-    };
+    const promises: Promise<void>[] = [];
 
-    return new Promise((resolve, reject) => {
-      this.permissionService
-        .bulkSetRolePermissions(permissionRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (result) => {
-            this.snackBar.open(`Permissions updated (${result.modifiedCount} changes)`, 'Close', {
-              duration: 3000,
-              panelClass: ['success-snackbar']
-            });
-            resolve();
-          },
-          error: (err) => {
-            console.error('Error saving permissions:', err);
-            this.snackBar.open('Failed to save permissions', 'Close', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-            reject(err);
-          }
+    // Save page permissions if any
+    if (this.rolePermissions.size > 0) {
+      const permissionRequest: RolePermissionBulkSetRequest = {
+        roleId: this.data.role.id,
+        pagePermissions: Array.from(this.rolePermissions.entries()).map(([pageId, canAccess]) => ({
+          pageId,
+          canAccess
+        }))
+      };
+
+      promises.push(new Promise((resolve, reject) => {
+        this.permissionService
+          .bulkSetRolePermissions(permissionRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => resolve(),
+            error: (err) => reject(err)
+          });
+      }));
+    }
+
+    // Save template permissions if any
+    if (this.roleTemplatePermissions.size > 0) {
+      const templatePermissionRequest: RoleTemplatePermissionBulkSetRequest = {
+        roleId: this.data.role.id,
+        templatePermissions: Array.from(this.roleTemplatePermissions.entries()).map(([savedCustomMissionId, canAccess]) => ({
+          savedCustomMissionId,
+          canAccess
+        }))
+      };
+
+      promises.push(new Promise((resolve, reject) => {
+        this.permissionService
+          .bulkSetRoleTemplatePermissions(templatePermissionRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => resolve(),
+            error: (err) => reject(err)
+          });
+      }));
+    }
+
+    if (promises.length === 0) {
+      return Promise.resolve();
+    }
+
+    return Promise.all(promises)
+      .then(() => {
+        this.snackBar.open('Permissions updated successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
         });
-    });
+      })
+      .catch((err) => {
+        console.error('Error saving permissions:', err);
+        this.snackBar.open('Failed to save permissions', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        throw err;
+      });
   }
 }

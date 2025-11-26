@@ -14,6 +14,13 @@ import {
   UserPermissionDto,
   UserPermissionCreateRequest,
   UserPermissionBulkSetRequest,
+  RoleTemplatePermissionDto,
+  RoleTemplatePermissionCreateRequest,
+  RoleTemplatePermissionBulkSetRequest,
+  RoleTemplatePermissionMatrix,
+  UserTemplatePermissionDto,
+  UserTemplatePermissionCreateRequest,
+  UserTemplatePermissionBulkSetRequest,
   ApiResponse
 } from '../models/permission.models';
 
@@ -238,6 +245,173 @@ export class PermissionService {
     return this.http
       .post<ApiResponse<{ modifiedCount: number }>>(
         `${this.API_URL}/user-permissions/bulk-set`,
+        request,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  // ==================== Role Template Permissions ====================
+
+  getAllRoleTemplatePermissions(): Observable<RoleTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<RoleTemplatePermissionDto[]>>(`${this.API_URL}/role-template-permissions`, {
+        headers: this.getHeaders()
+      })
+      .pipe(map((response) => response.data || []));
+  }
+
+  getRoleTemplatePermissionsByRoleId(roleId: number): Observable<RoleTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<RoleTemplatePermissionDto[]>>(
+        `${this.API_URL}/role-template-permissions/role/${roleId}`,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data || []));
+  }
+
+  getRoleTemplatePermissionsByTemplateId(templateId: number): Observable<RoleTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<RoleTemplatePermissionDto[]>>(
+        `${this.API_URL}/role-template-permissions/template/${templateId}`,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data || []));
+  }
+
+  getRoleTemplatePermissionMatrix(): Observable<RoleTemplatePermissionMatrix> {
+    return this.http
+      .get<ApiResponse<RoleTemplatePermissionMatrix>>(
+        `${this.API_URL}/role-template-permissions/matrix`,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  createRoleTemplatePermission(
+    request: RoleTemplatePermissionCreateRequest
+  ): Observable<RoleTemplatePermissionDto> {
+    return this.http
+      .post<ApiResponse<RoleTemplatePermissionDto>>(
+        `${this.API_URL}/role-template-permissions`,
+        request,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  updateRoleTemplatePermission(id: number, canAccess: boolean): Observable<RoleTemplatePermissionDto> {
+    return this.http
+      .put<ApiResponse<RoleTemplatePermissionDto>>(
+        `${this.API_URL}/role-template-permissions/${id}`,
+        { canAccess },
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  deleteRoleTemplatePermission(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/role-template-permissions/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  bulkSetRoleTemplatePermissions(
+    request: RoleTemplatePermissionBulkSetRequest
+  ): Observable<{ modifiedCount: number }> {
+    return this.http
+      .post<ApiResponse<{ modifiedCount: number }>>(
+        `${this.API_URL}/role-template-permissions/bulk-set`,
+        request,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  // ==================== User Template Permissions ====================
+
+  getAllUserTemplatePermissions(): Observable<UserTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<UserTemplatePermissionDto[]>>(`${this.API_URL}/user-template-permissions`, {
+        headers: this.getHeaders()
+      })
+      .pipe(map((response) => response.data || []));
+  }
+
+  getUserTemplatePermissionsByUserId(userId: number): Observable<UserTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<UserTemplatePermissionDto[]>>(
+        `${this.API_URL}/user-template-permissions/user/${userId}`,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data || []));
+  }
+
+  getUserTemplatePermissionsByTemplateId(templateId: number): Observable<UserTemplatePermissionDto[]> {
+    return this.http
+      .get<ApiResponse<UserTemplatePermissionDto[]>>(
+        `${this.API_URL}/user-template-permissions/template/${templateId}`,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data || []));
+  }
+
+  createUserTemplatePermission(
+    request: UserTemplatePermissionCreateRequest
+  ): Observable<UserTemplatePermissionDto> {
+    return this.http
+      .post<ApiResponse<UserTemplatePermissionDto>>(
+        `${this.API_URL}/user-template-permissions`,
+        request,
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  updateUserTemplatePermission(id: number, canAccess: boolean): Observable<UserTemplatePermissionDto> {
+    return this.http
+      .put<ApiResponse<UserTemplatePermissionDto>>(
+        `${this.API_URL}/user-template-permissions/${id}`,
+        { canAccess },
+        {
+          headers: this.getHeaders()
+        }
+      )
+      .pipe(map((response) => response.data!));
+  }
+
+  deleteUserTemplatePermission(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/user-template-permissions/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  bulkSetUserTemplatePermissions(
+    request: UserTemplatePermissionBulkSetRequest
+  ): Observable<{ modifiedCount: number }> {
+    return this.http
+      .post<ApiResponse<{ modifiedCount: number }>>(
+        `${this.API_URL}/user-template-permissions/bulk-set`,
         request,
         {
           headers: this.getHeaders()

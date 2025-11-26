@@ -1,0 +1,168 @@
+<div class="warehouse-map-container">
+  <!-- Header -->
+  <div class="map-header">
+    <div class="header-left">
+      <h1>Warehouse Live Map</h1>
+      <span class="connection-status" [class.connected]="connectionState() === 'connected'"
+                                       [class.connecting]="connectionState() === 'connecting'"
+                                       [class.error]="connectionState() === 'error'">
+        <mat-icon>{{ connectionState() === 'connected' ? 'wifi' :
+                     connectionState() === 'connecting' ? 'wifi_find' : 'wifi_off' }}</mat-icon>
+        {{ connectionState() }}
+      </span>
+    </div>
+    <div class="header-actions">
+      <input type="file"
+             accept=".json"
+             #fileInput
+             style="display: none"
+             (change)="onFileSelected($event)">
+      <button mat-raised-button
+              color="primary"
+              matTooltip="Import map from JSON file"
+              (click)="fileInput.click()"
+              [disabled]="isLoading()">
+        <mat-icon>upload_file</mat-icon>
+        Import Map
+      </button>
+      <button mat-icon-button
+              matTooltip="Refresh map data"
+              (click)="refreshMap()"
+              [disabled]="isLoading()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Floor tabs -->
+  <mat-card class="floor-tabs-card">
+    <mat-tab-group [selectedIndex]="selectedFloorIndex()"
+                   (selectedIndexChange)="selectFloor($event)">
+      @for (floor of floors(); track floor.mapCode; let i = $index) {
+        <mat-tab [label]="floor.displayName">
+          <ng-template mat-tab-label>
+            <span class="tab-label">
+              {{ floor.displayName }}
+              <span class="tab-count">({{ floor.nodeCount }} nodes)</span>
+            </span>
+          </ng-template>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  </mat-card>
+
+  <!-- Main content -->
+  <div class="map-content">
+    <!-- Map canvas -->
+    <mat-card class="map-canvas-card">
+      @if (isLoading()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading map data...</p>
+        </div>
+      }
+
+      @if (!isLoading() && floors().length === 0) {
+        <div class="empty-state">
+          <mat-icon>map</mat-icon>
+          <h3>No Map Data Available</h3>
+          <p>Sync QR codes and map zones from the external AMR system to visualize the warehouse.</p>
+        </div>
+      }
+
+      <div #cyContainer class="cy-container"
+           [class.hidden]="isLoading() || floors().length === 0"></div>
+    </mat-card>
+
+    <!-- Sidebar -->
+    <div class="map-sidebar">
+      <!-- Stats card -->
+      <mat-card class="stats-card">
+        <mat-card-header>
+          <mat-card-title>Statistics</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-item">
+            <mat-icon>smart_toy</mat-icon>
+            <div class="stat-details">
+              <span class="stat-value">{{ stats().totalRobots }}</span>
+              <span class="stat-label">Total Robots</span>
+            </div>
+          </div>
+          <div class="stat-item active">
+            <mat-icon>play_circle</mat-icon>
+            <div class="stat-details">
+              <span class="stat-value">{{ stats().activeRobots }}</span>
+              <span class="stat-label">Active</span>
+            </div>
+          </div>
+          @if (stats().errorRobots > 0) {
+            <div class="stat-item error">
+              <mat-icon>error</mat-icon>
+              <div class="stat-details">
+                <span class="stat-value">{{ stats().errorRobots }}</span>
+                <span class="stat-label">Errors</span>
+              </div>
+            </div>
+          }
+          <div class="stat-item">
+            <mat-icon>inventory_2</mat-icon>
+            <div class="stat-details">
+              <span class="stat-value">{{ stats().totalContainers }}</span>
+              <span class="stat-label">Containers</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Legend card -->
+      <mat-card class="legend-card">
+        <mat-card-header>
+          <mat-card-title>Legend</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="legend-item">
+            <span class="legend-marker node"></span>
+            <span>QR Code / Node</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker robot idle"></span>
+            <span>Robot (Idle)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker robot working"></span>
+            <span>Robot (Working)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker robot charging"></span>
+            <span>Robot (Charging)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker robot error"></span>
+            <span>Robot (Error)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker container"></span>
+            <span>Container</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker zone"></span>
+            <span>Zone Area</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-marker edge"></span>
+            <span>Path / Edge</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Last updated -->
+      @if (lastUpdated()) {
+        <div class="last-updated">
+          <mat-icon>schedule</mat-icon>
+          <span>Last updated: {{ lastUpdated() | date:'HH:mm:ss' }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

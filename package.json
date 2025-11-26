@@ -31,6 +31,7 @@
     "@angular/material": "^20.2.12",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@microsoft/signalr": "^10.0.0",
     "@types/cytoscape": "^3.21.9",
     "chart.js": "^4.5.1",
     "cytoscape": "^3.33.1",

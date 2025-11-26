@@ -21,8 +21,10 @@ import { UserDto, UserCreateRequest, UserUpdateRequest } from '../../models/user
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { PermissionService } from '../../services/permission.service';
+import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
 import { RoleDto } from '../../models/role.models';
-import { PageDto, UserPermissionBulkSetRequest } from '../../models/permission.models';
+import { PageDto, UserPermissionBulkSetRequest, UserTemplatePermissionBulkSetRequest } from '../../models/permission.models';
+import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { USER_MANAGEMENT_TABLE_CONFIG } from './user-management-table.config';
 
 @Component({
@@ -129,7 +131,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
    */
   private openEditDialog(user: UserDto): void {
     const dialogRef = this.dialog.open(UserFormDialogComponent, {
-      width: '900px',
+      width: '1000px',
+      maxWidth: '95vw',
       data: { mode: 'edit', user }
     });
 
@@ -315,8 +318,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           </form>
         </mat-tab>
 
-        <!-- Permissions Tab -->
-        <mat-tab label="Permissions">
+        <!-- Page Permissions Tab -->
+        <mat-tab label="Page Permissions">
           <div class="permissions-container">
             <div *ngIf="data.mode === 'create'" class="permissions-disabled-message">
               <mat-icon>info</mat-icon>
@@ -332,18 +335,21 @@ export class UserManagementComponent implements OnInit, OnDestroy {
               <h3>Page Access Overrides</h3>
               <p class="permissions-hint">Override role-based permissions for specific pages</p>
 
-              <mat-list class="permissions-list">
-                <mat-list-item *ngFor="let page of allPages">
-                  <mat-icon matListItemIcon>{{ page.pageIcon || 'web' }}</mat-icon>
-                  <div matListItemTitle>{{ page.pageName }}</div>
-                  <div matListItemLine class="page-path">
-                    <span class="path">{{ page.pagePath }}</span>
-                    <span class="role-access" [class.granted]="getRoleAccess(page.id)" [class.denied]="!getRoleAccess(page.id)">
-                      Role Access: {{ getRoleAccess(page.id) ? '✓ Allowed' : '✗ Denied' }}
-                    </span>
+              <div class="template-permissions-list">
+                <div class="permission-item" *ngFor="let page of allPages">
+                  <div class="permission-item-info">
+                    <mat-icon>{{ page.pageIcon || 'web' }}</mat-icon>
+                    <div class="permission-item-text">
+                      <div class="permission-item-title">{{ page.pageName }}</div>
+                      <div class="permission-item-subtitle">
+                        <span class="path">{{ page.pagePath }}</span>
+                        <span class="role-access" [class.granted]="getRoleAccess(page.id)" [class.denied]="!getRoleAccess(page.id)">
+                          Role Access: {{ getRoleAccess(page.id) ? '✓ Allowed' : '✗ Denied' }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <mat-button-toggle-group
-                    matListItemMeta
                     [value]="getUserPermissionOverride(page.id)"
                     (change)="onPermissionOverrideChange(page.id, $event.value)"
                     class="permission-toggle">
@@ -351,12 +357,66 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                     <mat-button-toggle value="allow">Allow</mat-button-toggle>
                     <mat-button-toggle value="deny">Deny</mat-button-toggle>
                   </mat-button-toggle-group>
-                </mat-list-item>
-              </mat-list>
+                </div>
+              </div>
             </div>
 
             <div *ngIf="isLoadingPages" class="loading-container">
               <p>Loading pages...</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Template Permissions Tab -->
+        <mat-tab label="Template Permissions">
+          <div class="permissions-container">
+            <div *ngIf="data.mode === 'create'" class="permissions-disabled-message">
+              <mat-icon>info</mat-icon>
+              <p>Save the user first to assign template permissions</p>
+            </div>
+
+            <div *ngIf="userForm.get('isSuperAdmin')?.value" class="permissions-disabled-message">
+              <mat-icon>admin_panel_settings</mat-icon>
+              <p>Super Admin users have access to all templates. Permission overrides are disabled.</p>
+            </div>
+
+            <div *ngIf="data.mode === 'edit' && !userForm.get('isSuperAdmin')?.value && !isLoadingTemplates">
+              <h3>Template Access Overrides</h3>
+              <p class="permissions-hint">Override role-based permissions for specific mission templates</p>
+
+              <div *ngIf="allTemplates.length === 0" class="empty-message">
+                <mat-icon>assignment</mat-icon>
+                <p>No templates available. Create templates in the Saved Custom Missions page first.</p>
+              </div>
+
+              <div class="template-permissions-list" *ngIf="allTemplates.length > 0">
+                <div class="permission-item" *ngFor="let template of allTemplates">
+                  <div class="permission-item-info">
+                    <mat-icon>assignment</mat-icon>
+                    <div class="permission-item-text">
+                      <div class="permission-item-title">{{ template.missionName }}</div>
+                      <div class="permission-item-subtitle">
+                        <span class="path">{{ template.robotType }} - {{ template.missionType }}</span>
+                        <span class="role-access" [class.granted]="getRoleTemplateAccess(template.id)" [class.denied]="!getRoleTemplateAccess(template.id)">
+                          Role Access: {{ getRoleTemplateAccess(template.id) ? '✓ Allowed' : '✗ Denied' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <mat-button-toggle-group
+                    [value]="getUserTemplatePermissionOverride(template.id)"
+                    (change)="onTemplatePermissionOverrideChange(template.id, $event.value)"
+                    class="permission-toggle">
+                    <mat-button-toggle value="inherit">Inherit</mat-button-toggle>
+                    <mat-button-toggle value="allow">Allow</mat-button-toggle>
+                    <mat-button-toggle value="deny">Deny</mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="isLoadingTemplates" class="loading-container">
+              <p>Loading templates...</p>
             </div>
           </div>
         </mat-tab>
@@ -379,6 +439,11 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       mat-dialog-content {
         padding: 0;
         min-height: 450px;
+        overflow: visible !important;
+      }
+
+      ::ng-deep .mat-mdc-dialog-content {
+        overflow: visible !important;
       }
 
       mat-tab-group {
@@ -410,6 +475,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       .permissions-container {
         padding: 1.5rem 1rem;
         min-height: 400px;
+        overflow: visible;
       }
 
       .permissions-disabled-message {
@@ -435,12 +501,21 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       .permissions-list {
         max-height: 450px;
         overflow-y: auto;
+        overflow-x: visible;
       }
 
       .permissions-list mat-list-item {
         height: auto;
         min-height: 80px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      }
+
+      ::ng-deep .permissions-list .mdc-list-item {
+        padding-right: 16px;
+      }
+
+      ::ng-deep .permissions-list .mdc-list-item__content {
+        overflow: visible;
       }
 
       .permissions-list mat-list-item:last-child {
@@ -478,11 +553,20 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       }
 
       .permission-toggle {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+        white-space: nowrap;
       }
 
-      .permission-toggle .mat-button-toggle {
-        font-size: 0.75rem;
+      ::ng-deep .permission-toggle .mat-button-toggle-label-content {
+        padding: 0 8px !important;
+        font-size: 0.7rem;
+        line-height: 32px !important;
+      }
+
+      ::ng-deep .permissions-list .mdc-list-item__end {
+        flex-shrink: 0;
+        margin-left: 8px;
       }
 
       .loading-container {
@@ -493,10 +577,83 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         color: rgba(0, 0, 0, 0.6);
       }
 
+      .empty-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 3rem;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .empty-message mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: rgba(0, 0, 0, 0.3);
+      }
+
       h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1.125rem;
         font-weight: 500;
+      }
+
+      .template-permissions-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .permission-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        gap: 16px;
+      }
+
+      .permission-item:last-child {
+        border-bottom: none;
+      }
+
+      .permission-item-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .permission-item-info mat-icon {
+        color: rgba(0, 0, 0, 0.54);
+        flex-shrink: 0;
+      }
+
+      .permission-item-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .permission-item-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .permission-item-subtitle {
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 4px;
+      }
+
+      .permission-item-subtitle .path {
+        color: rgba(0, 0, 0, 0.6);
       }
     `
   ]
@@ -505,10 +662,14 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
   userForm: FormGroup;
   availableRoles: RoleDto[] = [];
   allPages: PageDto[] = [];
+  allTemplates: SavedCustomMissionsDisplayData[] = [];
   rolePermissions = new Map<number, boolean>(); // pageId -> canAccess (from roles)
+  roleTemplatePermissions = new Map<number, boolean>(); // templateId -> canAccess (from roles)
   userPermissions = new Map<number, 'inherit' | 'allow' | 'deny'>(); // pageId -> override
+  userTemplatePermissions = new Map<number, 'inherit' | 'allow' | 'deny'>(); // templateId -> override
   hidePassword = true;
   isLoadingPages = false;
+  isLoadingTemplates = false;
   isSaving = false;
   private destroy$ = new Subject<void>();
 
@@ -517,6 +678,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<UserFormDialogComponent>,
     private roleService: RoleService,
     private permissionService: PermissionService,
+    private savedCustomMissionsService: SavedCustomMissionsService,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; user?: UserDto }
   ) {
@@ -537,6 +699,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
     this.loadRoles();
     if (this.data.mode === 'edit' && this.data.user) {
       this.loadPermissionsData();
+      this.loadTemplatePermissionsData();
     }
   }
 
@@ -652,10 +815,102 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load template permissions data (templates, role template permissions, user template permissions)
+   */
+  private loadTemplatePermissionsData(): void {
+    if (!this.data.user) return;
+
+    this.isLoadingTemplates = true;
+
+    forkJoin({
+      templates: this.savedCustomMissionsService.getAllSavedMissions(),
+      userPerms: this.permissionService.getUserTemplatePermissionsByUserId(this.data.user.id)
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ templates, userPerms }) => {
+          this.allTemplates = templates;
+
+          // Store user template permission overrides
+          this.userTemplatePermissions.clear();
+          userPerms.forEach((perm) => {
+            this.userTemplatePermissions.set(perm.savedCustomMissionId, perm.canAccess ? 'allow' : 'deny');
+          });
+
+          // Load role template permissions for this user's roles
+          this.loadRoleTemplatePermissionsForUser();
+
+          this.isLoadingTemplates = false;
+        },
+        error: (err) => {
+          console.error('Error loading template permissions:', err);
+          this.snackBar.open('Failed to load template permissions', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoadingTemplates = false;
+        }
+      });
+  }
+
+  /**
+   * Load role template permissions for the user's assigned roles
+   */
+  private loadRoleTemplatePermissionsForUser(): void {
+    const userRoles = this.userForm.get('roles')?.value || [];
+    if (userRoles.length === 0) {
+      this.roleTemplatePermissions.clear();
+      return;
+    }
+
+    // Get role IDs from role codes
+    const roleIds = this.availableRoles
+      .filter((r) => userRoles.includes(r.roleCode))
+      .map((r) => r.id);
+
+    if (roleIds.length === 0) {
+      this.roleTemplatePermissions.clear();
+      return;
+    }
+
+    // Load template permissions for all the user's roles
+    const rolePermRequests = roleIds.map((roleId) =>
+      this.permissionService.getRoleTemplatePermissionsByRoleId(roleId)
+    );
+
+    forkJoin(rolePermRequests)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (rolePermsArray) => {
+          this.roleTemplatePermissions.clear();
+
+          // Merge all role template permissions (if ANY role grants access, user gets access)
+          rolePermsArray.forEach((rolePerms) => {
+            rolePerms.forEach((perm) => {
+              if (perm.canAccess) {
+                this.roleTemplatePermissions.set(perm.savedCustomMissionId, true);
+              }
+            });
+          });
+        },
+        error: (err) => {
+          console.error('Error loading role template permissions:', err);
+        }
+      });
+  }
+
+  /**
    * Get role-based access for a page (what access the user gets from their roles)
    */
   getRoleAccess(pageId: number): boolean {
     return this.rolePermissions.get(pageId) || false;
+  }
+
+  /**
+   * Get role-based access for a template (what access the user gets from their roles)
+   */
+  getRoleTemplateAccess(templateId: number): boolean {
+    return this.roleTemplatePermissions.get(templateId) || false;
   }
 
   /**
@@ -670,6 +925,20 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
    */
   onPermissionOverrideChange(pageId: number, value: 'inherit' | 'allow' | 'deny'): void {
     this.userPermissions.set(pageId, value);
+  }
+
+  /**
+   * Get user's template permission override
+   */
+  getUserTemplatePermissionOverride(templateId: number): 'inherit' | 'allow' | 'deny' {
+    return this.userTemplatePermissions.get(templateId) || 'inherit';
+  }
+
+  /**
+   * Handle template permission override change
+   */
+  onTemplatePermissionOverrideChange(templateId: number, value: 'inherit' | 'allow' | 'deny'): void {
+    this.userTemplatePermissions.set(templateId, value);
   }
 
   /**
@@ -746,44 +1015,76 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
       return Promise.resolve();
     }
 
-    // Only send permission overrides (not 'inherit')
-    const overrides = Array.from(this.userPermissions.entries())
+    const promises: Promise<void>[] = [];
+
+    // Save page permission overrides (not 'inherit')
+    const pageOverrides = Array.from(this.userPermissions.entries())
       .filter(([_, value]) => value !== 'inherit')
       .map(([pageId, value]) => ({
         pageId,
         canAccess: value === 'allow'
       }));
 
-    if (overrides.length === 0) {
+    if (pageOverrides.length > 0) {
+      const pagePermissionRequest: UserPermissionBulkSetRequest = {
+        userId: this.data.user.id,
+        pagePermissions: pageOverrides
+      };
+
+      promises.push(new Promise((resolve, reject) => {
+        this.permissionService
+          .bulkSetUserPermissions(pagePermissionRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => resolve(),
+            error: (err) => reject(err)
+          });
+      }));
+    }
+
+    // Save template permission overrides (not 'inherit')
+    const templateOverrides = Array.from(this.userTemplatePermissions.entries())
+      .filter(([_, value]) => value !== 'inherit')
+      .map(([savedCustomMissionId, value]) => ({
+        savedCustomMissionId,
+        canAccess: value === 'allow'
+      }));
+
+    if (templateOverrides.length > 0) {
+      const templatePermissionRequest: UserTemplatePermissionBulkSetRequest = {
+        userId: this.data.user.id,
+        templatePermissions: templateOverrides
+      };
+
+      promises.push(new Promise((resolve, reject) => {
+        this.permissionService
+          .bulkSetUserTemplatePermissions(templatePermissionRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => resolve(),
+            error: (err) => reject(err)
+          });
+      }));
+    }
+
+    if (promises.length === 0) {
       return Promise.resolve();
     }
 
-    const permissionRequest: UserPermissionBulkSetRequest = {
-      userId: this.data.user.id,
-      pagePermissions: overrides
-    };
-
-    return new Promise((resolve, reject) => {
-      this.permissionService
-        .bulkSetUserPermissions(permissionRequest)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (result) => {
-            this.snackBar.open(`Permissions updated (${result.modifiedCount} changes)`, 'Close', {
-              duration: 3000,
-              panelClass: ['success-snackbar']
-            });
-            resolve();
-          },
-          error: (err) => {
-            console.error('Error saving permissions:', err);
-            this.snackBar.open('Failed to save permissions', 'Close', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-            reject(err);
-          }
+    return Promise.all(promises)
+      .then(() => {
+        this.snackBar.open('Permissions updated successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
         });
-    });
+      })
+      .catch((err) => {
+        console.error('Error saving permissions:', err);
+        this.snackBar.open('Failed to save permissions', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        throw err;
+      });
   }
 }

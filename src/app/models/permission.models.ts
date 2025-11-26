@@ -99,6 +99,75 @@ export interface UserPermissionBulkSetRequest {
   pagePermissions: UserPagePermissionSet[];
 }
 
+// Role Template Permission Models
+export interface RoleTemplatePermissionDto {
+  id: number;
+  roleId: number;
+  roleName: string;
+  roleCode: string;
+  savedCustomMissionId: number;
+  missionName: string;
+  description?: string;
+  canAccess: boolean;
+  createdUtc: Date;
+}
+
+export interface RoleTemplatePermissionCreateRequest {
+  roleId: number;
+  savedCustomMissionId: number;
+  canAccess: boolean;
+}
+
+export interface RoleTemplatePermissionSet {
+  savedCustomMissionId: number;
+  canAccess: boolean;
+}
+
+export interface RoleTemplatePermissionBulkSetRequest {
+  roleId: number;
+  templatePermissions: RoleTemplatePermissionSet[];
+}
+
+export interface RoleTemplatePermissionMatrix {
+  roles: RoleInfo[];
+  templates: TemplateInfo[];
+  permissions: { [key: string]: boolean }; // Key format: "roleId_templateId"
+}
+
+export interface TemplateInfo {
+  id: number;
+  missionName: string;
+  description?: string;
+}
+
+// User Template Permission Models
+export interface UserTemplatePermissionDto {
+  id: number;
+  userId: number;
+  username: string;
+  savedCustomMissionId: number;
+  missionName: string;
+  description?: string;
+  canAccess: boolean;
+  createdUtc: Date;
+}
+
+export interface UserTemplatePermissionCreateRequest {
+  userId: number;
+  savedCustomMissionId: number;
+  canAccess: boolean;
+}
+
+export interface UserTemplatePermissionSet {
+  savedCustomMissionId: number;
+  canAccess: boolean;
+}
+
+export interface UserTemplatePermissionBulkSetRequest {
+  userId: number;
+  templatePermissions: UserTemplatePermissionSet[];
+}
+
 // API Response wrapper
 export interface ApiResponse<T> {
   success: boolean;

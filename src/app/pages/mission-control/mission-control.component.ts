@@ -22,6 +22,9 @@ import { SavedCustomMissionsService } from '../../services/saved-custom-missions
 import { WorkflowService } from '../../services/workflow.service';
 import { MissionHistoryService } from '../../services/mission-history.service';
 import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.service';
+import { MissionQueueService } from '../../services/mission-queue.service';
+import { AuthService } from '../../services/auth.service';
+import { AddToQueueRequest, MissionQueueDisplayData } from '../../models/mission-queue.models';
 import { SavedCustomMissionDto } from '../../models/saved-custom-missions.models';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
@@ -68,15 +71,19 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public selectedTemplateIds: Set<number> = new Set();
   public expandedZones: Set<string> = new Set();
 
-  // Store job execution state for each workflow
+  // Store job execution state for each workflow (dual tracking: queue + job)
   public workflowJobs: Map<number, {
     missionCode: string;
     requestId?: string;
     workflowName?: string;
     workflowId?: number;
     savedMissionId?: number;
-    jobData?: JobData;
-    robotData?: RobotData;
+    queueId?: number;              // Queue record ID for tracking
+    queueStatus?: string;          // Queue status (Queued/Processing/Assigned/etc)
+    queuePosition?: number;        // Position in queue
+    assignedRobotId?: string;      // Robot assigned by queue processor
+    jobData?: JobData;             // Real-time job status from external AMR
+    robotData?: RobotData;         // Real-time robot position/status
   }> = new Map();
 
   // Loading states
@@ -103,12 +110,65 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     private workflowService: WorkflowService,
     private missionHistoryService: MissionHistoryService,
     private workflowNodeCodesService: WorkflowNodeCodesService,
+    private missionQueueService: MissionQueueService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.loadWorkflowsAndZones();
+    this.restoreActiveJobs();
+  }
+
+  /**
+   * Restore active jobs from MissionQueue on page load
+   * This allows users to navigate away and come back without losing tracking
+   */
+  restoreActiveJobs(): void {
+    this.missionQueueService.getAllQueueItems()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (queueItems: MissionQueueDisplayData[]) => {
+          // Filter for active (non-terminal) queue items
+          const activeItems = queueItems.filter((item: MissionQueueDisplayData) =>
+            item.statusCode === 0 || // Queued
+            item.statusCode === 1 || // Processing
+            item.statusCode === 2    // Assigned
+          );
+
+          console.log(`Restoring ${activeItems.length} active job(s) from queue`);
+
+          // Restore tracking for each active item that has a savedMissionId
+          activeItems.forEach((item: MissionQueueDisplayData) => {
+            if (item.savedMissionId) {
+              // Restore to workflowJobs map
+              this.workflowJobs.set(item.savedMissionId, {
+                missionCode: item.missionCode,
+                requestId: item.requestId,
+                workflowName: item.missionName,
+                savedMissionId: item.savedMissionId,
+                queueId: item.id,
+                queueStatus: item.status,
+                queuePosition: item.queuePosition,
+                assignedRobotId: item.assignedRobotId || undefined
+              });
+
+              // Start queue polling
+              this.startQueuePolling(item.savedMissionId, item.id);
+
+              // If already Assigned, also start job polling
+              if (item.statusCode === 2) {
+                console.log(`Restoring job polling for Assigned mission: ${item.missionCode}`);
+                this.startJobPolling(item.savedMissionId, item.missionCode);
+              }
+            }
+          });
+        },
+        error: (error: any) => {
+          console.error('Error restoring active jobs from queue:', error);
+        }
+      });
   }
 
   /**
@@ -125,8 +185,17 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
+          // Get allowed templates from auth (SuperAdmin sees all)
+          const allowedTemplateIds = new Set(this.authService.getAllowedTemplates());
+          const isSuperAdmin = this.authService.isSuperAdmin();
+
+          // Filter templates based on permissions (SuperAdmin sees all)
+          const filteredTemplates = result.templates.filter(t =>
+            isSuperAdmin || allowedTemplateIds.has(t.id)
+          );
+
           // Convert display data back to DTO format for internal use
-          this.savedTemplates = result.templates.map(displayData => ({
+          this.savedTemplates = filteredTemplates.map(displayData => ({
             id: displayData.id,
             missionName: displayData.missionName,
             description: displayData.description === '-' ? null : displayData.description,
@@ -370,7 +439,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
 
   /**
-   * Trigger sync workflow mission from saved template
+   * Trigger sync workflow mission from saved template - adds to queue for processing
    */
   triggerWorkflow(template: SavedCustomMissionDto): void {
     const id = template.id;
@@ -387,10 +456,14 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         template.robotIds.split(',').map(s => s.trim()).filter(s => s) :
         template.robotIds) : [];
 
-    const request = {
+    const missionCode = this.generateMissionCode();
+    const requestId = this.generateRequestId();
+
+    // Build the mission request JSON that will be stored in the queue
+    const missionRequestJson = JSON.stringify({
       orgId: template.orgId || 'UNIVERSAL',
-      requestId: this.generateRequestId(),
-      missionCode: this.generateMissionCode(),
+      requestId: requestId,
+      missionCode: missionCode,
       missionType: template.missionType || 'RACK_MOVE',
       viewBoardType: template.viewBoardType || '',
       robotModels: robotModels,
@@ -404,40 +477,57 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       unlockRobotId: template.unlockRobotId || '',
       unlockMissionCode: template.unlockMissionCode || '',
       idleNode: template.idleNode || ''
+    });
+
+    // Create queue request
+    const queueRequest: AddToQueueRequest = {
+      missionCode: missionCode,
+      requestId: requestId,
+      savedMissionId: template.id,
+      missionName: template.missionName,
+      missionRequestJson: missionRequestJson,
+      priority: parseInt(template.priority) || 1,
+      robotTypeFilter: template.robotType || undefined,
+      preferredRobotIds: robotIds.length > 0 ? robotIds.join(',') : undefined
     };
 
-    this.missionsService.submitMission(request).subscribe({
-      next: (response) => {
-        this.triggeringMissions.delete(id);
-        if (response.success) {
-          this.snackBar.open(`Template "${template.missionName}" triggered successfully!`, 'Close', { duration: 3000 });
+    // Add to queue instead of direct submission
+    this.missionQueueService.addToQueue(queueRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (queueItem) => {
+          this.triggeringMissions.delete(id);
 
-          // Initialize job tracking for this template
+          // Store queue info in workflowJobs map for tracking
           this.workflowJobs.set(id, {
-            missionCode: request.missionCode,
-            requestId: request.requestId,
+            missionCode: missionCode,
+            requestId: requestId,
             workflowName: template.missionName,
-            savedMissionId: template.id
+            savedMissionId: template.id,
+            queueId: queueItem.id,
+            queueStatus: queueItem.status, // Already a string from backend
+            queuePosition: queueItem.queuePosition,
+            assignedRobotId: queueItem.assignedRobotId || undefined
           });
 
-          // Start polling job status
-          this.startJobPolling(id, request.missionCode);
-        } else {
-          // Handle API error response (success: false)
-          const errorMsg = response.message || 'Unknown error occurred';
-          const errorCode = response.code ? `[${response.code}]` : '';
-          this.snackBar.open(`Failed to trigger template ${errorCode}: ${errorMsg}`, 'Close', { duration: 8000 });
-          console.error('Template trigger failed:', response);
+          // Start polling queue status
+          this.startQueuePolling(id, queueItem.id);
+
+          this.snackBar.open(
+            `"${template.missionName}" added to queue at position ${queueItem.queuePosition}`,
+            'View Queue',
+            { duration: 5000 }
+          ).onAction().subscribe(() => {
+            // Navigate to queue monitor when user clicks "View Queue"
+            window.location.href = '/queue-monitor';
+          });
+        },
+        error: (error) => {
+          this.triggeringMissions.delete(id);
+          console.error('Error adding to queue:', error);
+          this.snackBar.open('Failed to add mission to queue', 'Close', { duration: 3000 });
         }
-      },
-      error: (error) => {
-        this.triggeringMissions.delete(id);
-        // Handle HTTP/network errors
-        const errorMsg = this.extractErrorMessage(error);
-        this.snackBar.open(`Error triggering template: ${errorMsg}`, 'Close', { duration: 8000 });
-        console.error('Error triggering template:', error);
-      }
-    });
+      });
   }
 
 
@@ -551,6 +641,67 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Start polling for queue status (every 5 seconds)
+   * @param templateId - Template ID for tracking
+   * @param queueId - Queue record ID
+   */
+  startQueuePolling(templateId: number, queueId: number): void {
+    const pollKey = `queue_${queueId}`;
+
+    // Don't start if already polling
+    if (this.pollingSubscriptions.has(pollKey)) {
+      return;
+    }
+
+    // Poll every 5 seconds (same as Queue Monitor)
+    const subscription = interval(5000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.missionQueueService.getById(queueId).subscribe({
+          next: (queueItem) => {
+            const job = this.workflowJobs.get(templateId);
+            if (!job) return;
+
+            // Update queue status
+            job.queueStatus = queueItem.status; // Already a string from backend
+            job.queuePosition = queueItem.queuePosition;
+            job.assignedRobotId = queueItem.assignedRobotId || undefined;
+
+            // If status changed to Assigned (statusCode = 2), start job polling
+            if (queueItem.statusCode === 2 && !this.pollingSubscriptions.has(job.missionCode)) {
+              console.log(`Queue status changed to Assigned, starting job polling for ${job.missionCode}`);
+              this.startJobPolling(templateId, job.missionCode);
+            }
+
+            // If terminal state reached (statusCode 3/4/5), stop queue polling
+            if (queueItem.statusCode === 3 || queueItem.statusCode === 4 || queueItem.statusCode === 5) {
+              // Completed, Failed, or Cancelled
+              console.log(`Queue reached terminal state: ${queueItem.status}`);
+              this.stopQueuePolling(queueId);
+            }
+          },
+          error: (error) => {
+            console.error('Error polling queue status:', error);
+          }
+        });
+      });
+
+    this.pollingSubscriptions.set(pollKey, subscription);
+  }
+
+  /**
+   * Stop queue polling
+   */
+  stopQueuePolling(queueId: number): void {
+    const pollKey = `queue_${queueId}`;
+    const subscription = this.pollingSubscriptions.get(pollKey);
+    if (subscription) {
+      subscription.unsubscribe();
+      this.pollingSubscriptions.delete(pollKey);
+    }
+  }
+
+  /**
    * Create mission history record when mission completes
    */
   private createMissionHistoryOnCompletion(
@@ -627,10 +778,24 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if workflow has active job
+   * Check if workflow has active job (not in terminal state)
    */
   hasActiveJob(id: number): boolean {
-    return this.workflowJobs.has(id);
+    const job = this.workflowJobs.get(id);
+    if (!job) return false;
+
+    // Check if in terminal queue state
+    const terminalQueueStates = ['Completed', 'Failed', 'Cancelled'];
+    if (job.queueStatus && terminalQueueStates.includes(job.queueStatus)) {
+      return false;
+    }
+
+    // Check if job is in terminal state
+    if (job.jobData && this.MissionsUtils.isJobTerminal(job.jobData.status)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -705,31 +870,56 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       // Proceed with cancellation
       this.cancellingMissions.add(id);
 
-      // Call cancel API with selected mode
-      this.missionsService.cancelMission({
-        requestId: job.requestId || this.generateRequestId(),
-        missionCode: job.missionCode,
-        containerCode: '',
-        position: '',
-        cancelMode: result.cancelMode,
-        reason: result.reason || ''
-      }).pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.cancellingMissions.delete(id);
-            if (response.success) {
-              // Stop polling for this mission
+      // Check if mission is in queue (has queueId)
+      if (job.queueId) {
+        // Mission is in queue - use queue cancel API
+        // Backend will call external AMR cancel if status = Assigned
+        this.missionQueueService.cancel(job.queueId)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.cancellingMissions.delete(id);
+              // Stop all polling
+              this.stopQueuePolling(job.queueId!);
               this.stopJobPolling(job.missionCode);
               // Remove from tracking
               this.workflowJobs.delete(id);
-              this.snackBar.open(`Mission cancelled successfully (${result.cancelMode})`, 'Close', { duration: 3000 });
+              this.snackBar.open('Mission cancelled successfully', 'Close', { duration: 3000 });
+            },
+            error: (error) => {
+              this.cancellingMissions.delete(id);
+              console.error('Error cancelling mission from queue:', error);
+              this.snackBar.open('Failed to cancel mission', 'Close', { duration: 3000 });
             }
-          },
-          error: (error) => {
-            this.cancellingMissions.delete(id);
-            console.error('Error cancelling mission:', error);
-          }
-        });
+          });
+      } else {
+        // Mission was directly submitted (not in queue) - use direct cancel API
+        this.missionsService.cancelMission({
+          requestId: job.requestId || this.generateRequestId(),
+          missionCode: job.missionCode,
+          containerCode: '',
+          position: '',
+          cancelMode: result.cancelMode,
+          reason: result.reason || ''
+        }).pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              this.cancellingMissions.delete(id);
+              if (response.success) {
+                // Stop polling for this mission
+                this.stopJobPolling(job.missionCode);
+                // Remove from tracking
+                this.workflowJobs.delete(id);
+                this.snackBar.open(`Mission cancelled successfully (${result.cancelMode})`, 'Close', { duration: 3000 });
+              }
+            },
+            error: (error) => {
+              this.cancellingMissions.delete(id);
+              console.error('Error cancelling mission:', error);
+              this.snackBar.open('Failed to cancel mission', 'Close', { duration: 3000 });
+            }
+          });
+      }
     });
   }
 

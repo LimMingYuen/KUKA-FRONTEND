@@ -6,7 +6,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   SavedCustomMissionDto,
   SavedCustomMissionsDisplayData,
-  SavedCustomMissionsUtils
+  SavedCustomMissionsUtils,
+  ApiResponse
 } from '../models/saved-custom-missions.models';
 
 @Injectable({
@@ -14,7 +15,7 @@ import {
 })
 export class SavedCustomMissionsService {
   private readonly API_URL = 'http://localhost:5109/api';
-  private readonly ENDPOINT = '/SavedCustomMissions';
+  private readonly ENDPOINT = '/saved-custom-missions';
 
   // Reactive state using Angular signals
   public isLoading = signal<boolean>(false);
@@ -51,11 +52,14 @@ export class SavedCustomMissionsService {
   getAllSavedMissions(): Observable<SavedCustomMissionsDisplayData[]> {
     this.isLoading.set(true);
 
-    return this.http.get<SavedCustomMissionDto[]>(
+    return this.http.get<ApiResponse<SavedCustomMissionDto[]>>(
       `${this.API_URL}${this.ENDPOINT}`,
       { headers: this.createHeaders() }
     ).pipe(
-      map(missions => missions.map(mission => SavedCustomMissionsUtils.transformToDisplay(mission))),
+      map(response => {
+        const missions = response.data || [];
+        return missions.map(mission => SavedCustomMissionsUtils.transformToDisplay(mission));
+      }),
       tap(() => {
         this.isLoading.set(false);
       }),
@@ -74,15 +78,18 @@ export class SavedCustomMissionsService {
   getSyncWorkflowTemplates(): Observable<SavedCustomMissionDto[]> {
     this.isLoading.set(true);
 
-    return this.http.get<SavedCustomMissionDto[]>(
+    return this.http.get<ApiResponse<SavedCustomMissionDto[]>>(
       `${this.API_URL}${this.ENDPOINT}`,
       { headers: this.createHeaders() }
     ).pipe(
-      map(missions => missions.filter(mission => {
-        // Filter for sync workflow templates: empty or "[]" missionStepsJson
-        const stepsJson = mission.missionStepsJson?.trim();
-        return !stepsJson || stepsJson === '[]';
-      })),
+      map(response => {
+        const missions = response.data || [];
+        return missions.filter(mission => {
+          // Filter for sync workflow templates: empty or "[]" missionStepsJson
+          const stepsJson = mission.missionStepsJson?.trim();
+          return !stepsJson || stepsJson === '[]';
+        });
+      }),
       tap(() => {
         this.isLoading.set(false);
       }),
@@ -98,10 +105,11 @@ export class SavedCustomMissionsService {
    * Get saved mission by ID
    */
   getById(id: number): Observable<SavedCustomMissionDto> {
-    return this.http.get<SavedCustomMissionDto>(
+    return this.http.get<ApiResponse<SavedCustomMissionDto>>(
       `${this.API_URL}${this.ENDPOINT}/${id}`,
       { headers: this.createHeaders() }
     ).pipe(
+      map(response => response.data as SavedCustomMissionDto),
       catchError(error => {
         this.handleError(error, `Failed to load saved mission ${id}`);
         return throwError(() => error);

@@ -26,4 +26,5 @@ export interface User {
   isSuperAdmin?: boolean;
   roles?: string[];
   allowedPages?: string[];
+  allowedTemplates?: number[];
 }
