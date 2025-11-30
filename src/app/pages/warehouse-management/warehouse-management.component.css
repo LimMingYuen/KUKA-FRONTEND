@@ -2,9 +2,9 @@
 
 /* Main container */
 .warehouse-management-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 16px;
+  max-width: 100%;
+  margin: 0;
   min-height: 100vh;
   background-color: var(--mat-sys-surface-container-lowest);
 }
@@ -39,8 +39,8 @@
 
 /* Header Card */
 .header-card {
-  margin-bottom: 24px;
-  border-radius: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
@@ -48,7 +48,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 32px;
+    padding: 20px 24px;
 
     .header-left {
       .page-title {
@@ -103,8 +103,8 @@
 
 /* Tabs Card */
 .tabs-card {
-  margin-bottom: 24px;
-  border-radius: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
@@ -155,7 +155,7 @@
       }
 
       .tab-content {
-        padding: 24px;
+        padding: 16px;
 
         .tab-description {
           display: flex;
@@ -185,12 +185,12 @@
 /* Quick Navigation */
 .quick-navigation {
   .nav-card {
-    border-radius: 12px;
+    border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 
     .nav-content {
-      padding: 24px;
+      padding: 16px;
 
       h3 {
         margin: 0 0 16px 0;

@@ -10,24 +10,11 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
   // Column definitions
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      cellClass: 'id-cell',
-      headerClass: 'id-header',
-      transform: (value: number) => value.toString()
-    } as ColumnConfig<AreaDisplayData>,
-
-    {
       key: 'displayName',
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '200px',
-      cellClass: 'display-name-cell',
-      headerClass: 'display-name-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -37,8 +24,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       sortable: true,
       filterable: true,
       width: '150px',
-      cellClass: 'actual-value-cell',
-      headerClass: 'actual-value-header',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -47,9 +32,7 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '300px',
-      cellClass: 'description-cell',
-      headerClass: 'description-header',
+      width: '250px',
       transform: (value: string) => value || 'No description'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -58,35 +41,30 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '120px',
+      width: '100px',
       allowHtml: true,
-      cellClass: 'status-cell',
-      headerClass: 'status-header',
-      transform: (value: boolean, row: AreaDisplayData) => {
+      transform: (value: boolean) => {
         const statusClass = value ? 'status-active' : 'status-inactive';
-        return `<span class="status-badge ${statusClass}">${row.statusText}</span>`;
+        const statusText = value ? 'ACTIVE' : 'INACTIVE';
+        return `<span class="status-badge ${statusClass}">${statusText}</span>`;
       }
     } as ColumnConfig<AreaDisplayData>,
 
     {
-      key: 'createdDateRelative',
-      header: 'Created',
+      key: 'createdDateDisplay',
+      header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '140px',
-      cellClass: 'created-date-cell',
-      headerClass: 'created-date-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
     {
-      key: 'updatedDateRelative',
-      header: 'Updated',
+      key: 'updatedDateDisplay',
+      header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '140px',
-      cellClass: 'updated-date-cell',
-      headerClass: 'updated-date-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>
   ],

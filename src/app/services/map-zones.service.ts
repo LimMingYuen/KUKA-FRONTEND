@@ -71,8 +71,8 @@ export class MapZonesService {
             areaPurpose: mapZone.areaPurpose || getAreaPurpose('0'),
             status: mapZone.statusText === 'Enabled' ? 1 : 0,
             statusText: mapZone.statusText || 'Unknown',
-            createdDate: '', // Will be populated if backend provides it
-            updatedDate: ''  // Will be populated if backend provides it
+            createdDate: this.formatDateTime(mapZone.createTime),
+            updatedDate: this.formatDateTime(mapZone.lastUpdateTime)
           }))
           .sort((a, b) => a.id - b.id); // Sort by ID in ascending order
       }),
@@ -187,5 +187,27 @@ export class MapZonesService {
    */
   public clearSyncResult(): void {
     this.lastSyncResult.set(null);
+  }
+
+  /**
+   * Format datetime string to display format
+   */
+  private formatDateTime(dateString: string | null | undefined): string {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return 'N/A';
+    }
   }
 }

@@ -10,7 +10,7 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '200px',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     },
     {
@@ -26,7 +26,7 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '300px',
+      width: '250px',
       transform: (value: string, row: RobotTypeDisplayData) => row.descriptionDisplay
     },
     {
@@ -35,21 +35,28 @@ export const ROBOT_TYPES_TABLE_CONFIG: TableConfig<RobotTypeDisplayData> = {
       sortable: true,
       filterable: true,
       width: '100px',
-      transform: (value: boolean, row: RobotTypeDisplayData) => row.statusText
+      allowHtml: true,
+      transform: (value: boolean) => {
+        const statusClass = value ? 'status-active' : 'status-inactive';
+        const statusText = value ? 'ACTIVE' : 'INACTIVE';
+        return `<span class="status-badge ${statusClass}">${statusText}</span>`;
+      }
     },
     {
-      key: 'createdDateRelative',
-      header: 'Created',
+      key: 'createdDateDisplay',
+      header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '120px'
+      width: '180px',
+      transform: (value: string) => value || 'N/A'
     },
     {
-      key: 'updatedDateRelative',
-      header: 'Updated',
+      key: 'updatedDateDisplay',
+      header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '120px'
+      width: '180px',
+      transform: (value: string) => value || 'N/A'
     }
   ] as ColumnConfig<RobotTypeDisplayData>[],
 

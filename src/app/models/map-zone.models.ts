@@ -10,6 +10,8 @@ export interface MapZoneSummaryDto {
   layout: string;
   areaPurpose: string;
   statusText: string;
+  createTime: string;
+  lastUpdateTime: string;
 }
 
 export interface MapZoneSyncResultDto {

@@ -63,70 +63,20 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '160px',
-      headerClass: 'created-date-header',
-      cellClass: 'created-date-cell',
-      transform: (value: string) => {
-        if (!value) return 'N/A';
-        try {
-          const date = new Date(value);
-          return date.toLocaleDateString();
-        } catch {
-          return value;
-        }
-      }
+      width: '180px',
+      transform: (value: string) => value || 'N/A'
     },
     {
       key: 'updatedDate',
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '160px',
-      headerClass: 'updated-date-header',
-      cellClass: 'updated-date-cell',
-      transform: (value: string) => {
-        if (!value) return 'N/A';
-        try {
-          const date = new Date(value);
-          return date.toLocaleDateString();
-        } catch {
-          return value;
-        }
-      }
+      width: '180px',
+      transform: (value: string) => value || 'N/A'
     }
   ],
 
-  actions: [
-    {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View zone details'
-    },
-    {
-      action: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      type: 'icon',
-      tooltip: 'Edit zone'
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'menu-item',
-      tooltip: 'Export zone data'
-    },
-    {
-      action: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      type: 'menu-item',
-      tooltip: 'Delete zone',
-      cssClass: 'danger-action'
-    }
-  ],
+  actions: [],
 
   headerActions: [
     {

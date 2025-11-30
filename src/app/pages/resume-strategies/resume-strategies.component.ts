@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -52,17 +52,8 @@ import { ResumeStrategyDialogComponent } from './resume-strategy-dialog.componen
   styleUrl: './resume-strategies.component.css'
 })
 export class ResumeStrategiesComponent implements OnInit, OnDestroy {
-  // Table data
-  public resumeStrategies: ResumeStrategyDisplayData[] = [];
-
   // Table configuration
   public tableConfig = RESUME_STRATEGIES_TABLE_CONFIG;
-
-  // UI state
-  public isLoading = false;
-  public isCreating = false;
-  public isUpdating = false;
-  public isDeleting = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
@@ -82,27 +73,6 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
     if (this.tableConfig.empty) {
       this.tableConfig.empty.action = () => this.openCreateDialog();
     }
-
-    // Set up reactive effects for service state changes
-    effect(() => {
-      this.isLoading = this.resumeStrategiesService.isLoading();
-    });
-
-    effect(() => {
-      this.isCreating = this.resumeStrategiesService.isCreating();
-    });
-
-    effect(() => {
-      this.isUpdating = this.resumeStrategiesService.isUpdating();
-    });
-
-    effect(() => {
-      this.isDeleting = this.resumeStrategiesService.isDeleting();
-    });
-
-    effect(() => {
-      this.resumeStrategies = this.resumeStrategiesService.resumeStrategies();
-    });
   }
 
   ngOnInit(): void {
@@ -195,8 +165,15 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
    * View resume strategy details
    */
   private viewResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
-    // TODO: Implement view dialog
-    console.log('View resume strategy:', resumeStrategy);
+    this.dialog.open(ResumeStrategyDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: {
+        mode: 'view',
+        resumeStrategy: resumeStrategy
+      }
+    });
   }
 
   /**

@@ -239,10 +239,12 @@
         display: flex;
         gap: 4px;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
 
         button {
           min-width: auto;
+          flex-shrink: 0;
 
           mat-icon {
             font-size: 18px;
@@ -250,6 +252,12 @@
             height: 18px;
           }
         }
+      }
+
+      // Actions column - ensure enough width for buttons
+      .mat-column-actions {
+        min-width: 140px !important;
+        width: 140px !important;
       }
 
       // Row number column
@@ -400,8 +408,13 @@
         }
 
         .action-buttons {
-          flex-direction: column;
+          flex-wrap: wrap;
           gap: 2px;
+        }
+
+        .mat-column-actions {
+          min-width: 100px !important;
+          width: auto !important;
         }
       }
     }
@@ -459,6 +472,9 @@
         }
 
         .action-buttons {
+          flex-direction: column;
+          gap: 2px;
+
           button {
             mat-icon {
               font-size: 16px;
@@ -466,6 +482,11 @@
               height: 16px;
             }
           }
+        }
+
+        .mat-column-actions {
+          min-width: 50px !important;
+          width: auto !important;
         }
       }
     }

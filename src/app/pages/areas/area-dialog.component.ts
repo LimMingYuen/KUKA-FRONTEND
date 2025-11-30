@@ -14,7 +14,7 @@ import {
 } from '../../models/areas.models';
 
 export interface AreaDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   area?: AreaDisplayData;
 }
 
@@ -33,8 +33,8 @@ export interface AreaDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Area' : 'Edit Area' }}
+      <mat-icon>{{ getDialogIcon() }}</mat-icon>
+      {{ getDialogTitle() }}
     </h2>
 
     <mat-dialog-content>
@@ -93,10 +93,10 @@ export interface AreaDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!areaForm.valid">
+      <button *ngIf="data.mode !== 'view'" mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!areaForm.valid">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -163,8 +163,29 @@ export class AreaDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    if (this.data.mode === 'edit' && this.data.area) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.area) {
       this.populateForm(this.data.area);
+    }
+    if (this.data.mode === 'view') {
+      this.areaForm.disable();
+    }
+  }
+
+  getDialogIcon(): string {
+    switch (this.data.mode) {
+      case 'create': return 'add';
+      case 'edit': return 'edit';
+      case 'view': return 'visibility';
+      default: return 'location_on';
+    }
+  }
+
+  getDialogTitle(): string {
+    switch (this.data.mode) {
+      case 'create': return 'Create Area';
+      case 'edit': return 'Edit Area';
+      case 'view': return 'View Area';
+      default: return 'Area';
     }
   }
 

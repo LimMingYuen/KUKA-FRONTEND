@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -36,17 +36,8 @@ import { MissionTypeDialogComponent, MissionTypeDialogData } from './mission-typ
   styleUrl: './mission-types.component.css'
 })
 export class MissionTypesComponent implements OnInit, OnDestroy {
-  // Table data
-  public missionTypes: MissionTypeDisplayData[] = [];
-
   // Table configuration
   public tableConfig = MISSION_TYPES_TABLE_CONFIG;
-
-  // UI state
-  public isLoading = false;
-  public isCreating = false;
-  public isUpdating = false;
-  public isDeleting = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
@@ -59,27 +50,6 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
     if (this.tableConfig.empty) {
       this.tableConfig.empty.action = () => this.openCreateDialog();
     }
-
-    // Set up reactive effects for service state changes
-    effect(() => {
-      this.isLoading = this.missionTypesService.isLoading();
-    });
-
-    effect(() => {
-      this.isCreating = this.missionTypesService.isCreating();
-    });
-
-    effect(() => {
-      this.isUpdating = this.missionTypesService.isUpdating();
-    });
-
-    effect(() => {
-      this.isDeleting = this.missionTypesService.isDeleting();
-    });
-
-    effect(() => {
-      this.missionTypes = this.missionTypesService.missionTypes();
-    });
   }
 
   ngOnInit(): void {

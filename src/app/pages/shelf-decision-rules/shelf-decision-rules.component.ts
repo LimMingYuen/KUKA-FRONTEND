@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -36,17 +36,8 @@ import { ShelfDecisionRuleDialogComponent, ShelfDecisionRuleDialogData } from '.
   styleUrl: './shelf-decision-rules.component.css'
 })
 export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
-  // Table data
-  public shelfDecisionRules: ShelfDecisionRuleDisplayData[] = [];
-
   // Table configuration
   public tableConfig = SHELF_DECISION_RULES_TABLE_CONFIG;
-
-  // UI state
-  public isLoading = false;
-  public isCreating = false;
-  public isUpdating = false;
-  public isDeleting = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
@@ -57,32 +48,6 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
   ) {
     // Configure empty state action
     this.tableConfig.empty!.action = () => this.openCreateDialog();
-
-    // Set up reactive effects for service state changes
-    effect(() => {
-      this.isLoading = this.shelfDecisionRulesService.isLoading();
-    });
-
-    effect(() => {
-      this.isCreating = this.shelfDecisionRulesService.isCreating();
-      // Update header action loading state
-      const createAction = this.tableConfig.headerActions?.find(action => action.action === 'create-rule');
-      if (createAction) {
-        createAction.loading = this.isCreating;
-      }
-    });
-
-    effect(() => {
-      this.isUpdating = this.shelfDecisionRulesService.isUpdating();
-    });
-
-    effect(() => {
-      this.isDeleting = this.shelfDecisionRulesService.isDeleting();
-    });
-
-    effect(() => {
-      this.shelfDecisionRules = this.shelfDecisionRulesService.rules();
-    });
   }
 
   ngOnInit(): void {
@@ -117,6 +82,9 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
         break;
       case 'edit':
         this.editRule(event.row);
+        break;
+      case 'toggle-status':
+        this.toggleRuleStatus(event.row);
         break;
       case 'delete':
         this.deleteRule(event.row);
@@ -190,6 +158,19 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  /**
+   * Toggle rule active/inactive status
+   */
+  private toggleRuleStatus(rule: ShelfDecisionRuleDisplayData): void {
+    this.shelfDecisionRulesService.toggleRuleStatus(rule.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (error) => {
+          console.error('Error toggling rule status:', error);
+        }
+      });
   }
 
   /**

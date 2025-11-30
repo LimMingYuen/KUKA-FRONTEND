@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -52,17 +52,8 @@ import { AreaDialogComponent } from './area-dialog.component';
   styleUrl: './areas.component.css'
 })
 export class AreasComponent implements OnInit, OnDestroy {
-  // Table data
-  public areas: AreaDisplayData[] = [];
-
   // Table configuration
   public tableConfig = AREAS_TABLE_CONFIG;
-
-  // UI state
-  public isLoading = false;
-  public isCreating = false;
-  public isUpdating = false;
-  public isDeleting = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
@@ -82,27 +73,6 @@ export class AreasComponent implements OnInit, OnDestroy {
     if (this.tableConfig.empty) {
       this.tableConfig.empty.action = () => this.openCreateDialog();
     }
-
-    // Set up reactive effects for service state changes
-    effect(() => {
-      this.isLoading = this.areasService.isLoading();
-    });
-
-    effect(() => {
-      this.isCreating = this.areasService.isCreating();
-    });
-
-    effect(() => {
-      this.isUpdating = this.areasService.isUpdating();
-    });
-
-    effect(() => {
-      this.isDeleting = this.areasService.isDeleting();
-    });
-
-    effect(() => {
-      this.areas = this.areasService.areas();
-    });
   }
 
   ngOnInit(): void {
@@ -195,8 +165,15 @@ export class AreasComponent implements OnInit, OnDestroy {
    * View area details
    */
   private viewArea(area: AreaDisplayData): void {
-    // TODO: Implement view dialog
-    console.log('View area:', area);
+    this.dialog.open(AreaDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: {
+        mode: 'view',
+        area: area
+      }
+    });
   }
 
   /**

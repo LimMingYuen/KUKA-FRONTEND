@@ -14,7 +14,7 @@ import {
 } from '../../models/robot-types.models';
 
 export interface RobotTypeDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   robotType?: RobotTypeDisplayData;
 }
 
@@ -33,8 +33,8 @@ export interface RobotTypeDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Robot Type' : 'Edit Robot Type' }}
+      <mat-icon>{{ getDialogIcon() }}</mat-icon>
+      {{ getDialogTitle() }}
     </h2>
 
     <mat-dialog-content>
@@ -93,10 +93,10 @@ export interface RobotTypeDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!robotTypeForm.valid">
+      <button *ngIf="data.mode !== 'view'" mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!robotTypeForm.valid">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -163,8 +163,29 @@ export class RobotTypeDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    if (this.data.mode === 'edit' && this.data.robotType) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.robotType) {
       this.populateForm(this.data.robotType);
+    }
+    if (this.data.mode === 'view') {
+      this.robotTypeForm.disable();
+    }
+  }
+
+  getDialogIcon(): string {
+    switch (this.data.mode) {
+      case 'create': return 'add';
+      case 'edit': return 'edit';
+      case 'view': return 'visibility';
+      default: return 'smart_toy';
+    }
+  }
+
+  getDialogTitle(): string {
+    switch (this.data.mode) {
+      case 'create': return 'Create Robot Type';
+      case 'edit': return 'Edit Robot Type';
+      case 'view': return 'View Robot Type';
+      default: return 'Robot Type';
     }
   }
 

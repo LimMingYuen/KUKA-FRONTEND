@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -53,17 +53,8 @@ import { RobotTypeDialogComponent } from './robot-type-dialog.component';
   styleUrl: './robot-types.component.css'
 })
 export class RobotTypesComponent implements OnInit, OnDestroy {
-  // Table data
-  public robotTypes: RobotTypeDisplayData[] = [];
-
   // Table configuration
   public tableConfig = ROBOT_TYPES_TABLE_CONFIG;
-
-  // UI state
-  public isLoading = false;
-  public isCreating = false;
-  public isUpdating = false;
-  public isDeleting = false;
 
   // Cleanup subject
   private destroy$ = new Subject<void>();
@@ -83,27 +74,6 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
     if (this.tableConfig.empty) {
       this.tableConfig.empty.action = () => this.openCreateDialog();
     }
-
-    // Set up reactive effects for service state changes
-    effect(() => {
-      this.isLoading = this.robotTypesService.isLoading();
-    });
-
-    effect(() => {
-      this.isCreating = this.robotTypesService.isCreating();
-    });
-
-    effect(() => {
-      this.isUpdating = this.robotTypesService.isUpdating();
-    });
-
-    effect(() => {
-      this.isDeleting = this.robotTypesService.isDeleting();
-    });
-
-    effect(() => {
-      this.robotTypes = this.robotTypesService.robotTypes();
-    });
   }
 
   ngOnInit(): void {
@@ -196,8 +166,15 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
    * View robot type details
    */
   private viewRobotType(robotType: RobotTypeDisplayData): void {
-    // TODO: Implement view dialog
-    console.log('View robot type:', robotType);
+    this.dialog.open(RobotTypeDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: {
+        mode: 'view',
+        robotType: robotType
+      }
+    });
   }
 
   /**

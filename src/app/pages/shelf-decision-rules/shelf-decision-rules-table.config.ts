@@ -19,8 +19,7 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      headerClass: 'display-name-header',
-      cellClass: 'display-name-cell',
+      width: '180px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -30,9 +29,7 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Actual Value',
       sortable: true,
       filterable: true,
-      width: '140px',
-      headerClass: 'actual-value-header',
-      cellClass: 'actual-value-cell',
+      width: '150px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -42,22 +39,22 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Description',
       sortable: true,
       filterable: true,
-      headerClass: 'description-header',
-      cellClass: 'description-cell',
+      width: '250px',
       transform: (value: string) => {
         return value || 'No description';
       }
     },
     {
-      key: 'statusText',
+      key: 'isActive',
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'status-header',
-      cellClass: 'status-cell',
-      transform: (value: string, row: ShelfDecisionRuleDisplayData) => {
-        return value || 'Unknown';
+      width: '100px',
+      allowHtml: true,
+      transform: (value: boolean, row: ShelfDecisionRuleDisplayData) => {
+        const statusClass = value ? 'status-active' : 'status-inactive';
+        const statusText = value ? 'ACTIVE' : 'INACTIVE';
+        return `<span class="status-badge ${statusClass}">${statusText}</span>`;
       }
     },
     {
@@ -66,20 +63,16 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       sortable: true,
       filterable: true,
       width: '180px',
-      headerClass: 'created-date-header',
-      cellClass: 'created-date-cell',
       transform: (value: string) => {
         return value || 'N/A';
       }
     },
     {
-      key: 'updatedDateRelative',
-      header: 'Last Updated',
+      key: 'updatedDateDisplay',
+      header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '140px',
-      headerClass: 'updated-date-header',
-      cellClass: 'updated-date-cell',
+      width: '180px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -100,6 +93,14 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       icon: 'edit',
       type: 'icon',
       tooltip: 'Edit rule'
+    },
+    {
+      action: 'toggle-status',
+      label: 'Toggle Status',
+      icon: 'power_settings_new',
+      type: 'icon',
+      tooltip: 'Toggle active/inactive status',
+      color: 'primary'
     },
     {
       action: 'delete',

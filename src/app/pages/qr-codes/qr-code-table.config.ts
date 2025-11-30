@@ -81,37 +81,7 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
     }
   ],
 
-  actions: [
-    {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View QR code details'
-    },
-    {
-      action: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      type: 'icon',
-      tooltip: 'Edit QR code'
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'menu-item',
-      tooltip: 'Export QR code data'
-    },
-    {
-      action: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      type: 'menu-item',
-      tooltip: 'Delete QR code',
-      cssClass: 'danger-action'
-    }
-  ],
+  actions: [],
 
   headerActions: [
     {

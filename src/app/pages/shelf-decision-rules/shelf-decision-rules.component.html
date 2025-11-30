@@ -1,9 +1,9 @@
 <!-- Generic Table Component -->
 <app-generic-table class="shelf-decision-rules-table"
-  [data]="shelfDecisionRules"
+  [data]="shelfDecisionRulesService.rules()"
   [config]="tableConfig"
-  [loading]="isLoading"
-  [empty]="shelfDecisionRules.length === 0"
+  [loading]="shelfDecisionRulesService.isLoading()"
+  [empty]="shelfDecisionRulesService.rules().length === 0"
   (action)="onTableAction($event)"
   (sortChange)="onSortChange($event)"
   (pageChange)="onPageChange($event)"

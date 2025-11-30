@@ -10,24 +10,11 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
   // Column definitions
   columns: [
     {
-      key: 'id',
-      header: 'ID',
-      sortable: true,
-      filterable: true,
-      width: '80px',
-      cellClass: 'id-cell',
-      headerClass: 'id-header',
-      transform: (value: number) => value.toString()
-    } as ColumnConfig<MissionTypeDisplayData>,
-
-    {
       key: 'displayName',
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '200px',
-      cellClass: 'display-name-cell',
-      headerClass: 'display-name-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -37,8 +24,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       sortable: true,
       filterable: true,
       width: '150px',
-      cellClass: 'actual-value-cell',
-      headerClass: 'actual-value-header',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -47,21 +32,22 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '300px',
-      cellClass: 'description-cell',
-      headerClass: 'description-header',
+      width: '250px',
       transform: (value: string) => value || 'No description'
     } as ColumnConfig<MissionTypeDisplayData>,
 
     {
-      key: 'statusText',
+      key: 'isActive',
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '120px',
-      cellClass: 'status-cell',
-      headerClass: 'status-header',
-      transform: (value: string) => value || 'Unknown'
+      width: '100px',
+      allowHtml: true,
+      transform: (value: boolean) => {
+        const statusClass = value ? 'status-active' : 'status-inactive';
+        const statusText = value ? 'ACTIVE' : 'INACTIVE';
+        return `<span class="status-badge ${statusClass}">${statusText}</span>`;
+      }
     } as ColumnConfig<MissionTypeDisplayData>,
 
     {
@@ -69,9 +55,7 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '160px',
-      cellClass: 'created-date-cell',
-      headerClass: 'created-date-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -80,9 +64,7 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '160px',
-      cellClass: 'updated-date-cell',
-      headerClass: 'updated-date-header',
+      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>
   ],
@@ -112,9 +94,9 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
     {
       action: 'toggle-status',
       label: 'Toggle Status',
-      icon: 'toggle_on',
+      icon: 'power_settings_new',
       type: 'icon',
-      tooltip: 'Toggle mission type status',
+      tooltip: 'Toggle active/inactive status',
       color: 'primary',
       disabled: () => false
     } as ActionConfig,

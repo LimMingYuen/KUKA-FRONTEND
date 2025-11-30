@@ -1,8 +1,8 @@
 <!-- Table Component -->
       <app-generic-table
         [config]="tableConfig"
-        [data]="robotTypes"
-        [loading]="isLoading"
+        [data]="robotTypesService.robotTypes()"
+        [loading]="robotTypesService.isLoading()"
         (action)="onTableAction($event)"
         (sortChange)="onSortChange($event)"
         (pageChange)="onPageChange($event)"

@@ -14,7 +14,7 @@ import {
 } from '../../models/resume-strategies.models';
 
 export interface ResumeStrategyDialogData {
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
   resumeStrategy?: ResumeStrategyDisplayData;
 }
 
@@ -33,8 +33,8 @@ export interface ResumeStrategyDialogData {
   ],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>{{ data.mode === 'create' ? 'add' : 'edit' }}</mat-icon>
-      {{ data.mode === 'create' ? 'Create Resume Strategy' : 'Edit Resume Strategy' }}
+      <mat-icon>{{ getDialogIcon() }}</mat-icon>
+      {{ getDialogTitle() }}
     </h2>
 
     <mat-dialog-content>
@@ -93,10 +93,10 @@ export interface ResumeStrategyDialogData {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Cancel
+        <mat-icon>{{ data.mode === 'view' ? 'close' : 'cancel' }}</mat-icon>
+        {{ data.mode === 'view' ? 'Close' : 'Cancel' }}
       </button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!resumeStrategyForm.valid">
+      <button *ngIf="data.mode !== 'view'" mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!resumeStrategyForm.valid">
         <mat-icon>save</mat-icon>
         {{ data.mode === 'create' ? 'Create' : 'Update' }}
       </button>
@@ -163,8 +163,29 @@ export class ResumeStrategyDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    if (this.data.mode === 'edit' && this.data.resumeStrategy) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.resumeStrategy) {
       this.populateForm(this.data.resumeStrategy);
+    }
+    if (this.data.mode === 'view') {
+      this.resumeStrategyForm.disable();
+    }
+  }
+
+  getDialogIcon(): string {
+    switch (this.data.mode) {
+      case 'create': return 'add';
+      case 'edit': return 'edit';
+      case 'view': return 'visibility';
+      default: return 'restart_alt';
+    }
+  }
+
+  getDialogTitle(): string {
+    switch (this.data.mode) {
+      case 'create': return 'Create Resume Strategy';
+      case 'edit': return 'Edit Resume Strategy';
+      case 'view': return 'View Resume Strategy';
+      default: return 'Resume Strategy';
     }
   }
 

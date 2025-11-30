@@ -1,9 +1,9 @@
 <!-- Generic Table Component -->
 <app-generic-table class="mission-types-table"
-  [data]="missionTypes"
+  [data]="missionTypesService.missionTypes()"
   [config]="tableConfig"
-  [loading]="isLoading"
-  [empty]="missionTypes.length === 0"
+  [loading]="missionTypesService.isLoading()"
+  [empty]="missionTypesService.missionTypes().length === 0"
   (action)="onTableAction($event)"
   (sortChange)="onSortChange($event)"
   (pageChange)="onPageChange($event)"
