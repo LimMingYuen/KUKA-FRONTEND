@@ -6,11 +6,31 @@
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+// Custom Renesas Electronics Blue palette
+$renesas-blue-palette: (
+  0: #000000,
+  10: #0d1033,
+  20: #1a2066,
+  25: #1e2d6b,
+  30: #2f409a,
+  35: #3a4da8,
+  40: #4a5db8,
+  50: #6275c8,
+  60: #7b8ed8,
+  70: #95a7e5,
+  80: #b0c0f0,
+  90: #d0daf8,
+  95: #e8edfc,
+  98: #f5f7fe,
+  99: #fafbff,
+  100: #ffffff,
+);
+
 html {
   @include mat.theme((
     color: (
-      primary: mat.$blue-palette,
-      tertiary: mat.$cyan-palette,
+      primary: $renesas-blue-palette,
+      tertiary: $renesas-blue-palette,
     ),
     typography: Roboto,
     density: 0,
@@ -37,6 +57,61 @@ body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Global Material Dialog Styling */
+.cdk-overlay-container {
+  z-index: 1000 !important;
+}
+
+.cdk-overlay-backdrop {
+  background-color: rgba(0, 0, 0, 0.32) !important;
+}
+
+.mat-mdc-dialog-container {
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 11px 15px -7px rgba(0,0,0,.2), 0 24px 38px 3px rgba(0,0,0,.14), 0 9px 46px 8px rgba(0,0,0,.12) !important;
+}
+
+.mat-mdc-dialog-surface {
+  background-color: white !important;
+  border-radius: 8px !important;
+}
+
+.mat-mdc-dialog-content {
+  max-height: 65vh !important;
+  overflow-y: auto !important;
+}
+
+.mat-mdc-dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--mat-sys-outline-variant) !important;
+}
+
+/* Workflow Template Dialog Styling */
+.workflow-template-dialog {
+  .mat-mdc-dialog-container {
+    background-color: white !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    background-color: white !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* Ensure CDK overlay pane has proper positioning */
+.cdk-overlay-pane {
+  max-width: 100vw !important;
+}
+
+.cdk-global-overlay-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
 
 /* Global table overrides for generic table component - restore original Material Design */
 app-generic-table {

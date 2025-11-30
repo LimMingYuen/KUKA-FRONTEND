@@ -1,12 +1,4 @@
 .workflow-template-container {
-  padding: 24px;
   height: 100%;
   overflow: auto;
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .workflow-template-container {
-    padding: 16px;
-  }
 }

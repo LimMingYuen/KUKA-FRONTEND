@@ -7,6 +7,10 @@
 /* Header Styles */
 .page-header {
   margin-bottom: 24px;
+  background-color: var(--mat-sys-primary);
+  padding: 20px 24px;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .header-content {
@@ -24,17 +28,17 @@
 }
 
 .header-icon {
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
-  color: #1976d2; // Renesas Blue
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: white;
 }
 
 .header-title h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 500;
-  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
 }
 
 .header-actions {
@@ -47,6 +51,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  background-color: white !important;
+  color: var(--mat-sys-primary) !important;
+
+  mat-icon {
+    color: var(--mat-sys-primary) !important;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
 }
 
 /* Filters Card */

@@ -23,27 +23,18 @@
   color: white;
   margin: -16px -16px 20px -16px;
   padding: 24px 16px 20px 16px;
+  display: flex;
+  justify-content: center;
 
   .login-title {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     font-size: 24px;
     font-weight: 600;
     margin: 0;
-
-    .kuka-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-  }
-
-  mat-card-subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    margin-top: 8px;
-    font-size: 14px;
+    width: 100%;
+    text-align: center;
   }
 }
 
@@ -74,6 +65,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  color: white !important;
 
   .button-spinner {
     margin: 0;

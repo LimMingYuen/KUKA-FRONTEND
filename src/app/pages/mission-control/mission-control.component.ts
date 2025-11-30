@@ -84,6 +84,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     assignedRobotId?: string;      // Robot assigned by queue processor
     jobData?: JobData;             // Real-time job status from external AMR
     robotData?: RobotData;         // Real-time robot position/status
+    error?: string;                // Error message from API failures
   }> = new Map();
 
   // Loading states
@@ -553,7 +554,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: (response) => {
             if (response.success && response.data && response.data.length > 0) {
-              // Reset error counter on success
+              // Reset error counter and clear error on success
               this.jobQueryErrorCount.set(missionCode, 0);
 
               const jobData = response.data[0];
@@ -562,6 +563,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
               const currentJob = this.workflowJobs.get(id);
               if (currentJob) {
                 currentJob.jobData = jobData;
+                currentJob.error = undefined; // Clear any previous error
               }
 
               // Query robot status if robotId is available
@@ -969,6 +971,14 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   private handleJobQueryError(missionCode: string, errorMsg: string): void {
     const currentCount = (this.jobQueryErrorCount.get(missionCode) || 0) + 1;
     this.jobQueryErrorCount.set(missionCode, currentCount);
+
+    // Find the job by missionCode and set error
+    for (const [id, job] of this.workflowJobs.entries()) {
+      if (job.missionCode === missionCode) {
+        job.error = errorMsg;
+        break;
+      }
+    }
 
     if (currentCount >= this.MAX_CONSECUTIVE_ERRORS) {
       // Stop polling after max consecutive errors

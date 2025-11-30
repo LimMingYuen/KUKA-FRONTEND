@@ -2,10 +2,8 @@
   <mat-card class="login-card">
     <mat-card-header class="login-header">
       <mat-card-title class="login-title">
-        <mat-icon class="kuka-icon">precision_manufacturing</mat-icon>
-        KUKA Login
+        QES WMS
       </mat-card-title>
-      <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
@@ -33,6 +31,7 @@
                  [attr.aria-invalid]="passwordControl?.invalid && passwordControl?.touched ? 'true' : null">
           <button mat-icon-button
                   matSuffix
+                  type="button"
                   (click)="togglePasswordVisibility()"
                   [attr.aria-label]="'Hide password'"
                   [attr.aria-pressed]="hidePassword">

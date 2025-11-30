@@ -419,6 +419,21 @@ app-mission-history .storage-usage .mat-mdc-card .storage-details p {
       }
     }
 
+    &.error-message-cell {
+      .error-message {
+        display: block;
+        font-size: 13px;
+        color: #c62828;
+        word-break: break-word;
+        line-height: 1.4;
+      }
+
+      .no-error {
+        color: var(--mat-sys-on-surface-variant);
+        font-style: italic;
+      }
+    }
+
     &.created-date-cell {
       font-family: 'Roboto Mono', monospace;
       font-size: 13px;
@@ -730,6 +745,14 @@ app-generic-table.mission-history-table {
               border: 1px solid #ffc107 !important;
             }
           }
+        }
+
+        /* Error message column */
+        &.error-message-cell {
+          color: #c62828 !important;
+          font-size: 0.875rem !important;
+          word-break: break-word !important;
+          line-height: 1.4 !important;
         }
 
         /* Date columns */

@@ -11,6 +11,7 @@
     <div class="sidebar-content">
       <!-- Hamburger Toggle Button -->
       <div class="sidebar-action">
+        <span class="sidebar-title" *ngIf="!sidebarCollapsed">QES WMS</span>
         <button mat-fab
                 class="action-button"
                 (click)="toggleSidebar()"
@@ -43,9 +44,7 @@
     <!-- User Profile at Bottom -->
     <div class="sidebar-footer">
       <button class="user-profile-button"
-              [matMenuTriggerFor]="profileMenu"
-              matTooltip="Profile & Settings"
-              matTooltipPosition="right">
+              [matMenuTriggerFor]="profileMenu">
         <div class="user-avatar">
           <span class="user-initials">{{ getUserInitials() }}</span>
         </div>

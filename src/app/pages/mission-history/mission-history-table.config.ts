@@ -63,6 +63,18 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
       }
     },
     {
+      key: 'errorMessageDisplay',
+      header: 'Error Message',
+      sortable: false,
+      filterable: true,
+      width: '250px',
+      headerClass: 'error-message-header',
+      cellClass: 'error-message-cell',
+      transform: (value: string, row: MissionHistoryDisplayData) => {
+        return value || '-';
+      }
+    },
+    {
       key: 'robotDisplay',
       header: 'Robot',
       sortable: true,
@@ -114,24 +126,10 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
 
   actions: [
     {
-      action: 'view',
-      label: 'View',
-      icon: 'visibility',
-      type: 'icon',
-      tooltip: 'View mission details'
-    },
-    {
-      action: 'export',
-      label: 'Export',
-      icon: 'download',
-      type: 'menu-item',
-      tooltip: 'Export mission data'
-    },
-    {
       action: 'delete',
       label: 'Delete',
       icon: 'delete',
-      type: 'menu-item',
+      type: 'icon',
       tooltip: 'Delete mission record',
       cssClass: 'danger-action'
     }
@@ -144,14 +142,6 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
       icon: 'refresh',
       type: 'icon',
       tooltip: 'Refresh mission history'
-    },
-    {
-      action: 'export-all',
-      label: 'Export All',
-      icon: 'download',
-      type: 'button',
-      color: 'primary',
-      tooltip: 'Export all mission history data'
     },
     {
       action: 'clear-history',

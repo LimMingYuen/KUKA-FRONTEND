@@ -79,26 +79,7 @@
                     </div>
                     <mat-card-title>
                       <span class="title-text">{{ template.missionName }}</span>
-                      <mat-chip class="status-chip-active">
-                        <mat-icon matChipAvatar>label</mat-icon>
-                        {{ template.robotType }}
-                      </mat-chip>
                     </mat-card-title>
-                    <mat-card-subtitle>
-                      <!-- Sync Workflow Info -->
-                      <div *ngIf="isSyncWorkflow(template)" style="display: flex; align-items: center; gap: 8px;">
-                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">account_tree</mat-icon>
-                        <strong>Workflow:</strong> {{ getWorkflowName(template.templateCode) }}
-                      </div>
-                      <!-- Custom Mission Info -->
-                      <div *ngIf="!isSyncWorkflow(template)" style="display: flex; align-items: center; gap: 8px;">
-                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">build</mat-icon>
-                        <strong>Custom Mission:</strong> {{ getMissionStepsCount(template) }} step{{ getMissionStepsCount(template) !== 1 ? 's' : '' }}
-                      </div>
-                      <div *ngIf="template.description" style="margin-top: 4px;">
-                        {{ template.description }}
-                      </div>
-                    </mat-card-subtitle>
                   </mat-card-header>
 
                   <mat-card-content>
@@ -120,80 +101,32 @@
                         </mat-panel-description>
                       </mat-expansion-panel-header>
 
-                      <!-- Job Details List -->
-                      <mat-list class="job-details-list">
-                        <!-- Queue Information (shown when in queue, before job starts) -->
-                        <mat-list-item *ngIf="job.queuePosition !== undefined && job.queueStatus !== 'Completed' && job.queueStatus !== 'Failed' && job.queueStatus !== 'Cancelled'">
-                          <mat-icon matListItemIcon color="accent">queue</mat-icon>
-                          <div matListItemTitle>Queue Position</div>
-                          <div matListItemLine class="highlight-value">#{{ job.queuePosition }}</div>
-                        </mat-list-item>
+                      <!-- Compact Job Status Display -->
+                      <div class="job-status-compact">
+                        <!-- Error Display -->
+                        <div *ngIf="job.error" class="job-error">
+                          <mat-icon>error</mat-icon>
+                          <span>{{ job.error }}</span>
+                        </div>
 
-                        <mat-list-item *ngIf="job.queueStatus && !job.jobData">
-                          <mat-icon matListItemIcon color="accent">info</mat-icon>
-                          <div matListItemTitle>Queue Status</div>
-                          <div matListItemLine>
-                            <mat-chip color="accent" class="status-chip">{{ job.queueStatus }}</mat-chip>
-                          </div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.assignedRobotId && !job.jobData?.robotId">
-                          <mat-icon matListItemIcon color="primary">smart_toy</mat-icon>
-                          <div matListItemTitle>Assigned Robot</div>
-                          <div matListItemLine class="highlight-value">{{ job.assignedRobotId }}</div>
-                        </mat-list-item>
-
-                        <!-- Job Information (shown when job polling has started) -->
-                        <mat-list-item *ngIf="job.jobData?.robotId">
-                          <mat-icon matListItemIcon color="primary">smart_toy</mat-icon>
-                          <div matListItemTitle>Robot ID</div>
-                          <div matListItemLine class="highlight-value">{{ job.jobData?.robotId }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.nodeCode">
-                          <mat-icon matListItemIcon color="primary">pin_drop</mat-icon>
-                          <div matListItemTitle>Current Node</div>
-                          <div matListItemLine class="highlight-value">{{ job.robotData?.nodeCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.currentLocation">
-                          <mat-icon matListItemIcon color="primary">location_on</mat-icon>
-                          <div matListItemTitle>Current Location</div>
-                          <div matListItemLine class="highlight-value">{{ job.robotData?.currentLocation }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.jobData?.mapCode">
-                          <mat-icon matListItemIcon>map</mat-icon>
-                          <div matListItemTitle>Map Code</div>
-                          <div matListItemLine>{{ job.jobData?.mapCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.jobData?.targetCellCode">
-                          <mat-icon matListItemIcon>flag</mat-icon>
-                          <div matListItemTitle>Target Node</div>
-                          <div matListItemLine>{{ job.jobData?.targetCellCode }}</div>
-                        </mat-list-item>
-
-                        <mat-list-item *ngIf="job.robotData?.batteryLevel !== undefined">
-                          <mat-icon matListItemIcon [color]="(job.robotData?.batteryLevel ?? 0) > 20 ? 'primary' : 'warn'">battery_charging_full</mat-icon>
-                          <div matListItemTitle>Battery Level</div>
-                          <div matListItemLine>
-                            <div class="battery-info">
-                              <span class="battery-text">{{ job.robotData?.batteryLevel }}%</span>
-                              <mat-progress-bar mode="determinate" [value]="job.robotData?.batteryLevel ?? 0"
-                                               [color]="(job.robotData?.batteryLevel ?? 0) > 20 ? 'primary' : 'warn'">
-                              </mat-progress-bar>
-                            </div>
-                          </div>
-                        </mat-list-item>
+                        <!-- Compact Info Row -->
+                        <div class="job-info-row" *ngIf="!job.error">
+                          <span class="info-item" *ngIf="job.queueStatus || job.jobData?.status">
+                            <strong>Status:</strong> {{ job.jobData ? MissionsUtils.getJobStatusText(job.jobData.status) : job.queueStatus }}
+                          </span>
+                          <span class="info-item" *ngIf="job.assignedRobotId || job.jobData?.robotId">
+                            <strong>Robot:</strong> {{ job.jobData?.robotId || job.assignedRobotId }}
+                          </span>
+                          <span class="info-item" *ngIf="job.queuePosition !== undefined && job.queueStatus !== 'Completed' && job.queueStatus !== 'Failed' && job.queueStatus !== 'Cancelled'">
+                            <strong>Queue:</strong> #{{ job.queuePosition }}
+                          </span>
+                        </div>
 
                         <!-- Mission Code (always shown) -->
-                        <mat-list-item>
-                          <mat-icon matListItemIcon>qr_code</mat-icon>
-                          <div matListItemTitle>Mission Code</div>
-                          <div matListItemLine>{{ job.missionCode }}</div>
-                        </mat-list-item>
-                      </mat-list>
+                        <div class="mission-code-row">
+                          <strong>Mission:</strong> {{ job.missionCode }}
+                        </div>
+                      </div>
                     </mat-expansion-panel>
                   </mat-card-content>
 

@@ -69,12 +69,6 @@ export const routes: Routes = [
     title: 'Robot Analytics - KUKA GUI'
   },
   {
-    path: 'warehouse-map',
-    loadComponent: () => import('./pages/warehouse-map/warehouse-map.component').then(m => m.WarehouseMapComponent),
-    canActivate: [authGuard],
-    title: 'Warehouse Map - KUKA GUI'
-  },
-  {
     path: 'user-management',
     loadComponent: () => import('./pages/user-management/user-management.component').then(m => m.UserManagementComponent),
     canActivate: [authGuard],
@@ -91,6 +85,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
     canActivate: [authGuard],
     title: 'System Settings - KUKA GUI'
+  },
+  {
+    path: 'log-cleanup',
+    loadComponent: () => import('./pages/log-cleanup/log-cleanup.component').then(m => m.LogCleanupComponent),
+    canActivate: [authGuard],
+    title: 'Log Cleanup - KUKA GUI'
   },
   {
     path: 'workflow-templates',

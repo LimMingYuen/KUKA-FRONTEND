@@ -101,12 +101,6 @@ export class NavigationService {
             route: '/map-zones'
           },
           {
-            id: 'warehouse-map',
-            label: 'Warehouse Map',
-            icon: 'location_on',
-            route: '/warehouse-map'
-          },
-          {
             id: 'mobile-robots',
             label: 'Mobile Robots',
             icon: 'smart_toy',
@@ -171,6 +165,12 @@ export class NavigationService {
             label: 'System Settings',
             icon: 'settings',
             route: '/system-settings'
+          },
+          {
+            id: 'log-cleanup',
+            label: 'Log Cleanup',
+            icon: 'cleaning_services',
+            route: '/log-cleanup'
           }
         ]
       }

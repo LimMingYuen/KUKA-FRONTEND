@@ -12,7 +12,13 @@ import { MissionTypesComponent } from '../mission-types/mission-types.component'
 import { RobotTypesComponent } from '../robot-types/robot-types.component';
 import { ResumeStrategiesComponent } from '../resume-strategies/resume-strategies.component';
 import { AreasComponent } from '../areas/areas.component';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
+
+import { ShelfDecisionRulesService } from '../../services/shelf-decision-rules.service';
+import { MissionTypesService } from '../../services/mission-types.service';
+import { RobotTypesService } from '../../services/robot-types.service';
+import { ResumeStrategiesService } from '../../services/resume-strategies.service';
+import { AreasService } from '../../services/areas.service';
 
 export interface TabItem {
   label: string;
@@ -44,6 +50,13 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
   // UI state
   public isLoading = true;
   public selectedTabIndex = 0;
+
+  // Stats
+  public totalRules = 0;
+  public totalMissionTypes = 0;
+  public totalRobotTypes = 0;
+  public totalResumeStrategies = 0;
+  public totalAreas = 0;
 
   // Tabs configuration
   public tabs: TabItem[] = [
@@ -84,7 +97,12 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private shelfDecisionRulesService: ShelfDecisionRulesService,
+    private missionTypesService: MissionTypesService,
+    private robotTypesService: RobotTypesService,
+    private resumeStrategiesService: ResumeStrategiesService,
+    private areasService: AreasService
   ) {}
 
   ngOnInit(): void {
@@ -101,10 +119,33 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
    * Initialize the component
    */
   private initializeComponent(): void {
-    // Simulate loading time
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 500);
+    this.loadStats();
+  }
+
+  /**
+   * Load statistics from services
+   */
+  private loadStats(): void {
+    forkJoin({
+      rules: this.shelfDecisionRulesService.getShelfDecisionRules(),
+      missionTypes: this.missionTypesService.getMissionTypes(),
+      robotTypes: this.robotTypesService.getRobotTypes(),
+      resumeStrategies: this.resumeStrategiesService.getResumeStrategies(),
+      areas: this.areasService.getAreas()
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (results) => {
+        this.totalRules = results.rules?.length || 0;
+        this.totalMissionTypes = results.missionTypes?.length || 0;
+        this.totalRobotTypes = results.robotTypes?.length || 0;
+        this.totalResumeStrategies = results.resumeStrategies?.length || 0;
+        this.totalAreas = results.areas?.length || 0;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading stats:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   /**
@@ -209,13 +250,12 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
     totalResumeStrategies: number;
     totalAreas: number;
   } {
-    // These would come from respective services in a real implementation
     return {
-      totalRules: 0,
-      totalMissionTypes: 0,
-      totalRobotTypes: 0,
-      totalResumeStrategies: 0,
-      totalAreas: 0
+      totalRules: this.totalRules,
+      totalMissionTypes: this.totalMissionTypes,
+      totalRobotTypes: this.totalRobotTypes,
+      totalResumeStrategies: this.totalResumeStrategies,
+      totalAreas: this.totalAreas
     };
   }
 

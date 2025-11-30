@@ -20,6 +20,7 @@ export interface MissionHistorySummaryDto {
   completedDate?: string;
   assignedRobotId?: string;
   durationMinutes?: number;  // Mission working time in minutes
+  errorMessage?: string;     // Error message for failed missions
 }
 
 /**
@@ -76,6 +77,7 @@ export interface MissionHistoryDisplayData extends MissionHistorySummaryDto {
   workflowDisplay: string;
   durationDisplay: string;  // Formatted duration (e.g., "2m 30s", "1h 15m")
   robotDisplay: string;  // Formatted robot ID
+  errorMessageDisplay: string;  // Error message for failed missions
 }
 
 /**
@@ -219,7 +221,8 @@ export function transformMissionHistoryData(mission: MissionHistorySummaryDto): 
     createdDateRelative: formatRelativeTime(mission.createdDate),
     workflowDisplay: formatWorkflowName(mission.workflowName),
     durationDisplay: formatDuration(mission.durationMinutes),
-    robotDisplay: formatRobotId(mission.assignedRobotId)
+    robotDisplay: formatRobotId(mission.assignedRobotId),
+    errorMessageDisplay: mission.errorMessage || ''
   };
 }
 
