@@ -5,8 +5,7 @@
       <mat-icon>settings_remote</mat-icon>
       Mission Control Center
     </h1>
-    <p class="subtitle">Trigger workflow templates with one click</p>
-    <button mat-icon-button (click)="refresh()" matTooltip="Refresh All">
+    <button mat-icon-button (click)="refresh()" matTooltip="Refresh All" class="refresh-btn">
       <mat-icon>refresh</mat-icon>
     </button>
   </div>
@@ -71,7 +70,12 @@
               </mat-expansion-panel-header>
 
               <div class="missions-grid">
-                <mat-card *ngFor="let template of zone.value" class="mission-card">
+                <mat-card *ngFor="let template of zone.value" class="mission-card" [class.inactive-template]="!template.isActive">
+                  <!-- Status chip in top-right corner (SuperAdmin only) -->
+                  <span *ngIf="isSuperAdmin" class="status-chip" [class.status-active]="template.isActive" [class.status-inactive]="!template.isActive">
+                    {{ template.isActive ? 'ACTIVE' : 'INACTIVE' }}
+                  </span>
+
                   <mat-card-header>
                     <div mat-card-avatar class="workflow-icon" [matBadge]="hasActiveJob(template.id) ? '!' : ''"
                          [matBadgeHidden]="!hasActiveJob(template.id)" matBadgeColor="accent">

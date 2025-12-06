@@ -10,9 +10,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { MobileRobotsService } from '../../services/mobile-robots.service';
-import { MobileRobotDisplayData, MobileRobotSyncResultDto, getReliabilityClass, getFloorClass, getStatusClass, getBatteryClass } from '../../models/mobile-robot.models';
+import { MobileRobotDisplayData, MobileRobotSyncResultDto, getReliabilityClass, getFloorClass, getStatusClass, getBatteryClass, getLicenseStatusClass } from '../../models/mobile-robot.models';
+import { RobotLicenseDialogComponent, RobotLicenseDialogData, RobotLicenseDialogResult } from '../../shared/dialogs/robot-license-dialog/robot-license-dialog.component';
 import { Subject, takeUntil, Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 
@@ -30,7 +32,8 @@ import { toObservable } from '@angular/core/rxjs-interop';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDialogModule
   ],
   templateUrl: './mobile-robots.component.html',
   styleUrl: './mobile-robots.component.css'
@@ -56,7 +59,10 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
   private syncing$!: Observable<boolean>;
   private syncResult$!: Observable<MobileRobotSyncResultDto | null>;
 
-  constructor(public mobileRobotsService: MobileRobotsService) {
+  constructor(
+    public mobileRobotsService: MobileRobotsService,
+    private dialog: MatDialog
+  ) {
     // Create observables from signals within constructor (injection context)
     this.loading$ = toObservable(this.mobileRobotsService.isLoading);
     this.syncing$ = toObservable(this.mobileRobotsService.isSyncing);
@@ -209,5 +215,39 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
    */
   getFloorClass(floorNumber: string): string {
     return getFloorClass(floorNumber);
+  }
+
+  /**
+   * Get CSS class for license status badge
+   */
+  getLicenseStatusClass(isLicensed: boolean): string {
+    return getLicenseStatusClass(isLicensed);
+  }
+
+  /**
+   * Open license activation dialog for a robot
+   */
+  openLicenseDialog(robot: MobileRobotDisplayData): void {
+    const dialogData: RobotLicenseDialogData = {
+      robotId: robot.robotId,
+      currentStatus: {
+        robotId: robot.robotId,
+        isLicensed: robot.isLicensed,
+        errorMessage: robot.licenseError
+      }
+    };
+
+    const dialogRef = this.dialog.open(RobotLicenseDialogComponent, {
+      width: '500px',
+      disableClose: false,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: RobotLicenseDialogResult | undefined) => {
+      if (result?.success) {
+        // Reload robots to get updated license status
+        this.loadMobileRobots();
+      }
+    });
   }
 }

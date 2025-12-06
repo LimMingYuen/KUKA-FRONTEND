@@ -1,17 +1,22 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { WorkflowTemplateService } from '../../services/workflow-template.service';
+import { AuthService } from '../../services/auth.service';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
-import { WORKFLOW_TEMPLATE_TABLE_CONFIG } from './workflow-template-table.config';
-import { WorkflowTemplateDialogComponent, WorkflowTemplateDialogData } from './workflow-template-dialog.component';
-import { ActionEvent } from '../../shared/models/table.models';
+import { getWorkflowTemplateTableConfig } from './workflow-template-table.config';
+import { ActionEvent, TableConfig } from '../../shared/models/table.models';
 
 @Component({
   selector: 'app-create-workflow-template',
@@ -32,8 +37,8 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
   // Table data
   public workflowTemplates: SavedCustomMissionsDisplayData[] = [];
 
-  // Table configuration
-  public tableConfig = WORKFLOW_TEMPLATE_TABLE_CONFIG;
+  // Table configuration - dynamically generated based on user role
+  public tableConfig: TableConfig<SavedCustomMissionsDisplayData>;
 
   // UI state
   public isLoading = false;
@@ -43,8 +48,13 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
 
   constructor(
     private workflowTemplateService: WorkflowTemplateService,
+    private router: Router,
+    private authService: AuthService,
     private dialog: MatDialog
   ) {
+    // Configure table based on user role (SuperAdmin sees status column and toggle action)
+    this.tableConfig = getWorkflowTemplateTableConfig(this.authService.isSuperAdmin());
+
     // Configure empty state action
     this.tableConfig.empty!.action = () => this.openCreateDialog();
   }
@@ -91,6 +101,9 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
       case 'delete':
         this.deleteTemplate(event.row);
         break;
+      case 'toggle-status':
+        this.toggleTemplateStatus(event.row);
+        break;
       case 'create':
         this.openCreateDialog();
         break;
@@ -103,102 +116,27 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Open create template dialog
+   * Navigate to create template page
    */
   private openCreateDialog(): void {
-    const dialogData: WorkflowTemplateDialogData = {
-      mode: 'create'
-    };
-
-    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '95vw',
-      maxWidth: '1400px',
-      maxHeight: '90vh',
-      disableClose: true,
-      data: dialogData,
-      panelClass: 'workflow-template-dialog'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.createTemplate(result);
-      }
-    });
+    this.router.navigate(['/workflow-template-form']);
   }
 
   /**
-   * Open edit template dialog
+   * Navigate to edit template page
    */
   private openEditDialog(template: SavedCustomMissionsDisplayData): void {
-    const dialogData: WorkflowTemplateDialogData = {
-      mode: 'edit',
-      template: template
-    };
-
-    const dialogRef = this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '95vw',
-      maxWidth: '1400px',
-      maxHeight: '90vh',
-      disableClose: true,
-      data: dialogData,
-      panelClass: 'workflow-template-dialog'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.updateTemplate(template.id, result);
-      }
+    this.router.navigate(['/workflow-template-form', template.id], {
+      queryParams: { mode: 'edit' }
     });
   }
 
   /**
-   * Create new template
-   */
-  private createTemplate(request: any): void {
-    this.workflowTemplateService.saveMissionAsTemplate(request)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.refreshTemplates();
-        },
-        error: (error) => {
-          console.error('Error creating template:', error);
-        }
-      });
-  }
-
-  /**
-   * Update existing template
-   */
-  private updateTemplate(id: number, request: any): void {
-    this.workflowTemplateService.updateWorkflowTemplate(id, request)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.refreshTemplates();
-        },
-        error: (error) => {
-          console.error('Error updating template:', error);
-        }
-      });
-  }
-
-  /**
-   * View template details
+   * Navigate to view template page
    */
   private viewTemplate(template: SavedCustomMissionsDisplayData): void {
-    // Open read-only dialog
-    const dialogData: WorkflowTemplateDialogData = {
-      mode: 'view',
-      template: template
-    };
-
-    this.dialog.open(WorkflowTemplateDialogComponent, {
-      width: '95vw',
-      maxWidth: '1400px',
-      maxHeight: '90vh',
-      data: dialogData,
-      panelClass: 'workflow-template-dialog'
+    this.router.navigate(['/workflow-template-form', template.id], {
+      queryParams: { mode: 'view' }
     });
   }
 
@@ -206,20 +144,71 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
    * Delete template with confirmation
    */
   private deleteTemplate(template: SavedCustomMissionsDisplayData): void {
-    const message = `Are you sure you want to delete workflow template "${template.missionName}"? This action cannot be undone.`;
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Template',
+      message: `Are you sure you want to delete workflow template "${template.missionName}"? This action cannot be undone.`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
 
-    if (confirm(message)) {
-      this.workflowTemplateService.deleteSavedCustomMission(template.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.refreshTemplates();
-          },
-          error: (error) => {
-            console.error('Error deleting template:', error);
-          }
-        });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.workflowTemplateService.deleteSavedCustomMission(template.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.refreshTemplates();
+            },
+            error: (error) => {
+              console.error('Error deleting template:', error);
+            }
+          });
+      }
+    });
+  }
+
+  /**
+   * Toggle template status (SuperAdmin only)
+   */
+  private toggleTemplateStatus(template: SavedCustomMissionsDisplayData): void {
+    const newStatus = template.isActive ? 'inactive' : 'active';
+    const dialogData: ConfirmationDialogData = {
+      title: 'Change Template Status',
+      message: `Are you sure you want to set workflow template "${template.missionName}" to ${newStatus}?`,
+      icon: 'warning',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'primary'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.workflowTemplateService.toggleTemplateStatus(template.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.refreshTemplates();
+            },
+            error: (error) => {
+              console.error('Error toggling template status:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

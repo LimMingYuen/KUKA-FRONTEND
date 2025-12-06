@@ -29,6 +29,10 @@ import { GenericTableComponent } from '../../shared/components/generic-table/gen
 import { ROBOT_TYPES_TABLE_CONFIG } from './robot-types-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 import { RobotTypeDialogComponent } from './robot-type-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-robot-types',
@@ -223,35 +227,93 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
           if (usage.isUsed) {
             // Show warning about templates using this robot type
             const templateList = usage.templateNames.join('\n  - ');
-            const message = `Cannot delete robot type "${robotType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this robot type instead.`;
-            alert(message);
+            const alertData: ConfirmationDialogData = {
+              title: 'Cannot Delete',
+              message: `Cannot delete robot type "${robotType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this robot type instead.`,
+              icon: 'error',
+              confirmText: 'OK',
+              showCancel: false,
+              confirmColor: 'primary'
+            };
+            this.dialog.open(ConfirmationDialogComponent, {
+              width: '450px',
+              data: alertData
+            });
           } else {
             // Not in use, proceed with deletion after confirmation
-            if (confirm(`Are you sure you want to delete robot type "${robotType.displayName}"?`)) {
-              this.robotTypesService.deleteRobotType(robotType.id)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                  error: (error) => {
-                    console.error('Error deleting robot type:', error);
-                  }
-                });
-            }
+            this.showDeleteRobotTypeConfirmation(robotType);
           }
         },
         error: (error) => {
           console.error('Error checking robot type usage:', error);
           // On error, still allow deletion with a warning
-          if (confirm(`Unable to verify usage. Delete robot type "${robotType.displayName}" anyway?`)) {
-            this.robotTypesService.deleteRobotType(robotType.id)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                error: (error) => {
-                  console.error('Error deleting robot type:', error);
-                }
-              });
-          }
+          this.showDeleteRobotTypeConfirmationWithWarning(robotType);
         }
       });
+  }
+
+  /**
+   * Show delete confirmation dialog for robot type
+   */
+  private showDeleteRobotTypeConfirmation(robotType: RobotTypeDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Robot Type',
+      message: `Are you sure you want to delete robot type "${robotType.displayName}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.robotTypesService.deleteRobotType(robotType.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting robot type:', error);
+            }
+          });
+      }
+    });
+  }
+
+  /**
+   * Show delete confirmation with warning about unable to verify usage
+   */
+  private showDeleteRobotTypeConfirmationWithWarning(robotType: RobotTypeDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Robot Type',
+      message: `Unable to verify usage. Delete robot type "${robotType.displayName}" anyway?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.robotTypesService.deleteRobotType(robotType.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting robot type:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

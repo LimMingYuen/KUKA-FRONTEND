@@ -9,6 +9,7 @@ import {
   SavedCustomMissionsUtils,
   ApiResponse
 } from '../models/saved-custom-missions.models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,8 @@ export class SavedCustomMissionsService {
 
   constructor(
     private http: HttpClient,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {}
 
   /**
@@ -48,12 +50,18 @@ export class SavedCustomMissionsService {
 
   /**
    * Get all saved custom missions
+   * SuperAdmin users get all templates (active + inactive)
+   * Normal users only get active templates
    */
   getAllSavedMissions(): Observable<SavedCustomMissionsDisplayData[]> {
     this.isLoading.set(true);
 
+    // SuperAdmin sees all templates including inactive ones
+    const includeInactive = this.authService.isSuperAdmin();
+    const queryParams = includeInactive ? '?includeInactive=true' : '';
+
     return this.http.get<ApiResponse<SavedCustomMissionDto[]>>(
-      `${this.API_URL}${this.ENDPOINT}`,
+      `${this.API_URL}${this.ENDPOINT}${queryParams}`,
       { headers: this.createHeaders() }
     ).pipe(
       map(response => {
@@ -74,12 +82,17 @@ export class SavedCustomMissionsService {
   /**
    * Get sync workflow templates (missions with empty missionStepsJson)
    * These are saved workflow configurations without mission steps
+   * SuperAdmin users get all templates (active + inactive)
    */
   getSyncWorkflowTemplates(): Observable<SavedCustomMissionDto[]> {
     this.isLoading.set(true);
 
+    // SuperAdmin sees all templates including inactive ones
+    const includeInactive = this.authService.isSuperAdmin();
+    const queryParams = includeInactive ? '?includeInactive=true' : '';
+
     return this.http.get<ApiResponse<SavedCustomMissionDto[]>>(
-      `${this.API_URL}${this.ENDPOINT}`,
+      `${this.API_URL}${this.ENDPOINT}${queryParams}`,
       { headers: this.createHeaders() }
     ).pipe(
       map(response => {

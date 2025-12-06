@@ -1,0 +1,141 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-tab-group>
+      <!-- Basic Info Tab -->
+      <mat-tab label="Basic Info">
+        <div class="tab-content">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" placeholder="Enter map name">
+            @if (form.get('name')?.hasError('required')) {
+              <mat-error>Name is required</mat-error>
+            }
+            @if (form.get('name')?.hasError('maxlength')) {
+              <mat-error>Name must be less than 256 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3" placeholder="Enter description"></textarea>
+            @if (form.get('description')?.hasError('maxlength')) {
+              <mat-error>Description must be less than 1000 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="row">
+            <mat-form-field appearance="outline">
+              <mat-label>Map Code</mat-label>
+              <mat-select formControlName="mapCode">
+                <mat-option [value]="''">Any</mat-option>
+                @for (code of data.mapCodes; track code) {
+                  <mat-option [value]="code">{{ code }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Floor Number</mat-label>
+              <mat-select formControlName="floorNumber">
+                <mat-option [value]="''">Any</mat-option>
+                @for (floor of data.floorNumbers; track floor) {
+                  <mat-option [value]="floor">{{ floor }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <mat-checkbox formControlName="isDefault" color="primary">
+            Set as default map configuration
+          </mat-checkbox>
+        </div>
+      </mat-tab>
+
+      <!-- Background Image Tab -->
+      <mat-tab label="Background Image">
+        <div class="tab-content">
+          <div class="image-upload-section">
+            @if (previewUrl) {
+              <div class="image-preview">
+                <img [src]="previewUrl" alt="Background preview">
+                <button mat-icon-button class="remove-image-btn" (click)="removeImage()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            } @else {
+              <div class="upload-placeholder">
+                <mat-icon>image</mat-icon>
+                <p>No background image selected</p>
+              </div>
+            }
+
+            <div class="upload-actions">
+              <input
+                type="file"
+                #fileInput
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                style="display: none"
+                (change)="onFileSelected($event)">
+              <button mat-stroked-button color="primary" (click)="fileInput.click()">
+                <mat-icon>upload</mat-icon>
+                {{ previewUrl ? 'Change Image' : 'Upload Image' }}
+              </button>
+            </div>
+
+            <p class="upload-hint">Supported formats: JPG, PNG, GIF, WebP. Max size: 10MB</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Display Settings Tab -->
+      <mat-tab label="Display">
+        <div class="tab-content">
+          <div class="section-header">
+            <h3>Display Options</h3>
+            <button mat-button color="primary" (click)="resetDisplay()">
+              <mat-icon>restore</mat-icon>
+              Reset to Default
+            </button>
+          </div>
+
+          <div class="checkbox-group">
+            <mat-checkbox formControlName="showNodes" color="primary">Show Nodes</mat-checkbox>
+            <mat-checkbox formControlName="showZones" color="primary">Show Zones</mat-checkbox>
+            <mat-checkbox formControlName="showLabels" color="primary">Show Labels</mat-checkbox>
+          </div>
+
+          <div class="slider-group">
+            <label>Node Size: {{ form.get('nodeSize')?.value }}px</label>
+            <mat-slider min="4" max="50" step="2" discrete>
+              <input matSliderThumb formControlName="nodeSize">
+            </mat-slider>
+          </div>
+
+          <div class="slider-group">
+            <label>Zone Opacity: {{ (form.get('zoneOpacity')?.value * 100) | number:'1.0-0' }}%</label>
+            <mat-slider min="0" max="1" step="0.1" discrete>
+              <input matSliderThumb formControlName="zoneOpacity">
+            </mat-slider>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSubmitting()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="isSubmitting() || form.invalid">
+    @if (isSubmitting()) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      {{ isEditMode ? 'Update' : 'Create' }}
+    }
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,127 @@
+<div class="license-container">
+  <mat-card class="license-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="license-icon">vpn_key</mat-icon>
+      <mat-card-title>License Activation</mat-card-title>
+      <mat-card-subtitle>QES KUKA AMR System</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading spinner -->
+      @if (isLoading()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Checking license...</p>
+        </div>
+      }
+
+      <!-- License status message -->
+      @if (licenseStatus() && !licenseStatus()?.isValid) {
+        <div class="status-message error">
+          <mat-icon>warning</mat-icon>
+          <div class="status-content">
+            <span class="status-code">{{ getErrorCodeDisplay() }}</span>
+            <span class="status-detail">{{ licenseStatus()?.errorMessage }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Machine ID section -->
+      <div class="section">
+        <h3>Step 1: Copy Your Machine ID</h3>
+        <p class="section-description">
+          Send this Machine ID to your administrator to receive a license file.
+        </p>
+
+        <div class="machine-id-box">
+          @if (displayMachineId()) {
+            <code class="machine-id">{{ displayMachineId() }}</code>
+          } @else {
+            <code class="machine-id loading">Loading...</code>
+          }
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="copyMachineId()"
+            [disabled]="!machineId()"
+            matTooltip="Copy to clipboard"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- License upload section -->
+      <div class="section">
+        <h3>Step 2: Upload License File</h3>
+        <p class="section-description">
+          Once you receive your license file (.lic), upload it here to activate.
+        </p>
+
+        <div class="file-upload">
+          <input
+            type="file"
+            accept=".lic,.json"
+            (change)="onFileSelected($event)"
+            #fileInput
+            hidden
+          />
+          <button
+            mat-stroked-button
+            color="primary"
+            (click)="fileInput.click()"
+            [disabled]="isLoading()"
+          >
+            <mat-icon>upload_file</mat-icon>
+            Select License File
+          </button>
+
+          @if (selectedFile) {
+            <span class="file-name">
+              <mat-icon>description</mat-icon>
+              {{ selectedFile.name }}
+            </span>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <div class="error-message">
+            <mat-icon>error</mat-icon>
+            {{ errorMessage() }}
+          </div>
+        }
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="activateLicense()"
+        [disabled]="!selectedFile || isLoading()"
+      >
+        @if (isLoading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <mat-icon>check_circle</mat-icon>
+          Activate License
+        }
+      </button>
+
+      <button
+        mat-button
+        (click)="checkLicenseStatus()"
+        [disabled]="isLoading()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh Status
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div class="footer-info">
+    <p>
+      Need help? Contact your system administrator to obtain a valid license file.
+    </p>
+  </div>
+</div>

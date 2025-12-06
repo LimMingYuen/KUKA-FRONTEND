@@ -28,6 +28,10 @@ import { GenericTableComponent } from '../../shared/components/generic-table/gen
 import { RESUME_STRATEGIES_TABLE_CONFIG } from './resume-strategies-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 import { ResumeStrategyDialogComponent } from './resume-strategy-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-resume-strategies',
@@ -222,35 +226,93 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
           if (usage.isUsed) {
             // Show warning about templates using this resume strategy
             const templateList = usage.templateNames.join('\n  - ');
-            const message = `Cannot delete resume strategy "${resumeStrategy.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this resume strategy instead.`;
-            alert(message);
+            const alertData: ConfirmationDialogData = {
+              title: 'Cannot Delete',
+              message: `Cannot delete resume strategy "${resumeStrategy.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this resume strategy instead.`,
+              icon: 'error',
+              confirmText: 'OK',
+              showCancel: false,
+              confirmColor: 'primary'
+            };
+            this.dialog.open(ConfirmationDialogComponent, {
+              width: '450px',
+              data: alertData
+            });
           } else {
             // Not in use, proceed with deletion after confirmation
-            if (confirm(`Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`)) {
-              this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                  error: (error) => {
-                    console.error('Error deleting resume strategy:', error);
-                  }
-                });
-            }
+            this.showDeleteResumeStrategyConfirmation(resumeStrategy);
           }
         },
         error: (error) => {
           console.error('Error checking resume strategy usage:', error);
           // On error, still allow deletion with a warning
-          if (confirm(`Unable to verify usage. Delete resume strategy "${resumeStrategy.displayName}" anyway?`)) {
-            this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                error: (error) => {
-                  console.error('Error deleting resume strategy:', error);
-                }
-              });
-          }
+          this.showDeleteResumeStrategyConfirmationWithWarning(resumeStrategy);
         }
       });
+  }
+
+  /**
+   * Show delete confirmation dialog for resume strategy
+   */
+  private showDeleteResumeStrategyConfirmation(resumeStrategy: ResumeStrategyDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Resume Strategy',
+      message: `Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting resume strategy:', error);
+            }
+          });
+      }
+    });
+  }
+
+  /**
+   * Show delete confirmation with warning about unable to verify usage
+   */
+  private showDeleteResumeStrategyConfirmationWithWarning(resumeStrategy: ResumeStrategyDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Resume Strategy',
+      message: `Unable to verify usage. Delete resume strategy "${resumeStrategy.displayName}" anyway?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting resume strategy:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

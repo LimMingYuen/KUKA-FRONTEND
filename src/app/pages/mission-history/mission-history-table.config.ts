@@ -87,6 +87,18 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
       }
     },
     {
+      key: 'createdByDisplay',
+      header: 'Triggered By',
+      sortable: true,
+      filterable: true,
+      width: '120px',
+      headerClass: 'created-by-header',
+      cellClass: 'created-by-cell',
+      transform: (value: string, row: MissionHistoryDisplayData) => {
+        return value || 'System';
+      }
+    },
+    {
       key: 'durationDisplay',
       header: 'Working Time',
       sortable: true,

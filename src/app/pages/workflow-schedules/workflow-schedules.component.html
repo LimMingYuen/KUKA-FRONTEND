@@ -1,0 +1,38 @@
+<div class="schedules-container">
+  <!-- Generic Table -->
+  <app-generic-table
+    [data]="tableData"
+    [config]="tableConfig"
+    [loading]="isLoading"
+    (action)="handleAction($event)">
+  </app-generic-table>
+</div>
+
+<!-- Custom Template: Schedule Name with Description -->
+<ng-template #scheduleNameTemplate let-row>
+  <div class="schedule-name">
+    <span class="name">{{ row.scheduleName }}</span>
+    <span class="description" *ngIf="row.description">{{ row.description }}</span>
+  </div>
+</ng-template>
+
+<!-- Custom Template: Type -->
+<ng-template #typeTemplate let-row>
+  <span>{{ row.scheduleTypeDisplay }}</span>
+</ng-template>
+
+<!-- Custom Template: Last Run -->
+<ng-template #lastRunTemplate let-row>
+  <span *ngIf="row.lastRunUtc">{{ row.lastRunDisplay }}</span>
+  <span *ngIf="!row.lastRunUtc" class="text-muted">Never</span>
+</ng-template>
+
+<!-- Custom Template: Toggle Switch for Enabled/Disabled -->
+<ng-template #toggleTemplate let-row>
+  <mat-slide-toggle
+    [checked]="row.isEnabled"
+    (change)="toggleEnabled(row, $event.checked)"
+    [disabled]="isToggling(row.id)"
+    color="primary">
+  </mat-slide-toggle>
+</ng-template>

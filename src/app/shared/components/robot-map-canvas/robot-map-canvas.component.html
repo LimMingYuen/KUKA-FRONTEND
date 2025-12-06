@@ -1,0 +1,12 @@
+<div class="map-canvas-container">
+  <div #mapContainer class="leaflet-map"></div>
+
+  @if (!isMapReady()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner">
+        <span class="material-icons rotating">sync</span>
+        <span>Loading map...</span>
+      </div>
+    </div>
+  }
+</div>

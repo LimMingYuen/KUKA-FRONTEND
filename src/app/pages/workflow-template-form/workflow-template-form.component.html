@@ -1,0 +1,313 @@
+<div class="workflow-template-form-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button mat-icon-button (click)="onCancel()" matTooltip="Back to list">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>
+        <mat-icon>{{ mode() === 'create' ? 'add_task' : (mode() === 'view' ? 'visibility' : 'edit') }}</mat-icon>
+        {{ pageTitle() }}
+      </h1>
+    </div>
+    <div class="header-actions">
+      <button mat-button (click)="onCancel()">
+        <mat-icon>{{ isViewMode() ? 'close' : 'cancel' }}</mat-icon>
+        {{ isViewMode() ? 'Close' : 'Cancel' }}
+      </button>
+      <button
+        *ngIf="!isViewMode()"
+        mat-raised-button
+        color="primary"
+        (click)="onSubmit()"
+        [disabled]="!templateForm.valid || isLoadingConfig() || isSaving()">
+        <mat-icon>save</mat-icon>
+        {{ mode() === 'create' ? 'Create' : 'Update' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoadingConfig() || isLoadingTemplate()" class="loading-overlay">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>{{ isLoadingTemplate() ? 'Loading template...' : 'Loading configuration...' }}</p>
+  </div>
+
+  <!-- Form Content -->
+  <div class="form-content" [class.loading]="isLoadingConfig() || isLoadingTemplate()">
+    <form [formGroup]="templateForm" class="template-form">
+      <div class="form-columns">
+        <!-- LEFT COLUMN: Workflow Reference, Basic Info, Mission Config -->
+        <div class="left-column">
+          <mat-card class="form-card">
+            <mat-card-content>
+              <!-- Workflow Reference Section (Create mode only) -->
+              <section class="form-section" *ngIf="mode() === 'create'">
+                <h3>
+                  <mat-icon>account_tree</mat-icon>
+                  Workflow Reference
+                </h3>
+                <p class="section-description">Select a synced workflow to use as reference for this template.</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Select Workflow</mat-label>
+                  <mat-select (selectionChange)="onWorkflowSelected($event.value)">
+                    <mat-option [value]="null">-- None (Create without workflow reference) --</mat-option>
+                    <mat-option *ngFor="let workflow of availableWorkflows()" [value]="workflow">
+                      {{ workflow.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>account_tree</mat-icon>
+                  <mat-hint *ngIf="availableWorkflows().length === 0" class="warning-hint">
+                    No synced workflows available.
+                  </mat-hint>
+                  <mat-hint *ngIf="availableWorkflows().length > 0">
+                    {{ availableWorkflows().length }} workflow(s) available
+                  </mat-hint>
+                </mat-form-field>
+              </section>
+
+              <mat-divider *ngIf="mode() === 'create'"></mat-divider>
+
+              <!-- Basic Information Section -->
+              <section class="form-section">
+                <h3>
+                  <mat-icon>info</mat-icon>
+                  Basic Information
+                </h3>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Template Name</mat-label>
+                  <input matInput formControlName="missionName" placeholder="Enter template name" />
+                  <mat-icon matPrefix>label</mat-icon>
+                  <mat-error *ngIf="templateForm.get('missionName')?.hasError('required')">
+                    Template name is required
+                  </mat-error>
+                  <mat-error *ngIf="templateForm.get('missionName')?.hasError('minlength')">
+                    Minimum 3 characters required
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Description (Optional)</mat-label>
+                  <textarea
+                    matInput
+                    formControlName="description"
+                    placeholder="Enter description"
+                    rows="2"
+                  ></textarea>
+                  <mat-icon matPrefix>description</mat-icon>
+                </mat-form-field>
+              </section>
+
+              <mat-divider></mat-divider>
+
+              <!-- Mission Configuration Section -->
+              <section class="form-section" [formGroup]="missionTemplate">
+                <h3>
+                  <mat-icon>settings</mat-icon>
+                  Mission Configuration
+                </h3>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Organization ID</mat-label>
+                    <input matInput formControlName="orgId" placeholder="Org ID" />
+                    <mat-icon matPrefix>business</mat-icon>
+                    <mat-error>Required</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Mission Type</mat-label>
+                    <mat-select formControlName="missionType">
+                      <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.actualValue">
+                        {{ type.displayName }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>category</mat-icon>
+                    <mat-error>Required</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Robot Type</mat-label>
+                    <mat-select formControlName="robotType">
+                      <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.actualValue">
+                        {{ type.displayName }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>precision_manufacturing</mat-icon>
+                    <mat-error>Required</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Priority</mat-label>
+                    <input matInput type="number" formControlName="priority" min="1" max="10" placeholder="1-10" />
+                    <mat-icon matPrefix>flag</mat-icon>
+                    <mat-error>Required</mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Robot Models</mat-label>
+                    <mat-select formControlName="robotModels" multiple>
+                      <mat-option *ngFor="let model of availableRobotModels()" [value]="model">
+                        {{ model }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>smart_toy</mat-icon>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="flex-1">
+                    <mat-label>Robot IDs</mat-label>
+                    <mat-select formControlName="robotIds" multiple>
+                      <mat-option *ngFor="let robotId of availableRobotIds()" [value]="robotId">
+                        {{ robotId }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>pin</mat-icon>
+                  </mat-form-field>
+                </div>
+              </section>
+
+              <!-- Workflow Selected Notice (in left column when workflow is selected) -->
+              <ng-container *ngIf="isWorkflowSelected()">
+                <mat-divider></mat-divider>
+                <section class="form-section workflow-notice">
+                  <div class="notice-content">
+                    <mat-icon>info</mat-icon>
+                    <div>
+                      <h4>Workflow-Based Template</h4>
+                      <p>Mission steps are defined by the referenced workflow.</p>
+                    </div>
+                  </div>
+                </section>
+              </ng-container>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- RIGHT COLUMN: Mission Steps -->
+        <div class="right-column" *ngIf="!isWorkflowSelected()">
+          <mat-card class="form-card steps-card">
+            <mat-card-content [formGroup]="missionTemplate">
+              <div class="section-header">
+                <h3>
+                  <mat-icon>route</mat-icon>
+                  Mission Steps
+                </h3>
+                <div class="header-actions">
+                  <mat-button-toggle-group [value]="viewMode()" (change)="onViewModeChange($event.value)" class="view-toggle">
+                    <mat-button-toggle value="form">
+                      <mat-icon>list</mat-icon>
+                      Form
+                    </mat-button-toggle>
+                    <mat-button-toggle value="flowchart">
+                      <mat-icon>account_tree</mat-icon>
+                      Flowchart
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                  <button *ngIf="!isViewMode()" mat-mini-fab color="primary" type="button" (click)="addMissionStep()" matTooltip="Add Step">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Form View -->
+              <div *ngIf="viewMode() === 'form'" class="mission-steps" formArrayName="missionData">
+                <mat-card
+                  class="step-card"
+                  *ngFor="let step of missionData.controls; let i = index"
+                  [formGroupName]="i">
+                  <mat-card-header>
+                    <mat-card-title>Step {{ i + 1 }}</mat-card-title>
+                    <div class="step-actions" *ngIf="!isViewMode()">
+                      <button mat-icon-button (click)="moveStepUp(i)" [disabled]="i === 0" matTooltip="Move up">
+                        <mat-icon>arrow_upward</mat-icon>
+                      </button>
+                      <button mat-icon-button (click)="moveStepDown(i)" [disabled]="i === missionData.length - 1" matTooltip="Move down">
+                        <mat-icon>arrow_downward</mat-icon>
+                      </button>
+                      <button mat-icon-button color="warn" (click)="removeMissionStep(i)" [disabled]="missionData.length === 1" matTooltip="Remove step">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="step-row">
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Type (Area)</mat-label>
+                        <mat-select formControlName="type" (selectionChange)="onTypeChange(i)">
+                          <mat-option *ngFor="let area of activeAreas()" [value]="area">
+                            {{ area }}
+                          </mat-option>
+                        </mat-select>
+                        <mat-error>Required</mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Position</mat-label>
+                        <mat-select formControlName="position">
+                          <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_POINT'" label="QR Codes">
+                            <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
+                              {{ position }}
+                            </mat-option>
+                          </mat-optgroup>
+                          <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_AREA'" label="Map Zones">
+                            <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
+                              {{ position }}
+                            </mat-option>
+                          </mat-optgroup>
+                        </mat-select>
+                        <mat-error>Required</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="step-row">
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Pass Strategy</mat-label>
+                        <mat-select formControlName="passStrategy">
+                          <mat-option *ngFor="let strategy of activeResumeStrategies()" [value]="strategy.actualValue">
+                            {{ strategy.displayName }}
+                          </mat-option>
+                        </mat-select>
+                        <mat-error>Required</mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="flex-1">
+                        <mat-label>Shelf Decision Rule</mat-label>
+                        <mat-select formControlName="putDown">
+                          <mat-option *ngFor="let rule of activeShelfRules()" [value]="rule">
+                            {{ rule }}
+                          </mat-option>
+                        </mat-select>
+                        <mat-error>Required</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Wait Time (ms)</mat-label>
+                      <input matInput type="number" formControlName="waitingMillis" min="0" placeholder="0" />
+                    </mat-form-field>
+                  </mat-card-content>
+                </mat-card>
+
+                <div *ngIf="missionData.length === 0" class="no-steps">
+                  <mat-icon>info</mat-icon>
+                  <p>No mission steps defined. Click the + button to add a step.</p>
+                </div>
+              </div>
+
+              <!-- Flowchart View -->
+              <div *ngIf="viewMode() === 'flowchart'" class="flowchart-view">
+                <app-mission-flowchart [missionSteps]="flowchartData()"></app-mission-flowchart>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

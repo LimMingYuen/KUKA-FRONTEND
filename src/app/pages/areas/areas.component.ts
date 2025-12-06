@@ -28,6 +28,10 @@ import { GenericTableComponent } from '../../shared/components/generic-table/gen
 import { AREAS_TABLE_CONFIG } from './areas-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 import { AreaDialogComponent } from './area-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-areas',
@@ -214,15 +218,32 @@ export class AreasComponent implements OnInit, OnDestroy {
    * Delete area with confirmation
    */
   private deleteArea(area: AreaDisplayData): void {
-    if (confirm(`Are you sure you want to delete area "${area.displayName}"?`)) {
-      this.areasService.deleteArea(area.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (error) => {
-            console.error('Error deleting area:', error);
-          }
-        });
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Area',
+      message: `Are you sure you want to delete area "${area.displayName}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.areasService.deleteArea(area.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting area:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

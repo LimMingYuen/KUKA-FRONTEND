@@ -49,13 +49,15 @@ export const USER_MANAGEMENT_TABLE_CONFIG: TableConfig<UserDto> = {
       action: 'edit',
       label: 'Edit',
       icon: 'edit',
-      color: 'primary'
+      type: 'icon',
+      tooltip: 'Edit'
     },
     {
       action: 'delete',
       label: 'Delete',
       icon: 'delete',
-      color: 'warn'
+      type: 'icon',
+      tooltip: 'Delete'
     }
   ],
   headerActions: [

@@ -1,0 +1,67 @@
+<div class="admin-authorization-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon color="warn">admin_panel_settings</mat-icon>
+    {{ data.title || 'Admin Authorization Required' }}
+  </h2>
+
+  <mat-dialog-content>
+    <div class="authorization-info">
+      <mat-icon color="primary">info</mat-icon>
+      <p>{{ data.message || 'This action requires admin authorization. Please enter admin credentials to proceed.' }}</p>
+    </div>
+
+    <div class="credentials-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Admin Username</mat-label>
+        <input
+          matInput
+          [(ngModel)]="username"
+          placeholder="Enter admin username"
+          [disabled]="isLoading"
+          (keyup.enter)="onVerify()">
+        <mat-icon matPrefix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Admin Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword ? 'password' : 'text'"
+          [(ngModel)]="password"
+          placeholder="Enter admin password"
+          [disabled]="isLoading"
+          (keyup.enter)="onVerify()">
+        <mat-icon matPrefix>lock</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="'Toggle password visibility'"
+          type="button">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <div class="error-message" *ngIf="errorMessage">
+        <mat-icon color="warn">error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isLoading">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onVerify()"
+      [disabled]="isLoading || !username.trim() || !password.trim()">
+      <mat-spinner *ngIf="isLoading" diameter="18"></mat-spinner>
+      <mat-icon *ngIf="!isLoading">verified_user</mat-icon>
+      {{ data.actionLabel || 'Verify & Proceed' }}
+    </button>
+  </mat-dialog-actions>
+</div>

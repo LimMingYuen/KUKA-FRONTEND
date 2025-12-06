@@ -38,6 +38,10 @@
           {{ lastSyncResult.inserted }} new,
           {{ lastSyncResult.updated }} updated
         </p>
+        <p *ngIf="lastSyncResult.skippedDuplicates && lastSyncResult.skippedDuplicates.length > 0" class="warning-text">
+          <mat-icon class="warning-icon">warning</mat-icon>
+          Skipped {{ lastSyncResult.skippedDuplicates.length }} duplicate RobotId(s): {{ lastSyncResult.skippedDuplicates.join(', ') }}
+        </p>
       </div>
       <button mat-icon-button
               (click)="clearSyncResult()"
@@ -102,19 +106,41 @@
   <mat-card class="robot-card" *ngFor="let robot of filteredRobots">
 
     <!-- Card Header with Robot Icon and ID -->
-    <div class="card-header">
+    <div class="card-header" [class.unlicensed-card]="!robot.isLicensed">
       <div class="robot-icon-container">
-        <mat-icon class="robot-icon">smart_toy</mat-icon>
+        <img src="images/kmp-400p.png" alt="KUKA KMP 400P Robot" class="robot-image">
       </div>
       <div class="robot-header-info">
         <h3 class="robot-id" [matTooltip]="robot.robotId">{{ robot.robotId }}</h3>
         <span class="robot-type">{{ robot.robotTypeCode }}</span>
+        <div class="status-row">
+          <span class="status-badge"
+                [ngClass]="getStatusClass(robot.status)"
+                [matTooltip]="'Status: ' + robot.statusText">
+            {{ robot.statusText }}
+          </span>
+          <span class="license-badge"
+                [ngClass]="getLicenseStatusClass(robot.isLicensed)"
+                [matTooltip]="robot.isLicensed ? 'Robot is licensed' : (robot.licenseError || 'Robot is not licensed')">
+            <mat-icon>{{ robot.isLicensed ? 'verified' : 'gpp_bad' }}</mat-icon>
+            {{ robot.isLicensed ? 'Licensed' : 'Unlicensed' }}
+          </span>
+        </div>
       </div>
-      <span class="status-badge"
-            [ngClass]="getStatusClass(robot.status)"
-            [matTooltip]="'Status: ' + robot.statusText">
-        {{ robot.statusText }}
-      </span>
+    </div>
+
+    <!-- License Warning Banner (for unlicensed robots) -->
+    <div class="license-warning" *ngIf="!robot.isLicensed">
+      <div class="warning-content">
+        <mat-icon>warning</mat-icon>
+        <span>{{ robot.licenseError || 'This robot requires a license to operate' }}</span>
+      </div>
+      <button mat-stroked-button
+              color="primary"
+              (click)="openLicenseDialog(robot); $event.stopPropagation()">
+        <mat-icon>verified_user</mat-icon>
+        Activate License
+      </button>
     </div>
 
     <mat-divider></mat-divider>
@@ -137,21 +163,6 @@
             <mat-icon class="battery-icon" *ngIf="robot.batteryLevel >= 20 && robot.batteryLevel < 50">battery_3_bar</mat-icon>
             <mat-icon class="battery-icon" *ngIf="robot.batteryLevel < 20">battery_1_bar</mat-icon>
             {{ robot.batteryLevel }}%
-          </span>
-        </div>
-      </div>
-
-      <!-- Reliability -->
-      <div class="info-row">
-        <div class="info-label">
-          <mat-icon class="info-icon">trending_up</mat-icon>
-          Reliability
-        </div>
-        <div class="info-value">
-          <span class="reliability-badge"
-                [ngClass]="getReliabilityClass(robot.reliability)"
-                [matTooltip]="'Reliability: ' + robot.reliabilityText + ' (' + robot.reliability + '%)'">
-            {{ robot.reliabilityText }}
           </span>
         </div>
       </div>

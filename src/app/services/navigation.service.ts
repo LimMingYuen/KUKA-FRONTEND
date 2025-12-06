@@ -106,7 +106,13 @@ export class NavigationService {
             icon: 'smart_toy',
             route: '/mobile-robots'
           },
-                    {
+          {
+            id: 'robot-monitoring',
+            label: 'Robot Monitoring',
+            icon: 'radar',
+            route: '/robot-monitoring'
+          },
+          {
             id: 'mission-history',
             label: 'Mission History',
             icon: 'history',
@@ -123,6 +129,12 @@ export class NavigationService {
             label: 'Queue Monitor',
             icon: 'queue',
             route: '/queue-monitor'
+          },
+          {
+            id: 'live-jobs',
+            label: 'Live Jobs',
+            icon: 'play_circle',
+            route: '/live-jobs'
           },
           {
             id: 'workflow-schedules',

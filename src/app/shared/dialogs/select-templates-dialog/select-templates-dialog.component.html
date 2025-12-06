@@ -1,0 +1,77 @@
+<h2 mat-dialog-title>
+  <mat-icon>filter_list</mat-icon>
+  Select Templates
+</h2>
+
+<mat-dialog-content>
+  <!-- Search -->
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search templates</mat-label>
+    <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" placeholder="Search by name...">
+    <mat-icon matPrefix>search</mat-icon>
+    <button mat-icon-button matSuffix *ngIf="searchText" (click)="searchText = ''; onSearchChange()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <!-- Selection Summary -->
+  <div class="selection-summary">
+    <span>{{ selectedCount }} of {{ totalTemplates }} selected</span>
+    <div class="summary-actions">
+      <button mat-button color="primary" (click)="selectAll()">Select All</button>
+      <button mat-button (click)="deselectAll()">Clear All</button>
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Templates by Zone -->
+  <div class="templates-list">
+    <mat-accordion multi>
+      <mat-expansion-panel *ngFor="let zone of filteredTemplatesByZone | keyvalue" [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-checkbox
+              [checked]="isZoneAllSelected(zone.key)"
+              [indeterminate]="isZoneIndeterminate(zone.key)"
+              (change)="toggleZone(zone.key)"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+            <mat-icon>location_on</mat-icon>
+            {{ zone.key }}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ zone.value.length }} template{{ zone.value.length !== 1 ? 's' : '' }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="template-items">
+          <div class="template-item" *ngFor="let template of zone.value"
+               (click)="toggleTemplate(template.id)">
+            <mat-checkbox
+              [checked]="isSelected(template.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleTemplate(template.id)">
+            </mat-checkbox>
+            <div class="template-info">
+              <span class="template-name">{{ template.missionName }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="filteredTemplatesByZone.size === 0">
+      <mat-icon>search_off</mat-icon>
+      <p>No templates match your search</p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onApply()">
+    Apply Filter ({{ selectedCount }})
+  </button>
+</mat-dialog-actions>

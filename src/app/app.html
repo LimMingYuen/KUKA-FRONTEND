@@ -1,5 +1,15 @@
-<!-- Show sidebar with navigation when authenticated -->
-<app-sidebar *ngIf="authService.isAuthenticated()"></app-sidebar>
-
-<!-- Show standalone router outlet for login page when not authenticated -->
-<router-outlet *ngIf="!authService.isAuthenticated()"></router-outlet>
+<!-- Show loading spinner while checking license -->
+@if (isCheckingLicense()) {
+  <div class="license-check-overlay">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Checking license...</p>
+  </div>
+} @else {
+  <!-- Show sidebar with navigation when authenticated -->
+  @if (authService.isAuthenticated()) {
+    <app-sidebar></app-sidebar>
+  } @else {
+    <!-- Show standalone router outlet for login/license-activation pages -->
+    <router-outlet></router-outlet>
+  }
+}

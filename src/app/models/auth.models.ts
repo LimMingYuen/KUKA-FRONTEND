@@ -5,9 +5,23 @@ export interface LoginRequest {
 
 export interface LoginResponseData {
   token?: string;
-  username?: string;
-  expiresIn?: number;
+  expiresAt?: string;
+  refreshToken?: string;
+  refreshTokenExpiresAt?: string;
+  user?: {
+    id?: number;
+    username?: string;
+    nickname?: string;
+    isSuperAdmin?: boolean;
+    roles?: string[];
+    allowedPages?: string[];
+    allowedTemplates?: number[];
+  };
   [key: string]: any;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface ApiResponse<T> {
@@ -22,6 +36,9 @@ export interface User {
   username: string;
   nickname?: string;
   token: string;
+  refreshToken?: string;
+  tokenExpiresAt?: Date;
+  refreshTokenExpiresAt?: Date;
   isAuthenticated: boolean;
   isSuperAdmin?: boolean;
   roles?: string[];

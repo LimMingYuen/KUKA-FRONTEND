@@ -20,6 +20,7 @@ export interface SavedCustomMissionDto {
   createdBy: string;
   createdUtc: string;
   updatedUtc: string | null;
+  isActive: boolean;
   scheduleSummary: SavedMissionScheduleSummaryDto;
 }
 
@@ -49,6 +50,7 @@ export interface SavedCustomMissionCreateRequest {
   unlockRobotId?: string | null;
   unlockMissionCode?: string | null;
   missionStepsJson: string;
+  isActive?: boolean;  // Defaults to true on backend
 }
 
 export interface SavedCustomMissionUpdateRequest {
@@ -69,6 +71,7 @@ export interface SavedCustomMissionUpdateRequest {
   unlockRobotId?: string | null;
   unlockMissionCode?: string | null;
   missionStepsJson: string;
+  isActive: boolean;
 }
 
 export interface TriggerMissionResponse {
@@ -152,6 +155,7 @@ export interface SavedCustomMissionsDisplayData {
   lastStatus: string;
   lastRunUtc: string;
   missionStepsJson: string;
+  isActive: boolean;
 }
 
 // Enums for mission data
@@ -215,7 +219,8 @@ export class SavedCustomMissionsUtils {
       nextRunUtc: dto.scheduleSummary.nextRunUtc ? formatDateTime(dto.scheduleSummary.nextRunUtc) : '-',
       lastStatus: dto.scheduleSummary.lastStatus || '-',
       lastRunUtc: dto.scheduleSummary.lastRunUtc ? formatDateTime(dto.scheduleSummary.lastRunUtc) : '-',
-      missionStepsJson: dto.missionStepsJson
+      missionStepsJson: dto.missionStepsJson,
+      isActive: dto.isActive
     };
   }
 

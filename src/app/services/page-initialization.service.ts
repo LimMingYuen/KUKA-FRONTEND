@@ -80,6 +80,11 @@ export class PageInitializationService {
         pageIcon: 'smart_toy'
       },
       {
+        pagePath: '/robot-monitoring',
+        pageName: 'Robot Monitoring',
+        pageIcon: 'radar'
+      },
+      {
         pagePath: '/mission-history',
         pageName: 'Mission History',
         pageIcon: 'history'
@@ -93,6 +98,11 @@ export class PageInitializationService {
         pagePath: '/queue-monitor',
         pageName: 'Queue Monitor',
         pageIcon: 'queue'
+      },
+      {
+        pagePath: '/live-jobs',
+        pageName: 'Live Jobs',
+        pageIcon: 'play_circle'
       },
       {
         pagePath: '/saved-custom-missions',

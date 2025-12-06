@@ -5,8 +5,13 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { QrCodesService } from '../../services/qr-codes.service';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 import { QrCodeDisplayData, QrCodeSyncResultDto, getReliabilityClass, getFloorClass } from '../../models/qr-code.models';
 import { Subject, takeUntil, Observable } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -24,6 +29,7 @@ import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/mod
     MatIconModule,
     MatTooltipModule,
     MatButtonModule,
+    MatDialogModule,
     GenericTableComponent
   ],
   templateUrl: './qr-codes.component.html',
@@ -49,7 +55,10 @@ export class QrCodesComponent implements OnInit, OnDestroy {
   private syncing$!: Observable<boolean>;
   private syncResult$!: Observable<QrCodeSyncResultDto | null>;
 
-  constructor(public qrCodesService: QrCodesService) {
+  constructor(
+    public qrCodesService: QrCodesService,
+    private dialog: MatDialog
+  ) {
     // Create observables from signals within constructor (injection context)
     this.loading$ = toObservable(this.qrCodesService.isLoading);
     this.syncing$ = toObservable(this.qrCodesService.isSyncing);
@@ -191,20 +200,36 @@ export class QrCodesComponent implements OnInit, OnDestroy {
    * Delete QR code
    */
   private deleteQrCode(qrCode: QrCodeDisplayData): void {
-    // TODO: Implement delete confirmation dialog
-    if (confirm(`Are you sure you want to delete QR code "${qrCode.nodeLabel}"?`)) {
-      this.qrCodesService.deleteQrCode(qrCode.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            // Reload data after successful deletion
-            this.loadQrCodes();
-          },
-          error: (error) => {
-            // Error handling is managed by the service
-          }
-        });
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete QR Code',
+      message: `Are you sure you want to delete QR code "${qrCode.nodeLabel}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.qrCodesService.deleteQrCode(qrCode.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Reload data after successful deletion
+              this.loadQrCodes();
+            },
+            error: (error) => {
+              // Error handling is managed by the service
+            }
+          });
+      }
+    });
   }
 
   /**

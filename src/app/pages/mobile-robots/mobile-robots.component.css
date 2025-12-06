@@ -116,6 +116,23 @@
   color: white !important;
 }
 
+.sync-details .warning-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: rgba(255, 152, 0, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.sync-details .warning-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
 .sync-result-content button {
   color: white !important;
   background-color: rgba(255, 255, 255, 0.2) !important;
@@ -216,15 +233,23 @@
 }
 
 .robot-icon-container {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: var(--mat-sys-primary);
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(47, 64, 154, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  overflow: hidden;
+}
+
+.robot-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .robot-icon {
@@ -237,10 +262,14 @@
 .robot-header-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .robot-id {
-  margin: 0 0 4px 0;
+  margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--mat-sys-on-surface);
@@ -262,6 +291,14 @@
   letter-spacing: 0.5px;
 }
 
+/* Status Row */
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 /* Status Badge */
 .status-badge {
   display: inline-block;
@@ -275,31 +312,85 @@
   white-space: nowrap;
 }
 
-.status-available {
-  background-color: #e8f5e8;
+/* License Badge */
+.license-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.license-badge mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.license-valid {
+  background-color: #e8f5e9;
   color: #2e7d32;
   border: 1px solid #4caf50;
 }
 
-.status-busy {
-  background-color: #fff3e0;
-  color: #ef6c00;
-  border: 1px solid #ff9800;
-}
-
-.status-error {
+.license-invalid {
   background-color: #ffebee;
   color: #c62828;
   border: 1px solid #f44336;
 }
 
-.status-maintenance {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border: 1px solid #9c27b0;
+/* License Warning Banner */
+.license-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background-color: #fff3e0;
+  border-bottom: 1px solid #ffcc80;
 }
 
-.status-charging {
+.license-warning .warning-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.license-warning .warning-content mat-icon {
+  color: #ef6c00;
+  flex-shrink: 0;
+}
+
+.license-warning .warning-content span {
+  font-size: 13px;
+  color: #e65100;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.license-warning button {
+  flex-shrink: 0;
+}
+
+.license-warning button mat-icon {
+  margin-right: 4px;
+}
+
+/* Unlicensed Card Styling */
+.card-header.unlicensed-card {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+}
+
+.status-departure {
   background-color: #e3f2fd;
   color: #1565c0;
   border: 1px solid #2196f3;
@@ -309,6 +400,36 @@
   background-color: #fafafa;
   color: #757575;
   border: 1px solid #e0e0e0;
+}
+
+.status-idle {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.status-executing {
+  background-color: #fff3e0;
+  color: #ef6c00;
+  border: 1px solid #ff9800;
+}
+
+.status-charging {
+  background-color: #e1f5fe;
+  color: #0277bd;
+  border: 1px solid #03a9f4;
+}
+
+.status-updating {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #9c27b0;
+}
+
+.status-abnormal {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #f44336;
 }
 
 .status-unknown {
@@ -630,8 +751,9 @@
   }
 
   .robot-icon-container {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
+    padding: 6px;
   }
 
   .robot-icon {

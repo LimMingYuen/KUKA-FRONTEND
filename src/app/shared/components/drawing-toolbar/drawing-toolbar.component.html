@@ -1,0 +1,152 @@
+<div class="drawing-toolbar" [class.disabled]="disabled">
+  <!-- Drawing Mode Buttons -->
+  <div class="tool-group">
+    <button
+      mat-icon-button
+      [class.active]="isActive('select')"
+      (click)="setMode('select')"
+      matTooltip="Select (move/edit elements)"
+      [disabled]="disabled">
+      <mat-icon>near_me</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      [class.active]="isActive('addNode')"
+      (click)="setMode('addNode')"
+      matTooltip="Add Node (click to place)"
+      [disabled]="disabled">
+      <mat-icon>add_location</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      [class.active]="isActive('drawZone')"
+      (click)="setMode('drawZone')"
+      matTooltip="Draw Zone (click points to create polygon)"
+      [disabled]="disabled">
+      <mat-icon>pentagon</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      [class.active]="isActive('drawLine')"
+      (click)="setMode('drawLine')"
+      matTooltip="Draw Line (click two nodes to connect)"
+      [disabled]="disabled">
+      <mat-icon>timeline</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      [class.active]="isActive('delete')"
+      (click)="setMode('delete')"
+      matTooltip="Delete (click element to remove)"
+      [disabled]="disabled">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+
+  <mat-divider vertical></mat-divider>
+
+  <!-- Zone Drawing Actions (visible when drawing zone) -->
+  @if (isDrawingZone) {
+    <div class="tool-group zone-actions">
+      <button
+        mat-icon-button
+        color="primary"
+        (click)="onFinishZone()"
+        matTooltip="Finish Zone (complete polygon)">
+        <mat-icon>check</mat-icon>
+      </button>
+
+      <button
+        mat-icon-button
+        color="warn"
+        (click)="onCancelDrawing()"
+        matTooltip="Cancel Drawing">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <mat-divider vertical></mat-divider>
+  }
+
+  <!-- Node Dropdown (visible when nodes available) -->
+  @if (availableNodes.length > 0) {
+    <div class="tool-group node-dropdown">
+      <mat-form-field appearance="outline" class="node-select">
+        <mat-label>Add Node</mat-label>
+        <mat-select
+          [(ngModel)]="selectedNodeId"
+          (selectionChange)="onNodeSelected()"
+          [disabled]="disabled">
+          @for (node of availableNodes; track node.id) {
+            <mat-option [value]="node.id">
+              {{ node.nodeLabel }} ({{ node.nodeNumber }})
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-divider vertical></mat-divider>
+  }
+
+  <!-- Image Upload -->
+  <div class="tool-group">
+    <button
+      mat-icon-button
+      (click)="onUploadImage()"
+      matTooltip="Upload Background Image"
+      [disabled]="disabled">
+      <mat-icon>image</mat-icon>
+    </button>
+  </div>
+
+  <mat-divider vertical></mat-divider>
+
+  <!-- Save & Clear -->
+  <div class="tool-group">
+    <button
+      mat-icon-button
+      color="primary"
+      (click)="onSave()"
+      matTooltip="Save Changes"
+      [disabled]="disabled || !hasUnsavedChanges">
+      <mat-icon>save</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      (click)="onClearAll()"
+      matTooltip="Clear All Custom Elements"
+      [disabled]="disabled">
+      <mat-icon>layers_clear</mat-icon>
+    </button>
+  </div>
+
+  <!-- Mode Indicator -->
+  <div class="mode-indicator">
+    @switch (currentMode) {
+      @case ('select') {
+        <span class="mode-label">Select Mode</span>
+      }
+      @case ('addNode') {
+        <span class="mode-label highlight">Click to place node</span>
+      }
+      @case ('drawZone') {
+        <span class="mode-label highlight">Click points to draw zone</span>
+      }
+      @case ('drawLine') {
+        <span class="mode-label highlight">Click two nodes to connect</span>
+      }
+      @case ('delete') {
+        <span class="mode-label warning">Click element to delete</span>
+      }
+      @default {
+        <span class="mode-label">View Mode</span>
+      }
+    }
+  </div>
+</div>

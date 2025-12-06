@@ -21,6 +21,10 @@ export interface MobileRobotSummaryDto {
   xCoordinate: number;
   yCoordinate: number;
   robotOrientation: number;
+  /** Whether this robot has a valid license */
+  isLicensed: boolean;
+  /** License error message if unlicensed */
+  licenseError?: string;
 }
 
 /**
@@ -30,6 +34,8 @@ export interface MobileRobotSyncResultDto {
   total: number;
   inserted: number;
   updated: number;
+  /** List of RobotIds that were skipped because they appeared multiple times in external API */
+  skippedDuplicates: string[];
 }
 
 /**
@@ -45,6 +51,7 @@ export interface MobileRobotDisplayData extends MobileRobotSummaryDto {
   orientationText: string;
   floorDisplay: string;
   nodeDisplay: string;
+  licenseStatusText: string;
 }
 
 /**
@@ -52,16 +59,17 @@ export interface MobileRobotDisplayData extends MobileRobotSummaryDto {
  */
 
 /**
- * Robot Status enumeration
+ * Robot Status enumeration (from external AMR API)
  */
 export enum RobotStatus {
   Unknown = 0,
-  Available = 1,
-  Busy = 2,
-  Error = 3,
-  Maintenance = 4,
+  Departure = 1,
+  Offline = 2,
+  Idle = 3,
+  Executing = 4,
   Charging = 5,
-  Offline = 6
+  Updating = 6,
+  Abnormal = 7
 }
 
 /**
@@ -90,12 +98,13 @@ export function getReliabilityText(reliability: number): string {
  */
 export function getStatusText(status: number): string {
   switch (status) {
-    case RobotStatus.Available: return 'Available';
-    case RobotStatus.Busy: return 'Busy';
-    case RobotStatus.Error: return 'Error';
-    case RobotStatus.Maintenance: return 'Maintenance';
-    case RobotStatus.Charging: return 'Charging';
+    case RobotStatus.Departure: return 'Departure';
     case RobotStatus.Offline: return 'Offline';
+    case RobotStatus.Idle: return 'Idle';
+    case RobotStatus.Executing: return 'Executing';
+    case RobotStatus.Charging: return 'Charging';
+    case RobotStatus.Updating: return 'Updating';
+    case RobotStatus.Abnormal: return 'Abnormal';
     default: return 'Unknown';
   }
 }
@@ -157,6 +166,21 @@ export function formatNodeDisplay(nodeNumber: number): string {
 }
 
 /**
+ * Format license status for display
+ */
+export function formatLicenseStatus(isLicensed: boolean, licenseError?: string): string {
+  if (isLicensed) return 'Licensed';
+  return licenseError || 'Unlicensed';
+}
+
+/**
+ * Get CSS class for license status badge
+ */
+export function getLicenseStatusClass(isLicensed: boolean): string {
+  return isLicensed ? 'license-valid' : 'license-invalid';
+}
+
+/**
  * Transform MobileRobotSummaryDto to MobileRobotDisplayData
  */
 export function transformMobileRobotData(robot: MobileRobotSummaryDto): MobileRobotDisplayData {
@@ -168,7 +192,8 @@ export function transformMobileRobotData(robot: MobileRobotSummaryDto): MobileRo
     coordinatesText: formatCoordinates(robot.xCoordinate, robot.yCoordinate),
     orientationText: formatOrientation(robot.robotOrientation),
     floorDisplay: formatFloorNumber(robot.floorNumber),
-    nodeDisplay: formatNodeDisplay(robot.lastNodeNumber)
+    nodeDisplay: formatNodeDisplay(robot.lastNodeNumber),
+    licenseStatusText: formatLicenseStatus(robot.isLicensed, robot.licenseError)
   };
 }
 
@@ -195,12 +220,13 @@ export function getReliabilityClass(reliability: number): string {
  */
 export function getStatusClass(status: number): string {
   switch (status) {
-    case RobotStatus.Available: return 'status-available';
-    case RobotStatus.Busy: return 'status-busy';
-    case RobotStatus.Error: return 'status-error';
-    case RobotStatus.Maintenance: return 'status-maintenance';
-    case RobotStatus.Charging: return 'status-charging';
+    case RobotStatus.Departure: return 'status-departure';
     case RobotStatus.Offline: return 'status-offline';
+    case RobotStatus.Idle: return 'status-idle';
+    case RobotStatus.Executing: return 'status-executing';
+    case RobotStatus.Charging: return 'status-charging';
+    case RobotStatus.Updating: return 'status-updating';
+    case RobotStatus.Abnormal: return 'status-abnormal';
     default: return 'status-unknown';
   }
 }

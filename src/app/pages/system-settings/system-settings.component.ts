@@ -44,14 +44,12 @@ import {
   ],
   template: `
     <div class="system-settings-container">
-      <div class="page-header">
-        <h1>System Settings</h1>
-      </div>
-
       <mat-card class="settings-card">
+        <div class="page-header">
+          <h1>System Settings</h1>
+        </div>
         <mat-card-header>
           <mat-card-title>
-            <mat-icon>sync</mat-icon>
             Auto-Sync Configuration
           </mat-card-title>
           <mat-card-subtitle>
@@ -84,7 +82,7 @@ import {
             <div class="setting-row">
               <mat-form-field appearance="outline" class="interval-select">
                 <mat-label>Sync Interval</mat-label>
-                <mat-select [(ngModel)]="settings.intervalMinutes" [disabled]="!settings.enabled">
+                <mat-select [(ngModel)]="settings.intervalMinutes" [disabled]="!settings.enabled" panelClass="sync-interval-panel">
                   <mat-option *ngFor="let option of intervalOptions" [value]="option.value">
                     {{ option.label }}
                   </mat-option>
@@ -186,7 +184,7 @@ import {
           <button mat-raised-button
                   color="primary"
                   (click)="saveSettings()"
-                  [disabled]="isSaving || isLoading">
+                  [disabled]="isSaving || isLoading || !hasChanges">
             <mat-icon>save</mat-icon>
             {{ isSaving ? 'Saving...' : 'Save Settings' }}
           </button>
@@ -196,23 +194,28 @@ import {
   `,
   styles: [`
     .system-settings-container {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
+      max-width: 100%;
     }
 
     .page-header {
-      margin-bottom: 24px;
+      background-color: var(--mat-sys-primary, #2f409a);
+      color: white;
+      padding: 16px 24px;
+      margin: -24px -24px 24px -24px;
     }
 
     .page-header h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 500;
+      color: white;
     }
 
     .settings-card {
       margin-bottom: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      padding: 24px;
     }
 
     mat-card-header {
@@ -389,6 +392,7 @@ import {
 })
 export class SystemSettingsComponent implements OnInit, OnDestroy {
   settings: AutoSyncSettings | null = null;
+  originalSettings: AutoSyncSettings | null = null;
   lastSyncResults: SyncResult[] = [];
   intervalOptions = SYNC_INTERVAL_OPTIONS;
 
@@ -397,6 +401,18 @@ export class SystemSettingsComponent implements OnInit, OnDestroy {
   isSyncing = false;
 
   private destroy$ = new Subject<void>();
+
+  get hasChanges(): boolean {
+    if (!this.settings || !this.originalSettings) return false;
+    return (
+      this.settings.enabled !== this.originalSettings.enabled ||
+      this.settings.intervalMinutes !== this.originalSettings.intervalMinutes ||
+      this.settings.syncWorkflows !== this.originalSettings.syncWorkflows ||
+      this.settings.syncQrCodes !== this.originalSettings.syncQrCodes ||
+      this.settings.syncMapZones !== this.originalSettings.syncMapZones ||
+      this.settings.syncMobileRobots !== this.originalSettings.syncMobileRobots
+    );
+  }
 
   constructor(
     private autoSyncService: AutoSyncService,
@@ -420,6 +436,7 @@ export class SystemSettingsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (settings) => {
           this.settings = settings;
+          this.originalSettings = { ...settings };
           this.isLoading = false;
         },
         error: (err) => {
@@ -453,6 +470,7 @@ export class SystemSettingsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (settings) => {
           this.settings = settings;
+          this.originalSettings = { ...settings };
           this.snackBar.open('Settings saved successfully', 'Close', {
             duration: 3000,
             panelClass: ['success-snackbar']

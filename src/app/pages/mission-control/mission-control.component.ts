@@ -32,7 +32,8 @@ import { MissionHistoryRequest } from '../../models/mission-history.models';
 import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
 import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
-import { SelectWorkflowsDialogComponent, SelectWorkflowsDialogData, SelectWorkflowsDialogResult } from '../../shared/dialogs/select-workflows-dialog/select-workflows-dialog.component';
+import { SelectTemplatesDialogComponent, SelectTemplatesDialogData, SelectTemplatesDialogResult } from '../../shared/dialogs/select-templates-dialog/select-templates-dialog.component';
+import { AdminAuthorizationDialogComponent, AdminAuthorizationDialogData, AdminAuthorizationDialogResult } from '../../shared/dialogs/admin-authorization-dialog/admin-authorization-dialog.component';
 
 @Component({
   selector: 'app-mission-control',
@@ -104,6 +105,13 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   // Expose MissionsUtils to template
   public readonly MissionsUtils = MissionsUtils;
+
+  /**
+   * Check if current user is SuperAdmin (exposed for template)
+   */
+  public get isSuperAdmin(): boolean {
+    return this.authService.isSuperAdmin();
+  }
 
   constructor(
     private missionsService: MissionsService,
@@ -218,6 +226,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
             createdBy: displayData.createdBy,
             createdUtc: displayData.createdUtc,
             updatedUtc: displayData.updatedUtc === '-' ? null : displayData.updatedUtc,
+            isActive: displayData.isActive,
             scheduleSummary: {
               totalSchedules: displayData.activeSchedules,
               activeSchedules: displayData.activeSchedules,
@@ -302,12 +311,23 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Open template selection dialog
-   * TODO: Create a generic dialog for both workflows and templates
    */
   openSelectWorkflowsDialog(): void {
-    this.snackBar.open('Template filtering coming soon!', 'Close', { duration: 2000 });
-    // Temporarily disabled until we create a generic selection dialog
-    // that works with both WorkflowDisplayData and SavedCustomMissionDto
+    const dialogRef = this.dialog.open(SelectTemplatesDialogComponent, {
+      width: '600px',
+      maxHeight: '80vh',
+      data: {
+        templatesByZone: this.templatesByZone,
+        selectedIds: this.selectedTemplateIds
+      } as SelectTemplatesDialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: SelectTemplatesDialogResult | undefined) => {
+      if (result) {
+        this.selectedTemplateIds = result.selectedIds;
+        this.applyTemplateFilter();
+      }
+    });
   }
 
   /**
@@ -734,7 +754,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       // Use job creation time or current time as submitted time
       submittedToAmrDate: jobData.createTime || new Date().toISOString(),
       // For completed jobs, estimate processed date from job data
-      processedDate: this.estimateProcessedDate(jobData)
+      processedDate: this.estimateProcessedDate(jobData),
+      // Track who triggered the job
+      createdBy: this.authService.currentUser()?.username
     };
 
     this.missionHistoryService.addMissionHistory(historyRequest)
@@ -830,6 +852,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Cancel mission - opens dialog to select cancel mode
+   * Requires admin authorization for non-SuperAdmin users
    */
   cancelMission(id: number, event?: Event): void {
     // Prevent event propagation if called from button
@@ -850,6 +873,36 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Check if user is SuperAdmin - proceed directly if true
+    if (this.authService.isSuperAdmin()) {
+      this.openCancelMissionDialog(id, job);
+      return;
+    }
+
+    // Non-admin user - show admin authorization dialog first
+    const authDialogRef = this.dialog.open(AdminAuthorizationDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      data: {
+        title: 'Admin Authorization Required',
+        message: 'Cancelling a mission requires admin authorization. Please enter admin credentials to proceed.',
+        actionLabel: 'Authorize & Cancel'
+      } as AdminAuthorizationDialogData
+    });
+
+    authDialogRef.afterClosed().subscribe((authResult: AdminAuthorizationDialogResult | undefined) => {
+      if (authResult?.authorized) {
+        // Admin authorization successful - proceed with cancel dialog
+        this.openCancelMissionDialog(id, job);
+      }
+      // If not authorized, do nothing (user cancelled or verification failed)
+    });
+  }
+
+  /**
+   * Opens the cancel mission dialog after authorization check
+   */
+  private openCancelMissionDialog(id: number, job: any): void {
     // Get mission name based on type
     const missionName = job.workflowName || 'Unknown Mission';
 

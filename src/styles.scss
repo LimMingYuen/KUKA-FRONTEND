@@ -272,6 +272,25 @@ app-generic-table {
   }
 }
 
+/* Global Mat-Select Panel Styles */
+.mat-mdc-select-panel,
+.sync-interval-panel,
+.retention-panel {
+  background-color: white !important;
+}
+
+.mat-mdc-option {
+  background-color: white !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  &.mdc-list-item--selected {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
 /* Global Status Badge Styles */
 .status-badge {
   display: inline-block;

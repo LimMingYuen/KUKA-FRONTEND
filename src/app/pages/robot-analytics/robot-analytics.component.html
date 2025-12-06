@@ -6,21 +6,6 @@
         <mat-icon class="header-icon">analytics</mat-icon>
         <h1>Robot Analytics</h1>
       </div>
-      <div class="header-actions">
-        <button mat-raised-button
-                color="primary"
-                (click)="refreshData()"
-                [disabled]="isLoading">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
-        <button mat-stroked-button
-                (click)="exportData()"
-                [disabled]="isLoading || !utilizationData">
-          <mat-icon>download</mat-icon>
-          Export CSV
-        </button>
-      </div>
     </div>
   </div>
 

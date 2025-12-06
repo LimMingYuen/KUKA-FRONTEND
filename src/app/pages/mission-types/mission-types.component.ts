@@ -18,6 +18,10 @@ import { GenericTableComponent } from '../../shared/components/generic-table/gen
 import { MISSION_TYPES_TABLE_CONFIG } from './mission-types-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 import { MissionTypeDialogComponent, MissionTypeDialogData } from './mission-type-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-mission-types',
@@ -175,35 +179,93 @@ export class MissionTypesComponent implements OnInit, OnDestroy {
           if (usage.isUsed) {
             // Show warning about templates using this mission type
             const templateList = usage.templateNames.join('\n  - ');
-            const message = `Cannot delete mission type "${missionType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this mission type instead.`;
-            alert(message);
+            const alertData: ConfirmationDialogData = {
+              title: 'Cannot Delete',
+              message: `Cannot delete mission type "${missionType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this mission type instead.`,
+              icon: 'error',
+              confirmText: 'OK',
+              showCancel: false,
+              confirmColor: 'primary'
+            };
+            this.dialog.open(ConfirmationDialogComponent, {
+              width: '450px',
+              data: alertData
+            });
           } else {
             // Not in use, proceed with deletion after confirmation
-            if (confirm(`Are you sure you want to delete mission type "${missionType.displayName}"?`)) {
-              this.missionTypesService.deleteMissionType(missionType.id)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                  error: (error) => {
-                    console.error('Error deleting mission type:', error);
-                  }
-                });
-            }
+            this.showDeleteConfirmation(missionType);
           }
         },
         error: (error) => {
           console.error('Error checking mission type usage:', error);
           // On error, still allow deletion with a warning
-          if (confirm(`Unable to verify usage. Delete mission type "${missionType.displayName}" anyway?`)) {
-            this.missionTypesService.deleteMissionType(missionType.id)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                error: (error) => {
-                  console.error('Error deleting mission type:', error);
-                }
-              });
-          }
+          this.showDeleteConfirmationWithWarning(missionType);
         }
       });
+  }
+
+  /**
+   * Show delete confirmation dialog
+   */
+  private showDeleteConfirmation(missionType: MissionTypeDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Mission Type',
+      message: `Are you sure you want to delete mission type "${missionType.displayName}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.missionTypesService.deleteMissionType(missionType.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting mission type:', error);
+            }
+          });
+      }
+    });
+  }
+
+  /**
+   * Show delete confirmation with warning about unable to verify usage
+   */
+  private showDeleteConfirmationWithWarning(missionType: MissionTypeDisplayData): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Mission Type',
+      message: `Unable to verify usage. Delete mission type "${missionType.displayName}" anyway?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.missionTypesService.deleteMissionType(missionType.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting mission type:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

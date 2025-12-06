@@ -36,24 +36,19 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
   ],
   template: `
     <div class="log-cleanup-container">
-      <div class="page-header">
-        <h1>Log Cleanup</h1>
-        <p class="page-subtitle">Manage log file retention and cleanup old log folders</p>
-      </div>
+      <mat-card class="main-card">
+        <div class="page-header">
+          <h1>Log Cleanup</h1>
+        </div>
 
-      <!-- Retention Settings Card -->
-      <mat-card class="settings-card">
-        <mat-card-header>
-          <mat-card-title>
+        <!-- Retention Settings Section -->
+        <div class="section">
+          <h3 class="section-title">
             <mat-icon>settings</mat-icon>
             Retention Settings
-          </mat-card-title>
-          <mat-card-subtitle>
-            Configure how long log files should be retained
-          </mat-card-subtitle>
-        </mat-card-header>
+          </h3>
+          <p class="section-subtitle">Configure how long log files should be retained</p>
 
-        <mat-card-content>
           <div *ngIf="isLoading" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p>Loading settings...</p>
@@ -63,7 +58,7 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
             <div class="setting-row">
               <mat-form-field appearance="outline" class="retention-select">
                 <mat-label>Retention Period</mat-label>
-                <mat-select [(ngModel)]="retentionMonths">
+                <mat-select [(ngModel)]="retentionMonths" panelClass="retention-panel">
                   <mat-option *ngFor="let option of retentionOptions" [value]="option.value">
                     {{ option.label }}
                   </mat-option>
@@ -71,33 +66,29 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
                 <mat-hint>Logs older than this period will be deleted during cleanup</mat-hint>
               </mat-form-field>
             </div>
+
+            <div class="action-row">
+              <button mat-raised-button
+                      color="primary"
+                      (click)="saveSetting()"
+                      [disabled]="isSaving || isLoading">
+                <mat-icon>save</mat-icon>
+                {{ isSaving ? 'Saving...' : 'Save Setting' }}
+              </button>
+            </div>
           </div>
-        </mat-card-content>
+        </div>
 
-        <mat-card-actions align="end">
-          <button mat-raised-button
-                  color="primary"
-                  (click)="saveSetting()"
-                  [disabled]="isSaving || isLoading">
-            <mat-icon>save</mat-icon>
-            {{ isSaving ? 'Saving...' : 'Save Setting' }}
-          </button>
-        </mat-card-actions>
-      </mat-card>
+        <mat-divider></mat-divider>
 
-      <!-- Manual Cleanup Card -->
-      <mat-card class="cleanup-card">
-        <mat-card-header>
-          <mat-card-title>
+        <!-- Manual Cleanup Section -->
+        <div class="section">
+          <h3 class="section-title">
             <mat-icon>cleaning_services</mat-icon>
             Manual Cleanup
-          </mat-card-title>
-          <mat-card-subtitle>
-            Run log cleanup immediately to remove old log folders
-          </mat-card-subtitle>
-        </mat-card-header>
+          </h3>
+          <p class="section-subtitle">Run log cleanup immediately to remove old log folders</p>
 
-        <mat-card-content>
           <div class="cleanup-info">
             <mat-icon class="info-icon">info</mat-icon>
             <p>
@@ -106,32 +97,28 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
               This action cannot be undone.
             </p>
           </div>
-        </mat-card-content>
 
-        <mat-card-actions align="end">
-          <button mat-raised-button
-                  color="warn"
-                  (click)="runCleanup()"
-                  [disabled]="isRunningCleanup || isLoading">
-            <mat-icon>{{ isRunningCleanup ? 'hourglass_empty' : 'delete_sweep' }}</mat-icon>
-            {{ isRunningCleanup ? 'Running Cleanup...' : 'Run Cleanup' }}
-          </button>
-        </mat-card-actions>
-      </mat-card>
+          <div class="action-row">
+            <button mat-raised-button
+                    color="warn"
+                    (click)="runCleanup()"
+                    [disabled]="isRunningCleanup || isLoading">
+              <mat-icon>{{ isRunningCleanup ? 'hourglass_empty' : 'delete_sweep' }}</mat-icon>
+              {{ isRunningCleanup ? 'Running Cleanup...' : 'Run Cleanup' }}
+            </button>
+          </div>
+        </div>
 
-      <!-- Log Folders Card -->
-      <mat-card class="folders-card">
-        <mat-card-header>
-          <mat-card-title>
+        <mat-divider></mat-divider>
+
+        <!-- Log Folders Section -->
+        <div class="section">
+          <h3 class="section-title">
             <mat-icon>folder</mat-icon>
             Log Folders
-          </mat-card-title>
-          <mat-card-subtitle>
-            Current log folders in the system ({{ folders.length }} folders)
-          </mat-card-subtitle>
-        </mat-card-header>
+          </h3>
+          <p class="section-subtitle">Current log folders in the system ({{ folders.length }} folders)</p>
 
-        <mat-card-content>
           <div *ngIf="isLoadingFolders" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p>Loading folders...</p>
@@ -151,60 +138,73 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
               </span>
             </div>
           </div>
-        </mat-card-content>
 
-        <mat-card-actions align="end">
-          <button mat-button
-                  (click)="refreshFolders()"
-                  [disabled]="isLoadingFolders">
-            <mat-icon>refresh</mat-icon>
-            Refresh
-          </button>
-        </mat-card-actions>
+          <div class="action-row">
+            <button mat-button
+                    (click)="refreshFolders()"
+                    [disabled]="isLoadingFolders">
+              <mat-icon>refresh</mat-icon>
+              Refresh
+            </button>
+          </div>
+        </div>
       </mat-card>
     </div>
   `,
   styles: [`
     .log-cleanup-container {
+      max-width: 100%;
+    }
+
+    .main-card {
+      border-radius: 12px;
+      overflow: hidden;
       padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
     }
 
     .page-header {
-      margin-bottom: 24px;
+      background-color: var(--mat-sys-primary, #2f409a);
+      color: white;
+      padding: 16px 24px;
+      margin: -24px -24px 24px -24px;
     }
 
     .page-header h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 500;
+      color: white;
     }
 
-    .page-subtitle {
-      margin: 8px 0 0 0;
-      color: rgba(0, 0, 0, 0.6);
-      font-size: 14px;
+    .section {
+      padding: 16px 0;
     }
 
-    .settings-card,
-    .cleanup-card,
-    .folders-card {
-      margin-bottom: 24px;
-    }
-
-    mat-card-header {
-      margin-bottom: 16px;
-    }
-
-    mat-card-title {
+    .section-title {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 500;
     }
 
-    mat-card-title mat-icon {
-      color: #ff6600;
+    .section-title mat-icon {
+      color: var(--mat-sys-primary, #2f409a);
+    }
+
+    .section-subtitle {
+      margin: 0 0 16px 0;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .action-row {
+      margin-top: 16px;
+    }
+
+    mat-divider {
+      margin: 8px -24px;
     }
 
     .loading-container {
@@ -239,13 +239,13 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
       align-items: flex-start;
       gap: 12px;
       padding: 16px;
-      background-color: #fff3e0;
+      background-color: #e3f2fd;
       border-radius: 8px;
-      border-left: 4px solid #ff6600;
+      border-left: 4px solid var(--mat-sys-primary, #2f409a);
     }
 
     .cleanup-info .info-icon {
-      color: #ff6600;
+      color: var(--mat-sys-primary, #2f409a);
       flex-shrink: 0;
     }
 

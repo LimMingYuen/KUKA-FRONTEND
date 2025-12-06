@@ -26,6 +26,10 @@ import { RoleDto } from '../../models/role.models';
 import { PageDto, UserPermissionBulkSetRequest, UserTemplatePermissionBulkSetRequest } from '../../models/permission.models';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { USER_MANAGEMENT_TABLE_CONFIG } from './user-management-table.config';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-user-management',
@@ -201,33 +205,46 @@ export class UserManagementComponent implements OnInit, OnDestroy {
    * Delete a user
    */
   private deleteUser(user: UserDto): void {
-    if (
-      !confirm(`Are you sure you want to delete user "${user.username}"? This action cannot be undone.`)
-    ) {
-      return;
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete User',
+      message: `Are you sure you want to delete user "${user.username}"? This action cannot be undone.`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
 
-    this.isLoading = true;
-    this.userService
-      .delete(user.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.snackBar.open('User deleted successfully', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.isLoading = true;
+        this.userService
+          .delete(user.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.snackBar.open('User deleted successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              this.loadData();
+            },
+            error: (err) => {
+              console.error('Error deleting user:', err);
+              this.snackBar.open(err.message || 'Failed to delete user', 'Close', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+              this.isLoading = false;
+            }
           });
-          this.loadData();
-        },
-        error: (err) => {
-          console.error('Error deleting user:', err);
-          this.snackBar.open(err.message || 'Failed to delete user', 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
-          this.isLoading = false;
-        }
-      });
+      }
+    });
   }
 }
 

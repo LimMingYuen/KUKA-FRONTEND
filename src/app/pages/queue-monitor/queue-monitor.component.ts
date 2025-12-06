@@ -18,6 +18,8 @@ import { FormsModule } from '@angular/forms';
 
 import { MissionQueueService } from '../../services/mission-queue.service';
 import { SignalRService } from '../../services/signalr.service';
+import { AuthService } from '../../services/auth.service';
+import { AdminAuthorizationDialogComponent, AdminAuthorizationDialogData, AdminAuthorizationDialogResult } from '../../shared/dialogs/admin-authorization-dialog/admin-authorization-dialog.component';
 import {
   MissionQueueDisplayData,
   MissionQueueStatistics,
@@ -97,7 +99,8 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     private queueService: MissionQueueService,
     private signalRService: SignalRService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {
     // Effect: Update connection state
     effect(() => {
@@ -234,6 +237,7 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
 
   /**
    * Cancel queue item
+   * Requires admin authorization for non-SuperAdmin users
    */
   cancelItem(item: MissionQueueDisplayData): void {
     if (!item.canCancel) {
@@ -241,6 +245,34 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Check if user is SuperAdmin - proceed directly if true
+    if (this.authService.isSuperAdmin()) {
+      this.executeCancelItem(item);
+      return;
+    }
+
+    // Non-admin user - show admin authorization dialog first
+    const authDialogRef = this.dialog.open(AdminAuthorizationDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      data: {
+        title: 'Admin Authorization Required',
+        message: `Cancelling queue item "${item.missionName}" requires admin authorization. Please enter admin credentials to proceed.`,
+        actionLabel: 'Authorize & Cancel'
+      } as AdminAuthorizationDialogData
+    });
+
+    authDialogRef.afterClosed().subscribe((authResult: AdminAuthorizationDialogResult | undefined) => {
+      if (authResult?.authorized) {
+        this.executeCancelItem(item);
+      }
+    });
+  }
+
+  /**
+   * Execute the actual cancel operation after authorization check
+   */
+  private executeCancelItem(item: MissionQueueDisplayData): void {
     this.addProcessingAction(item.id);
 
     this.queueService.cancel(item.id)

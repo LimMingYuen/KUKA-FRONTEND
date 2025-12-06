@@ -21,6 +21,7 @@ export interface MissionHistorySummaryDto {
   assignedRobotId?: string;
   durationMinutes?: number;  // Mission working time in minutes
   errorMessage?: string;     // Error message for failed missions
+  createdBy?: string;        // Username of who triggered the job
 }
 
 /**
@@ -78,6 +79,7 @@ export interface MissionHistoryDisplayData extends MissionHistorySummaryDto {
   durationDisplay: string;  // Formatted duration (e.g., "2m 30s", "1h 15m")
   robotDisplay: string;  // Formatted robot ID
   errorMessageDisplay: string;  // Error message for failed missions
+  createdByDisplay: string;  // Who triggered the job
 }
 
 /**
@@ -111,13 +113,32 @@ export function getStatusText(status: string): string {
 }
 
 /**
- * Format date string for display
+ * Parse date string from backend/AMR system.
+ * Handles both ISO format with 'Z' and "yyyy-MM-dd HH:mm:ss" format without timezone.
+ * Server returns UTC time, so we append 'Z' if not present.
+ */
+function parseUtcDate(dateString: string): Date {
+  // If already has timezone info, use directly
+  if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/T.*[+-]\d{2}:\d{2}$/)) {
+    return new Date(dateString);
+  }
+
+  // For "yyyy-MM-dd HH:mm:ss" format, the server sends UTC time without 'Z'
+  // Replace space with 'T' and append 'Z' to indicate UTC
+  const isoString = dateString.includes('T') ? dateString + 'Z' : dateString.replace(' ', 'T') + 'Z';
+  return new Date(isoString);
+}
+
+/**
+ * Format date string for display (converts UTC to local time)
  */
 export function formatDate(dateString: string): string {
   if (!dateString) return 'N/A';
 
   try {
-    const date = new Date(dateString);
+    const date = parseUtcDate(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -132,13 +153,15 @@ export function formatDate(dateString: string): string {
 }
 
 /**
- * Format relative time for display
+ * Format relative time for display (converts UTC to local time)
  */
 export function formatRelativeTime(dateString: string): string {
   if (!dateString) return 'N/A';
 
   try {
-    const date = new Date(dateString);
+    const date = parseUtcDate(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -222,7 +245,8 @@ export function transformMissionHistoryData(mission: MissionHistorySummaryDto): 
     workflowDisplay: formatWorkflowName(mission.workflowName),
     durationDisplay: formatDuration(mission.durationMinutes),
     robotDisplay: formatRobotId(mission.assignedRobotId),
-    errorMessageDisplay: mission.errorMessage || ''
+    errorMessageDisplay: mission.errorMessage || '',
+    createdByDisplay: mission.createdBy || 'System'
   };
 }
 

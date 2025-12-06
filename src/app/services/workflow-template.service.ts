@@ -14,6 +14,7 @@ import {
   SaveMissionAsTemplateRequest,
   SaveMissionAsTemplateResponse
 } from '../models/saved-custom-missions.models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -31,7 +32,8 @@ export class WorkflowTemplateService {
 
   constructor(
     private http: HttpClient,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {}
 
   /**
@@ -57,12 +59,17 @@ export class WorkflowTemplateService {
 
   /**
    * Get all saved custom missions from the API
+   * SuperAdmin users can see inactive templates by setting includeInactive=true
    */
   getAllSavedCustomMissions(): Observable<SavedCustomMissionsDisplayData[]> {
     this.isLoading.set(true);
 
+    // SuperAdmin users can see inactive templates
+    const includeInactive = this.authService.isSuperAdmin();
+    const queryParams = includeInactive ? '?includeInactive=true' : '';
+
     return this.http.get<ApiResponse<SavedCustomMissionDto[]>>(
-      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}`,
+      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}${queryParams}`,
       { headers: this.createHeaders() }
     ).pipe(
       map(response => {
@@ -219,6 +226,31 @@ export class WorkflowTemplateService {
   }
 
   /**
+   * Toggle workflow template active status (SuperAdmin only)
+   */
+  toggleTemplateStatus(id: number): Observable<SavedCustomMissionsDisplayData> {
+    return this.http.patch<ApiResponse<SavedCustomMissionDto>>(
+      `${this.API_URL}${this.SAVED_CUSTOM_MISSIONS_ENDPOINT}/${id}/toggle-status`,
+      {},
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(response => {
+        if (!response.success) {
+          throw new Error(response.msg || 'Failed to toggle template status');
+        }
+        return SavedCustomMissionsUtils.transformToDisplay(response.data);
+      }),
+      tap(() => {
+        this.showSuccessMessage('Template status toggled successfully');
+      }),
+      catchError(error => {
+        this.handleError(error, 'Failed to toggle template status');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Save mission as template (workflow template creation)
    * Uses the /api/missions/save-as-template endpoint
    */
@@ -285,7 +317,8 @@ export class WorkflowTemplateService {
       lockRobotAfterFinish: request.missionTemplate.lockRobotAfterFinish,
       unlockRobotId: request.missionTemplate.unlockRobotId,
       unlockMissionCode: request.missionTemplate.unlockMissionCode,
-      missionStepsJson: JSON.stringify(request.missionTemplate.missionData)
+      missionStepsJson: JSON.stringify(request.missionTemplate.missionData),
+      isActive: true  // Preserve as active when editing through dialog
     };
 
     return this.http.put<ApiResponse<SavedCustomMissionDto>>(

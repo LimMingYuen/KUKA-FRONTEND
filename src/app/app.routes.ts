@@ -4,6 +4,11 @@ import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'license-activation',
+    loadComponent: () => import('./pages/license-activation/license-activation.component').then(m => m.LicenseActivationComponent),
+    title: 'License Activation - KUKA GUI'
+  },
+  {
     path: 'login',
     component: LoginComponent,
     title: 'Login - KUKA GUI'
@@ -57,10 +62,22 @@ export const routes: Routes = [
     title: 'Queue Monitor - KUKA GUI'
   },
   {
+    path: 'live-jobs',
+    loadComponent: () => import('./pages/live-jobs/live-jobs.component').then(m => m.LiveJobsComponent),
+    canActivate: [authGuard],
+    title: 'Live Jobs - KUKA GUI'
+  },
+  {
     path: 'workflow-schedules',
     loadComponent: () => import('./pages/workflow-schedules/workflow-schedules.component').then(m => m.WorkflowSchedulesComponent),
     canActivate: [authGuard],
     title: 'Workflow Schedules - KUKA GUI'
+  },
+  {
+    path: 'robot-monitoring',
+    loadComponent: () => import('./pages/robot-monitoring/robot-monitoring.component').then(m => m.RobotMonitoringComponent),
+    canActivate: [authGuard],
+    title: 'Robot Monitoring - KUKA GUI'
   },
   {
     path: 'robot-analytics',
@@ -97,6 +114,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],
     title: 'Workflow Templates - KUKA GUI'
+  },
+  {
+    path: 'workflow-template-form',
+    loadComponent: () => import('./pages/workflow-template-form/workflow-template-form.component').then(m => m.WorkflowTemplateFormComponent),
+    canActivate: [authGuard],
+    title: 'Workflow Template - KUKA GUI'
+  },
+  {
+    path: 'workflow-template-form/:id',
+    loadComponent: () => import('./pages/workflow-template-form/workflow-template-form.component').then(m => m.WorkflowTemplateFormComponent),
+    canActivate: [authGuard],
+    title: 'Workflow Template - KUKA GUI'
   },
   {
     path: '',

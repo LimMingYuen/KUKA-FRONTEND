@@ -1,0 +1,119 @@
+<div class="robot-monitoring-container">
+  <!-- Header Toolbar -->
+  <mat-toolbar class="header-toolbar" color="primary">
+    <div class="toolbar-left">
+      <mat-icon>map</mat-icon>
+      <span class="title">Robot Monitoring</span>
+    </div>
+
+    <div class="toolbar-center">
+      <!-- Map Selector -->
+      <mat-form-field appearance="outline" class="map-selector">
+        <mat-label>Select Map</mat-label>
+        <mat-select [value]="selectedMapId()" (selectionChange)="selectMap($event.value)">
+          @for (map of maps(); track map.id) {
+            <mat-option [value]="map.id">
+              {{ map.name }}
+              @if (map.isDefault) {
+                <span class="default-badge">(Default)</span>
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Action Buttons -->
+      <button mat-icon-button matTooltip="Fit to content" (click)="fitMapToContent()">
+        <mat-icon>fit_screen</mat-icon>
+      </button>
+
+      <!-- Map Menu -->
+      <button mat-icon-button [matMenuTriggerFor]="mapMenu" matTooltip="Map options">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #mapMenu="matMenu">
+        <button mat-menu-item (click)="openCreateMapDialog()">
+          <mat-icon>add</mat-icon>
+          <span>New Map Configuration</span>
+        </button>
+        @if (selectedMap()) {
+          <button mat-menu-item (click)="openEditMapDialog()">
+            <mat-icon>edit</mat-icon>
+            <span>Edit Current Map</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item class="delete-option" (click)="deleteCurrentMap()">
+            <mat-icon color="warn">delete</mat-icon>
+            <span>Delete Current Map</span>
+          </button>
+        }
+      </mat-menu>
+    </div>
+  </mat-toolbar>
+
+  <!-- Drawing Toolbar -->
+  @if (selectedMap()) {
+    <app-drawing-toolbar
+      [currentMode]="drawingMode()"
+      [isDrawingZone]="isDrawingZone()"
+      [hasUnsavedChanges]="hasUnsavedChanges()"
+      [disabled]="isLoadingMapData()"
+      [availableNodes]="availableNodes()"
+      (modeChange)="onDrawingModeChange($event)"
+      (finishZone)="onFinishZone()"
+      (cancelDrawing)="onCancelDrawing()"
+      (uploadImage)="onUploadImage()"
+      (save)="onSaveDrawing()"
+      (clearAll)="onClearAllDrawing()"
+      (placeNode)="onPlaceNodeFromDropdown($event)">
+    </app-drawing-toolbar>
+  }
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Map Container -->
+    <div class="map-container">
+      @if (isLoadingMapData()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="48"></mat-spinner>
+          <span>Loading map data...</span>
+        </div>
+      }
+
+      @if (selectedMap()) {
+        <app-robot-map-canvas
+          [mapConfig]="selectedMap()"
+          [backgroundImageUrl]="backgroundImageUrl()"
+          [imageWidth]="imageWidth"
+          [imageHeight]="imageHeight"
+          [drawingMode]="drawingMode()"
+          [customNodes]="customNodes()"
+          [customZones]="customZones()"
+          [customLines]="customLines()"
+          [lineStartNodeId]="lineStartNodeId()"
+          (nodeAdded)="onNodeAdded($event)"
+          (zoneAdded)="onZoneAdded($event)"
+          (nodeDeleted)="onNodeDeleted($event)"
+          (zoneDeleted)="onZoneDeleted($event)"
+          (nodeMoved)="onNodeMoved($event)"
+          (zoneMoved)="onZoneMoved($event)"
+          (nodeClickForLine)="onNodeClickForLine($event)"
+          (lineDeleted)="onLineDeleted($event)">
+        </app-robot-map-canvas>
+      } @else if (!isLoadingMaps()) {
+        <div class="empty-state">
+          <mat-icon>map</mat-icon>
+          <h3>No Map Selected</h3>
+          <p>Select a map configuration or create a new one to get started.</p>
+          <button mat-raised-button color="primary" (click)="openCreateMapDialog()">
+            <mat-icon>add</mat-icon>
+            Create Map Configuration
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

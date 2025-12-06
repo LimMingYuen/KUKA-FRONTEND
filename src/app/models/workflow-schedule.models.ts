@@ -107,3 +107,71 @@ export const CRON_EXAMPLES = [
   { expression: '0 9,18 * * *', label: 'At 9:00 AM and 6:00 PM' },
   { expression: '0 0 * * SUN', label: 'Every Sunday at midnight' }
 ];
+
+/**
+ * Display data for workflow schedules with pre-formatted values
+ */
+export interface WorkflowScheduleDisplayData extends WorkflowSchedule {
+  scheduleTypeDisplay: string;
+  nextRunDisplay: string;
+  lastRunDisplay: string;
+  executionCountDisplay: string;
+}
+
+/**
+ * Transform a WorkflowSchedule to display data with formatted values
+ */
+export function transformScheduleToDisplayData(
+  schedule: WorkflowSchedule,
+  intervalOptions: typeof INTERVAL_OPTIONS
+): WorkflowScheduleDisplayData {
+  return {
+    ...schedule,
+    scheduleTypeDisplay: getScheduleTypeDisplay(schedule, intervalOptions),
+    nextRunDisplay: formatUtcToLocal(schedule.nextRunUtc),
+    lastRunDisplay: formatUtcToLocal(schedule.lastRunUtc),
+    executionCountDisplay: formatExecutionCount(schedule.executionCount, schedule.maxExecutions)
+  };
+}
+
+/**
+ * Get schedule type display text
+ */
+function getScheduleTypeDisplay(schedule: WorkflowSchedule, intervalOptions: typeof INTERVAL_OPTIONS): string {
+  switch (schedule.scheduleType) {
+    case 'OneTime':
+      return 'One-time';
+    case 'Interval':
+      const option = intervalOptions.find(o => o.value === schedule.intervalMinutes);
+      return option ? option.label : `${schedule.intervalMinutes} min`;
+    case 'Cron':
+      return schedule.cronExpression || 'Cron';
+    default:
+      return schedule.scheduleType;
+  }
+}
+
+/**
+ * Format UTC datetime string to local time display
+ */
+function formatUtcToLocal(utcString?: string): string {
+  if (!utcString) return '-';
+
+  const utcDate = utcString.endsWith('Z') ? utcString : utcString + 'Z';
+  const date = new Date(utcDate);
+
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+/**
+ * Format execution count display
+ */
+function formatExecutionCount(count: number, max?: number): string {
+  return max ? `${count} / ${max}` : `${count}`;
+}

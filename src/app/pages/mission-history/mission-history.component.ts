@@ -15,6 +15,10 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { MISSION_HISTORY_TABLE_CONFIG } from './mission-history-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-mission-history',
@@ -216,11 +220,27 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
    * Delete mission history record
    */
   private deleteMissionHistory(mission: MissionHistoryDisplayData): void {
-    // TODO: Implement delete functionality (may not be available via API)
-    if (confirm(`Are you sure you want to delete mission "${mission.missionCode}"?`)) {
-      // This would require a DELETE endpoint for individual records
-      console.log('Delete mission:', mission);
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Mission',
+      message: `Are you sure you want to delete mission "${mission.missionCode}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        // This would require a DELETE endpoint for individual records
+        console.log('Delete mission:', mission);
+      }
+    });
   }
 
   /**
@@ -251,21 +271,36 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
    * Clear all mission history with confirmation
    */
   private clearMissionHistory(): void {
-    const message = `Are you sure you want to clear all mission history? This will delete ${this.missionCount} records and cannot be undone.`;
+    const dialogData: ConfirmationDialogData = {
+      title: 'Clear Mission History',
+      message: `Are you sure you want to clear all mission history? This will delete ${this.missionCount} records and cannot be undone.`,
+      icon: 'warning',
+      confirmText: 'Clear All',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
 
-    if (confirm(message)) {
-      this.missionHistoryService.clearMissionHistory()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            // Reload data after successful clear
-            this.refreshMissionHistory();
-          },
-          error: (error) => {
-            console.error('Error clearing mission history:', error);
-          }
-        });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '450px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.missionHistoryService.clearMissionHistory()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Reload data after successful clear
+              this.refreshMissionHistory();
+            },
+            error: (error) => {
+              console.error('Error clearing mission history:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

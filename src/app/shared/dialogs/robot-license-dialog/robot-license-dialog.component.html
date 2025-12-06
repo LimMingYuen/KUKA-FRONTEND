@@ -1,0 +1,95 @@
+<div class="robot-license-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon color="primary">verified_user</mat-icon>
+    Activate Robot License
+  </h2>
+
+  <mat-dialog-content>
+    <!-- Robot Info -->
+    <div class="robot-info">
+      <div class="robot-id-section">
+        <label>Robot ID</label>
+        <div class="robot-id-value">
+          <code>{{ data.robotId }}</code>
+          <button mat-icon-button
+                  (click)="copyRobotId()"
+                  matTooltip="Copy Robot ID">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+        <p class="hint-text">Use this Robot ID when generating the license file</p>
+      </div>
+
+      <!-- Current Status -->
+      <div class="current-status" *ngIf="data.currentStatus">
+        <label>Current Status</label>
+        <div class="status-badge" [class.licensed]="data.currentStatus.isLicensed" [class.unlicensed]="!data.currentStatus.isLicensed">
+          <mat-icon>{{ data.currentStatus.isLicensed ? 'check_circle' : 'cancel' }}</mat-icon>
+          {{ data.currentStatus.isLicensed ? 'Licensed' : 'Unlicensed' }}
+        </div>
+        <p class="error-text" *ngIf="!data.currentStatus.isLicensed && data.currentStatus.errorMessage">
+          {{ data.currentStatus.errorMessage }}
+        </p>
+      </div>
+    </div>
+
+    <!-- File Upload Section -->
+    <div class="upload-section">
+      <label>License File</label>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone"
+           [class.has-file]="selectedFile"
+           [class.has-error]="errorMessage"
+           (dragover)="onDragOver($event)"
+           (drop)="onDrop($event)">
+
+        <ng-container *ngIf="!selectedFile">
+          <mat-icon class="upload-icon">cloud_upload</mat-icon>
+          <p class="drop-text">Drag and drop license file here</p>
+          <p class="or-text">or</p>
+          <button mat-stroked-button color="primary" (click)="fileInput.click()">
+            <mat-icon>folder_open</mat-icon>
+            Browse Files
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="selectedFile">
+          <mat-icon class="file-icon">description</mat-icon>
+          <p class="file-name">{{ selectedFile.name }}</p>
+          <p class="file-size">{{ (selectedFile.size / 1024).toFixed(2) }} KB</p>
+          <button mat-icon-button color="warn" (click)="clearFile()" matTooltip="Remove file">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </ng-container>
+      </div>
+
+      <input type="file"
+             #fileInput
+             hidden
+             accept=".lic"
+             (change)="onFileSelected($event)">
+
+      <!-- Error Message -->
+      <div class="error-message" *ngIf="errorMessage">
+        <mat-icon>error</mat-icon>
+        {{ errorMessage }}
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isLoading">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+    <button mat-raised-button
+            color="primary"
+            (click)="onActivate()"
+            [disabled]="!selectedFile || isLoading">
+      <mat-icon *ngIf="!isLoading">verified_user</mat-icon>
+      <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+      {{ isLoading ? 'Activating...' : 'Activate License' }}
+    </button>
+  </mat-dialog-actions>
+</div>

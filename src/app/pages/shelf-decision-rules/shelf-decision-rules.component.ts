@@ -18,6 +18,10 @@ import { GenericTableComponent } from '../../shared/components/generic-table/gen
 import { SHELF_DECISION_RULES_TABLE_CONFIG } from './shelf-decision-rules-table.config';
 import { ActionEvent, SortEvent, PageEvent, FilterEvent } from '../../shared/models/table.models';
 import { ShelfDecisionRuleDialogComponent, ShelfDecisionRuleDialogData } from './shelf-decision-rule-dialog.component';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-shelf-decision-rules',
@@ -149,15 +153,32 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    * Delete rule with confirmation
    */
   private deleteRule(rule: ShelfDecisionRuleDisplayData): void {
-    if (confirm(`Are you sure you want to delete rule "${rule.displayName}"?`)) {
-      this.shelfDecisionRulesService.deleteShelfDecisionRule(rule.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          error: (error) => {
-            console.error('Error deleting rule:', error);
-          }
-        });
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Rule',
+      message: `Are you sure you want to delete rule "${rule.displayName}"?`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.shelfDecisionRulesService.deleteShelfDecisionRule(rule.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            error: (error) => {
+              console.error('Error deleting rule:', error);
+            }
+          });
+      }
+    });
   }
 
   /**

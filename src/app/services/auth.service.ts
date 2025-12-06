@@ -18,12 +18,17 @@ import { PageInitializationService } from './page-initialization.service';
 export class AuthService {
   private readonly API_URL = 'http://localhost:5109/api';
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'user_data';
 
   // Reactive state using Angular signals
   public currentUser = signal<User | null>(null);
   public isAuthenticated = signal<boolean>(false);
   public isLoading = signal<boolean>(false);
+
+  // Track if a refresh is in progress to prevent multiple simultaneous refresh calls
+  private refreshInProgress = false;
+  private refreshPromise: Promise<boolean> | null = null;
 
   private pageInitService = inject(PageInitializationService);
 
@@ -53,6 +58,9 @@ export class AuthService {
             username: userData.username || credentials.username,
             nickname: userData.nickname,
             token: response.data.token,
+            refreshToken: response.data.refreshToken,
+            tokenExpiresAt: response.data.expiresAt ? new Date(response.data.expiresAt) : undefined,
+            refreshTokenExpiresAt: response.data.refreshTokenExpiresAt ? new Date(response.data.refreshTokenExpiresAt) : undefined,
             isAuthenticated: true,
             isSuperAdmin: userData.isSuperAdmin || false,
             roles: userData.roles || [],
@@ -60,8 +68,11 @@ export class AuthService {
             allowedTemplates: userData.allowedTemplates || []
           };
 
-          // Store token and user data
+          // Store tokens and user data
           localStorage.setItem(this.TOKEN_KEY, response.data.token);
+          if (response.data.refreshToken) {
+            localStorage.setItem(this.REFRESH_TOKEN_KEY, response.data.refreshToken);
+          }
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
 
           // Update reactive state
@@ -117,8 +128,18 @@ export class AuthService {
    * Logout user and clear stored data
    */
   logout(): void {
+    // Revoke refresh token on server (fire and forget)
+    const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    if (refreshToken) {
+      this.http.post(`${this.API_URL}/Auth/logout`, { refreshToken })
+        .subscribe({
+          error: () => {} // Silently ignore errors
+        });
+    }
+
     // Clear stored data
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
 
     // Update reactive state
@@ -158,6 +179,89 @@ export class AuthService {
    */
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  /**
+   * Get stored refresh token
+   */
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Refresh the access token using the stored refresh token.
+   * Returns a promise that resolves to true if refresh was successful, false otherwise.
+   * Implements request deduplication - multiple calls during refresh will share the same promise.
+   */
+  async refreshToken(): Promise<boolean> {
+    // If a refresh is already in progress, return the existing promise
+    if (this.refreshInProgress && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return false;
+    }
+
+    this.refreshInProgress = true;
+    this.refreshPromise = this.performTokenRefresh(refreshToken);
+
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshInProgress = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  /**
+   * Perform the actual token refresh HTTP call
+   */
+  private async performTokenRefresh(refreshToken: string): Promise<boolean> {
+    try {
+      const response = await this.http.post<ApiResponse<any>>(
+        `${this.API_URL}/Auth/refresh`,
+        { refreshToken }
+      ).toPromise();
+
+      if (response?.success && response.data?.token) {
+        const userData = response.data.user || {};
+        const user: User = {
+          id: userData.id,
+          username: userData.username,
+          nickname: userData.nickname,
+          token: response.data.token,
+          refreshToken: response.data.refreshToken,
+          tokenExpiresAt: response.data.expiresAt ? new Date(response.data.expiresAt) : undefined,
+          refreshTokenExpiresAt: response.data.refreshTokenExpiresAt ? new Date(response.data.refreshTokenExpiresAt) : undefined,
+          isAuthenticated: true,
+          isSuperAdmin: userData.isSuperAdmin || false,
+          roles: userData.roles || [],
+          allowedPages: userData.allowedPages || [],
+          allowedTemplates: userData.allowedTemplates || []
+        };
+
+        // Store new tokens and user data
+        localStorage.setItem(this.TOKEN_KEY, response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem(this.REFRESH_TOKEN_KEY, response.data.refreshToken);
+        }
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+        // Update reactive state
+        this.currentUser.set(user);
+        this.isAuthenticated.set(true);
+
+        console.log('Token refreshed successfully');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      return false;
+    }
   }
 
   /**

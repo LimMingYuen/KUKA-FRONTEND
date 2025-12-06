@@ -1,0 +1,334 @@
+<div class="live-jobs-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">play_circle</mat-icon>
+      <h1>Live Jobs</h1>
+      @if (statistics()?.activeJobs) {
+        <span class="active-badge" [matBadge]="statistics()?.activeJobs" matBadgeColor="accent"></span>
+      }
+    </div>
+
+    <div class="header-right">
+      <!-- Last Refreshed -->
+      <span class="last-refreshed">
+        <mat-icon>schedule</mat-icon>
+        Last updated: {{ getLastRefreshedDisplay() }}
+      </span>
+
+      <!-- Auto-refresh Toggle -->
+      <mat-slide-toggle
+        [checked]="autoRefresh()"
+        (change)="toggleAutoRefresh()"
+        color="primary"
+        matTooltip="Auto-refresh every 5 seconds">
+        Auto-refresh
+      </mat-slide-toggle>
+
+      <!-- Manual Refresh Button -->
+      <button mat-icon-button
+              (click)="refresh()"
+              [disabled]="isLoading()"
+              matTooltip="Refresh now">
+        <mat-icon [class.spinning]="isLoading()">refresh</mat-icon>
+      </button>
+
+      <!-- Filter Toggle Button -->
+      <button mat-icon-button
+              (click)="toggleFilters()"
+              [class.active]="hasActiveFilters()"
+              matTooltip="Toggle filters">
+        <mat-icon>filter_list</mat-icon>
+      </button>
+
+      <!-- Restore Dismissed Button -->
+      @if (getDismissedCount() > 0) {
+        <button mat-stroked-button
+                color="accent"
+                (click)="clearDismissedJobs()"
+                matTooltip="Restore {{ getDismissedCount() }} dismissed job(s)">
+          <mat-icon>restore</mat-icon>
+          Restore ({{ getDismissedCount() }})
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  @if (statistics(); as stats) {
+    <div class="stats-grid">
+      <mat-card class="stat-card total">
+        <mat-card-content>
+          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-label">Total Jobs</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card executing">
+        <mat-card-content>
+          <mat-icon>play_circle</mat-icon>
+          <div class="stat-value">{{ stats.executing }}</div>
+          <div class="stat-label">Executing</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card waiting">
+        <mat-card-content>
+          <mat-icon>pause_circle</mat-icon>
+          <div class="stat-value">{{ stats.waiting }}</div>
+          <div class="stat-label">Waiting</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card warning" [class.has-items]="stats.warning > 0">
+        <mat-card-content>
+          <mat-icon>warning</mat-icon>
+          <div class="stat-value">{{ stats.warning }}</div>
+          <div class="stat-label">Warnings</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card error" [class.has-items]="stats.error > 0">
+        <mat-card-content>
+          <mat-icon>error</mat-icon>
+          <div class="stat-value">{{ stats.error }}</div>
+          <div class="stat-label">Errors</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Filter Panel -->
+  @if (filtersExpanded()) {
+    <mat-card class="filters-card">
+      <mat-card-content>
+        <div class="filters-header">
+          <h3>
+            <mat-icon>filter_list</mat-icon>
+            Filters
+          </h3>
+          @if (hasActiveFilters()) {
+            <button mat-button color="warn" (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear All
+            </button>
+          }
+        </div>
+
+        <div class="filters-grid">
+          <!-- Status Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [value]="filters().status"
+                        (selectionChange)="updateFilter('status', $event.value)">
+              @for (option of statusOptions; track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Robot ID Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Robot ID</mat-label>
+            <mat-select [value]="filters().robotId"
+                        (selectionChange)="updateFilter('robotId', $event.value)">
+              <mat-option [value]="null">All Robots</mat-option>
+              @for (robot of robotOptions(); track robot) {
+                <mat-option [value]="robot">{{ robot }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Workflow Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Workflow</mat-label>
+            <mat-select [value]="filters().workflowName"
+                        (selectionChange)="updateFilter('workflowName', $event.value)">
+              <mat-option [value]="null">All Workflows</mat-option>
+              @for (workflow of workflowOptions(); track workflow) {
+                <mat-option [value]="workflow">{{ workflow }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Map Filter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Map</mat-label>
+            <mat-select [value]="filters().mapCode"
+                        (selectionChange)="updateFilter('mapCode', $event.value)">
+              <mat-option [value]="null">All Maps</mat-option>
+              @for (map of mapOptions(); track map) {
+                <mat-option [value]="map">{{ map }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="filters-actions">
+          <button mat-raised-button color="primary" (click)="applyFilters()">
+            <mat-icon>search</mat-icon>
+            Apply Filters
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Loading Spinner -->
+  @if (isLoading() && jobs().length === 0) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading jobs...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && jobs().length === 0) {
+    <mat-card class="empty-state">
+      <mat-card-content>
+        <mat-icon>inbox</mat-icon>
+        <h2>No Jobs Found</h2>
+        <p>
+          @if (hasActiveFilters()) {
+            No jobs match your current filters. Try adjusting or clearing the filters.
+          } @else {
+            There are no active jobs in the system.
+          }
+        </p>
+        @if (hasActiveFilters()) {
+          <button mat-raised-button color="primary" (click)="clearFilters()">
+            Clear Filters
+          </button>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Jobs Grid -->
+  @if (jobs().length > 0) {
+    <div class="jobs-grid">
+      @for (job of jobs(); track trackByJobCode($index, job)) {
+        <mat-card class="job-card" [class]="job.statusColorClass">
+          <!-- Card Header -->
+          <div class="job-header">
+            <div class="status-badge" [class]="job.statusColorClass">
+              <mat-icon>{{ job.statusIcon }}</mat-icon>
+              <span>{{ job.statusText }}</span>
+            </div>
+            <div class="header-actions">
+              <span class="workflow-name" [matTooltip]="job.workflowName || 'Unknown'">
+                {{ job.workflowName || 'Unknown' }}
+              </span>
+              <!-- Dismiss button for error/warning jobs -->
+              @if (job.statusColorClass === 'status-error' || job.statusColorClass === 'status-warning') {
+                <button mat-icon-button
+                        class="dismiss-btn"
+                        (click)="dismissJob(job.jobCode)"
+                        matTooltip="Dismiss from live view">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Warning Banner -->
+          @if (job.hasWarning) {
+            <div class="warning-banner">
+              <mat-icon>warning</mat-icon>
+              <span>{{ job.warnCode || 'Warning detected' }}</span>
+            </div>
+          }
+
+          <mat-card-content>
+            <!-- Job Code -->
+            <div class="job-info-row primary">
+              <span class="label">Job Code:</span>
+              <span class="value job-code">{{ job.jobCode }}</span>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Robot Info -->
+            <div class="job-info-row">
+              <span class="label">
+                <mat-icon>smart_toy</mat-icon>
+                Robot:
+              </span>
+              <span class="value">{{ job.robotId || 'Not Assigned' }}</span>
+            </div>
+
+            <!-- Progress Bar -->
+            @if (job.progressPercent > 0) {
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="label">Progress:</span>
+                  <span class="value">{{ job.progressPercent }}%</span>
+                </div>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="job.progressPercent"
+                  [color]="job.isActiveJob ? 'primary' : 'accent'">
+                </mat-progress-bar>
+              </div>
+            }
+
+            <!-- Location -->
+            <div class="job-info-row">
+              <span class="label">
+                <mat-icon>location_on</mat-icon>
+                Location:
+              </span>
+              <span class="value">{{ job.locationDisplay }}</span>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Timestamps -->
+            <div class="job-info-row">
+              <span class="label">
+                <mat-icon>schedule</mat-icon>
+                Created:
+              </span>
+              <span class="value" [matTooltip]="job.createdDateDisplay">
+                {{ job.createdDateRelative }}
+              </span>
+            </div>
+
+            <!-- Duration -->
+            @if (job.spendTime) {
+              <div class="job-info-row">
+                <span class="label">
+                  <mat-icon>timer</mat-icon>
+                  Duration:
+                </span>
+                <span class="value">{{ job.durationDisplay }}</span>
+              </div>
+            }
+
+            <!-- Map -->
+            @if (job.mapCode) {
+              <div class="job-info-row">
+                <span class="label">
+                  <mat-icon>map</mat-icon>
+                  Map:
+                </span>
+                <span class="value">{{ job.mapCode }}</span>
+              </div>
+            }
+
+            <!-- Priority -->
+            @if (job.workflowPriority) {
+              <div class="job-info-row">
+                <span class="label">
+                  <mat-icon>low_priority</mat-icon>
+                  Priority:
+                </span>
+                <span class="value">{{ job.workflowPriority }}</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

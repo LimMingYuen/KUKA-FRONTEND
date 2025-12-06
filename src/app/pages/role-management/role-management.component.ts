@@ -22,6 +22,10 @@ import { SavedCustomMissionsService } from '../../services/saved-custom-missions
 import { PageDto, RolePermissionBulkSetRequest, RoleTemplatePermissionBulkSetRequest } from '../../models/permission.models';
 import { SavedCustomMissionsDisplayData } from '../../models/saved-custom-missions.models';
 import { ROLE_MANAGEMENT_TABLE_CONFIG } from './role-management-table.config';
+import {
+  ConfirmationDialogComponent,
+  ConfirmationDialogData
+} from '../workflow-template-form/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-role-management',
@@ -203,33 +207,46 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (
-      !confirm(`Are you sure you want to delete role "${role.name}"? This action cannot be undone.`)
-    ) {
-      return;
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Role',
+      message: `Are you sure you want to delete role "${role.name}"? This action cannot be undone.`,
+      icon: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      confirmColor: 'warn'
+    };
 
-    this.isLoading = true;
-    this.roleService
-      .delete(role.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Role deleted successfully', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result === true) {
+        this.isLoading = true;
+        this.roleService
+          .delete(role.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.snackBar.open('Role deleted successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              this.loadData();
+            },
+            error: (err) => {
+              console.error('Error deleting role:', err);
+              this.snackBar.open(err.message || 'Failed to delete role', 'Close', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+              this.isLoading = false;
+            }
           });
-          this.loadData();
-        },
-        error: (err) => {
-          console.error('Error deleting role:', err);
-          this.snackBar.open(err.message || 'Failed to delete role', 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
-          this.isLoading = false;
-        }
-      });
+      }
+    });
   }
 }
 
