@@ -23,11 +23,13 @@ import { WorkflowService } from '../../services/workflow.service';
 import { MissionHistoryService } from '../../services/mission-history.service';
 import { WorkflowNodeCodesService } from '../../services/workflow-node-codes.service';
 import { MissionQueueService } from '../../services/mission-queue.service';
+import { MapZonesService } from '../../services/map-zones.service';
 import { AuthService } from '../../services/auth.service';
+import { MapZoneWithNodesDto } from '../../models/map-zone.models';
 import { AddToQueueRequest, MissionQueueDisplayData } from '../../models/mission-queue.models';
 import { SavedCustomMissionDto } from '../../models/saved-custom-missions.models';
 import { WorkflowDisplayData } from '../../models/workflow.models';
-import { JobData, RobotData, MissionsUtils } from '../../models/missions.models';
+import { JobData, RobotData, MissionsUtils, MissionStepData, OperationFeedbackRequest } from '../../models/missions.models';
 import { MissionHistoryRequest } from '../../models/mission-history.models';
 import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
 import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
@@ -66,6 +68,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public workflows: WorkflowDisplayData[] = [];
   public zoneMappings: WorkflowZoneMapping[] = [];
 
+  // MapZones data for manual waypoint position matching
+  private mapZonesWithNodes: MapZoneWithNodesDto[] = [];
+
   // Grouped templates by zone (using templateCode zone mapping)
   public templatesByZone: Map<string, SavedCustomMissionDto[]> = new Map();
   public filteredTemplatesByZone: Map<string, SavedCustomMissionDto[]> = new Map();
@@ -86,6 +91,11 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     jobData?: JobData;             // Real-time job status from external AMR
     robotData?: RobotData;         // Real-time robot position/status
     error?: string;                // Error message from API failures
+    missionSteps?: MissionStepData[];        // Parsed mission steps for manual tracking
+    currentStepIndex?: number;                // Current step being executed
+    isWaitingForManualConfirm?: boolean;      // True when at MANUAL waypoint
+    currentManualStep?: MissionStepData;      // The current MANUAL step waiting for confirmation
+    confirmedManualPositions?: Set<string>;   // Track confirmed manual positions
   }> = new Map();
 
   // Loading states
@@ -93,6 +103,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   public isLoadingZoneMappings = false;
   public triggeringMissions: Set<number> = new Set();
   public cancellingMissions: Set<number> = new Set();
+
+  // Concurrency blocking: templateId -> reason
+  public blockedTemplates: Map<number, string> = new Map();
 
   // Cleanup
   private destroy$ = new Subject<void>();
@@ -120,6 +133,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     private missionHistoryService: MissionHistoryService,
     private workflowNodeCodesService: WorkflowNodeCodesService,
     private missionQueueService: MissionQueueService,
+    private mapZonesService: MapZonesService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
@@ -128,6 +142,22 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadWorkflowsAndZones();
     this.restoreActiveJobs();
+    this.loadMapZonesForPositionMatching();
+  }
+
+  /**
+   * Load MapZones with nodes for manual waypoint position matching
+   */
+  private loadMapZonesForPositionMatching(): void {
+    this.mapZonesService.getMapZonesWithNodes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (zones) => {
+          this.mapZonesWithNodes = zones;
+        },
+        error: (error) => {
+        }
+      });
   }
 
   /**
@@ -145,8 +175,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
             item.statusCode === 1 || // Processing
             item.statusCode === 2    // Assigned
           );
-
-          console.log(`Restoring ${activeItems.length} active job(s) from queue`);
 
           // Restore tracking for each active item that has a savedMissionId
           activeItems.forEach((item: MissionQueueDisplayData) => {
@@ -168,14 +196,12 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
               // If already Assigned, also start job polling
               if (item.statusCode === 2) {
-                console.log(`Restoring job polling for Assigned mission: ${item.missionCode}`);
                 this.startJobPolling(item.savedMissionId, item.missionCode);
               }
             }
           });
         },
         error: (error: any) => {
-          console.error('Error restoring active jobs from queue:', error);
         }
       });
   }
@@ -227,6 +253,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
             createdUtc: displayData.createdUtc,
             updatedUtc: displayData.updatedUtc === '-' ? null : displayData.updatedUtc,
             isActive: displayData.isActive,
+            concurrencyMode: displayData.concurrencyMode,
             scheduleSummary: {
               totalSchedules: displayData.activeSchedules,
               activeSchedules: displayData.activeSchedules,
@@ -242,7 +269,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           this.isLoadingZoneMappings = false;
         },
         error: (error) => {
-          console.error('Error loading saved templates and zones:', error);
           this.isLoadingTemplates = false;
           this.isLoadingZoneMappings = false;
           this.snackBar.open('Failed to load saved templates', 'Close', { duration: 3000 });
@@ -464,7 +490,45 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    */
   triggerWorkflow(template: SavedCustomMissionDto): void {
     const id = template.id;
-    this.triggeringMissions.add(id);
+
+    // Check concurrency mode for "Wait" templates
+    if (template.concurrencyMode === 'Wait') {
+      this.triggeringMissions.add(id);
+      this.missionQueueService.getActiveCount(id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (count) => {
+            if (count > 0) {
+              this.triggeringMissions.delete(id);
+              this.blockedTemplates.set(id, `${count} active mission(s) - waiting for completion`);
+              this.snackBar.open(
+                `Cannot trigger "${template.missionName}". ${count} active mission(s) must complete first.`,
+                'Close',
+                { duration: 5000 }
+              );
+              return;
+            }
+            // Clear any previous block and proceed
+            this.blockedTemplates.delete(id);
+            this.doTriggerWorkflow(template);
+          },
+          error: () => {
+            // On error, try to trigger anyway (backend will validate)
+            this.doTriggerWorkflow(template);
+          }
+        });
+    } else {
+      // Unlimited mode - proceed directly
+      this.triggeringMissions.add(id);
+      this.doTriggerWorkflow(template);
+    }
+  }
+
+  /**
+   * Internal method to actually trigger the workflow (after concurrency check)
+   */
+  private doTriggerWorkflow(template: SavedCustomMissionDto): void {
+    const id = template.id;
 
     // Parse robot models and IDs from comma-separated strings
     const robotModels = template.robotModels ?
@@ -480,6 +544,9 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     const missionCode = this.generateMissionCode();
     const requestId = this.generateRequestId();
 
+    // Parse mission steps to include in request (for simulator to know about MANUAL waypoints)
+    const missionSteps = this.parseMissionSteps(template);
+
     // Build the mission request JSON that will be stored in the queue
     const missionRequestJson = JSON.stringify({
       orgId: template.orgId || 'UNIVERSAL',
@@ -490,14 +557,16 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       robotModels: robotModels,
       robotIds: robotIds,
       robotType: template.robotType || 'LIFT',
-      priority: parseInt(template.priority) || 1,
+      priority: this.convertToQueuePriority(template.priority),
       containerModelCode: template.containerModelCode || '',
       containerCode: template.containerCode || '',
       templateCode: template.templateCode || '',
       lockRobotAfterFinish: template.lockRobotAfterFinish || false,
       unlockRobotId: template.unlockRobotId || '',
       unlockMissionCode: template.unlockMissionCode || '',
-      idleNode: template.idleNode || ''
+      idleNode: template.idleNode || '',
+      // Include mission steps so simulator knows about MANUAL waypoints
+      missionData: missionSteps
     });
 
     // Create queue request
@@ -507,7 +576,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       savedMissionId: template.id,
       missionName: template.missionName,
       missionRequestJson: missionRequestJson,
-      priority: parseInt(template.priority) || 1,
+      priority: this.convertToQueuePriority(template.priority),
       robotTypeFilter: template.robotType || undefined,
       preferredRobotIds: robotIds.length > 0 ? robotIds.join(',') : undefined
     };
@@ -520,6 +589,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           this.triggeringMissions.delete(id);
 
           // Store queue info in workflowJobs map for tracking
+          // missionSteps already parsed above for missionRequestJson
           this.workflowJobs.set(id, {
             missionCode: missionCode,
             requestId: requestId,
@@ -528,7 +598,11 @@ export class MissionControlComponent implements OnInit, OnDestroy {
             queueId: queueItem.id,
             queueStatus: queueItem.status, // Already a string from backend
             queuePosition: queueItem.queuePosition,
-            assignedRobotId: queueItem.assignedRobotId || undefined
+            assignedRobotId: queueItem.assignedRobotId || undefined,
+            missionSteps: missionSteps,
+            currentStepIndex: 0,
+            isWaitingForManualConfirm: false,
+            confirmedManualPositions: new Set()
           });
 
           // Start polling queue status
@@ -545,8 +619,15 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.triggeringMissions.delete(id);
-          console.error('Error adding to queue:', error);
-          this.snackBar.open('Failed to add mission to queue', 'Close', { duration: 3000 });
+
+          // Check if it's a concurrency violation (HTTP 409 Conflict)
+          if (error.status === 409) {
+            const errorMsg = error.error?.msg || 'Active missions must complete first';
+            this.blockedTemplates.set(id, errorMsg);
+            this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
+          } else {
+            this.snackBar.open('Failed to add mission to queue', 'Close', { duration: 3000 });
+          }
         }
       });
   }
@@ -599,12 +680,10 @@ export class MissionControlComponent implements OnInit, OnDestroy {
               }
             } else if (!response.success) {
               // Handle API error response (success: false)
-              console.warn(`Job query failed for ${missionCode}:`, response.message || response.code);
               this.handleJobQueryError(missionCode, response.message || 'Job query failed');
             }
           },
           error: (error) => {
-            console.error('Error polling job status:', error);
             const errorMsg = this.extractErrorMessage(error);
             this.handleJobQueryError(missionCode, errorMsg);
           }
@@ -634,15 +713,15 @@ export class MissionControlComponent implements OnInit, OnDestroy {
           const currentJob = this.workflowJobs.get(id);
           if (currentJob) {
             currentJob.robotData = robotData;
+            // Check if robot is at a manual waypoint
+            this.checkManualWaypointStatus(id);
           }
         } else if (!response.success) {
           // Handle API error response (success: false)
-          console.warn(`Robot query failed for ${robotId}:`, response.message || response.code);
           this.handleRobotQueryError(robotId, response.message || 'Robot query failed');
         }
       },
       error: (error) => {
-        console.error('Error querying robot status:', error);
         const errorMsg = this.extractErrorMessage(error);
         this.handleRobotQueryError(robotId, errorMsg);
       }
@@ -691,19 +770,20 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
             // If status changed to Assigned (statusCode = 2), start job polling
             if (queueItem.statusCode === 2 && !this.pollingSubscriptions.has(job.missionCode)) {
-              console.log(`Queue status changed to Assigned, starting job polling for ${job.missionCode}`);
               this.startJobPolling(templateId, job.missionCode);
             }
 
             // If terminal state reached (statusCode 3/4/5), stop queue polling
             if (queueItem.statusCode === 3 || queueItem.statusCode === 4 || queueItem.statusCode === 5) {
               // Completed, Failed, or Cancelled
-              console.log(`Queue reached terminal state: ${queueItem.status}`);
               this.stopQueuePolling(queueId);
+              // Clear concurrency block for this template
+              if (job.savedMissionId) {
+                this.blockedTemplates.delete(job.savedMissionId);
+              }
             }
           },
           error: (error) => {
-            console.error('Error polling queue status:', error);
           }
         });
       });
@@ -735,7 +815,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
     const jobInfo = this.workflowJobs.get(id);
 
     if (!jobInfo) {
-      console.error(`No job info found for workflow ID ${id}`);
       return;
     }
 
@@ -763,10 +842,8 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          console.log(`✓ Mission history created: ${missionCode} - ${finalStatus}`);
         },
         error: (error) => {
-          console.error(`✗ Failed to create mission history for ${missionCode}:`, error);
         }
       });
   }
@@ -792,6 +869,20 @@ export class MissionControlComponent implements OnInit, OnDestroy {
    */
   isTriggering(id: number): boolean {
     return this.triggeringMissions.has(id);
+  }
+
+  /**
+   * Check if template is blocked due to concurrency mode
+   */
+  isTemplateBlocked(id: number): boolean {
+    return this.blockedTemplates.has(id);
+  }
+
+  /**
+   * Get block reason for template
+   */
+  getBlockReason(id: number): string {
+    return this.blockedTemplates.get(id) || '';
   }
 
   /**
@@ -937,13 +1028,16 @@ export class MissionControlComponent implements OnInit, OnDestroy {
               // Stop all polling
               this.stopQueuePolling(job.queueId!);
               this.stopJobPolling(job.missionCode);
+              // Clear concurrency block
+              if (job.savedMissionId) {
+                this.blockedTemplates.delete(job.savedMissionId);
+              }
               // Remove from tracking
               this.workflowJobs.delete(id);
               this.snackBar.open('Mission cancelled successfully', 'Close', { duration: 3000 });
             },
             error: (error) => {
               this.cancellingMissions.delete(id);
-              console.error('Error cancelling mission from queue:', error);
               this.snackBar.open('Failed to cancel mission', 'Close', { duration: 3000 });
             }
           });
@@ -970,7 +1064,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
             },
             error: (error) => {
               this.cancellingMissions.delete(id);
-              console.error('Error cancelling mission:', error);
               this.snackBar.open('Failed to cancel mission', 'Close', { duration: 3000 });
             }
           });
@@ -1043,7 +1136,6 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         'Close',
         { duration: 8000 }
       );
-      console.error(`Job query stopped for ${missionCode} after ${this.MAX_CONSECUTIVE_ERRORS} errors`);
     } else if (currentCount === 3) {
       // Warn user after 3 errors (but continue polling)
       this.snackBar.open(
@@ -1102,5 +1194,205 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       now.getSeconds().toString().padStart(2, '0') +
       now.getMilliseconds().toString().padStart(3, '0');
     return `mission${timestamp}`;
+  }
+
+  /**
+   * Convert template priority (string or number) to queue priority number
+   * Queue priority: 1=Critical (highest), 2=High, 3=Normal, 4=Low, 5=Lowest
+   */
+  private convertToQueuePriority(priority: string | number | null | undefined): number {
+    if (priority == null) return 3; // Default to Normal
+
+    // If it's already a number in valid range, use it directly
+    const numPriority = typeof priority === 'number' ? priority : parseInt(priority);
+    if (!isNaN(numPriority) && numPriority >= 1 && numPriority <= 5) {
+      return numPriority;
+    }
+
+    // Convert string priority to queue priority
+    const priorityStr = String(priority).toUpperCase();
+    switch (priorityStr) {
+      case 'CRITICAL':
+        return 1;
+      case 'HIGH':
+        return 2;
+      case 'MEDIUM':
+      case 'NORMAL':
+        return 3;
+      case 'LOW':
+        return 4;
+      case 'LOWEST':
+        return 5;
+      default:
+        return 3; // Default to Normal
+    }
+  }
+
+  // =========================================================================
+  // MANUAL WAYPOINT CONFIRMATION METHODS
+  // =========================================================================
+
+  /**
+   * Parse mission steps from saved template
+   */
+  private parseMissionSteps(template: SavedCustomMissionDto): MissionStepData[] {
+    try {
+      return JSON.parse(template.missionStepsJson || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Check if robot is at a manual waypoint using frontend-based position matching
+   * Compares robot's nodeCode with mission step positions
+   */
+  private checkManualWaypointStatus(id: number): void {
+    const job = this.workflowJobs.get(id);
+    if (!job || !job.robotData || !job.missionSteps) {
+      return;
+    }
+
+    const robotNodeCode = job.robotData.nodeCode;
+    if (!robotNodeCode) {
+      return;
+    }
+
+    // Find MANUAL step that robot is currently at
+    for (const step of job.missionSteps) {
+      if (step.passStrategy?.toUpperCase() !== 'MANUAL') {
+        continue;
+      }
+
+      // Skip already confirmed positions
+      if (job.confirmedManualPositions?.has(step.position)) {
+        continue;
+      }
+
+      // Check if robot is at this MANUAL step's position
+      const stepType = this.determineStepType(step.position);
+
+      const isAtPosition = this.isRobotAtPosition(robotNodeCode, step.position, stepType);
+
+      if (isAtPosition) {
+        job.isWaitingForManualConfirm = true;
+        job.currentManualStep = step;
+        return;
+      }
+    }
+
+    // No matching MANUAL waypoint found
+    job.isWaitingForManualConfirm = false;
+    job.currentManualStep = undefined;
+  }
+
+  /**
+   * Determine if position is NODE_AREA (zone) or NODE_POINT (specific node)
+   */
+  private determineStepType(position: string): 'NODE_AREA' | 'NODE_POINT' {
+    // Check if position matches a known zone code
+    const isZone = this.mapZonesWithNodes.some(
+      z => z.zoneCode.toLowerCase() === position.toLowerCase()
+    );
+    return isZone ? 'NODE_AREA' : 'NODE_POINT';
+  }
+
+  /**
+   * Check if robot's current nodeCode matches a step position
+   * @param robotNodeCode - Full node code from RobotQuery (e.g., "Sim1-1-5")
+   * @param stepPosition - Position from mission step (zone code or full node code)
+   * @param stepType - "NODE_AREA" or "NODE_POINT"
+   */
+  private isRobotAtPosition(robotNodeCode: string, stepPosition: string, stepType: 'NODE_AREA' | 'NODE_POINT'): boolean {
+    if (!robotNodeCode || !stepPosition) {
+      return false;
+    }
+
+    // Extract just the nodeNumber from the robot's full node code (e.g., "Sim1-1-5" -> "5")
+    const robotNodeNumber = this.extractLastNodeNumber(robotNodeCode);
+
+    if (stepType === 'NODE_AREA') {
+      // Find the MapZone by zoneCode
+      const zone = this.mapZonesWithNodes.find(
+        z => z.zoneCode.toLowerCase() === stepPosition.toLowerCase()
+      );
+      if (!zone || !zone.nodes) {
+        return false;
+      }
+
+      // Parse comma-separated node numbers (or JSON array)
+      const nodeNumbers = this.parseZoneNodes(zone.nodes);
+
+      return nodeNumbers.includes(robotNodeNumber);
+    }
+    else if (stepType === 'NODE_POINT') {
+      // Step position is full node code: "Sim1-1-16"
+      // Extract the nodeNumber (last part after splitting by '-')
+      const stepNodeNumber = this.extractLastNodeNumber(stepPosition);
+
+      return robotNodeNumber === stepNodeNumber;
+    }
+
+    return false;
+  }
+
+  /**
+   * Confirm manual waypoint to continue mission
+   */
+  confirmManualWaypoint(id: number): void {
+    const job = this.workflowJobs.get(id);
+    if (!job || !job.isWaitingForManualConfirm || !job.currentManualStep) return;
+
+    // Get position from currentManualStep (set by checkManualWaypointStatus)
+    const currentPosition = job.currentManualStep.position;
+    if (!currentPosition) {
+      return;
+    }
+
+    // Always generate a NEW requestId for each operation feedback call
+    const request: OperationFeedbackRequest = {
+      requestId: this.generateRequestId(),
+      missionCode: job.missionCode,
+      position: currentPosition
+    };
+
+    this.missionsService.sendOperationFeedback(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Mark position as confirmed
+            if (!job.confirmedManualPositions) {
+              job.confirmedManualPositions = new Set();
+            }
+            job.confirmedManualPositions.add(currentPosition);
+            job.isWaitingForManualConfirm = false;
+            job.currentManualStep = undefined;
+
+            this.snackBar.open('Manual waypoint confirmed - robot will continue', 'Close', { duration: 3000 });
+          } else {
+            this.snackBar.open(response.message || 'Failed to confirm manual waypoint', 'Close', { duration: 5000 });
+          }
+        },
+        error: (error) => {
+          this.snackBar.open('Failed to confirm manual waypoint', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
+  /**
+   * Check if job is waiting for manual confirmation (for template)
+   */
+  isWaitingForManualConfirm(id: number): boolean {
+    const job = this.workflowJobs.get(id);
+    return job?.isWaitingForManualConfirm || false;
+  }
+
+  /**
+   * Get current manual waypoint position for display
+   */
+  getManualWaypointPosition(id: number): string {
+    const job = this.workflowJobs.get(id);
+    return job?.currentManualStep?.position || '';
   }
 }

@@ -21,6 +21,8 @@ export interface SavedCustomMissionDto {
   createdUtc: string;
   updatedUtc: string | null;
   isActive: boolean;
+  /** Concurrency mode: "Unlimited" (default) or "Wait" */
+  concurrencyMode: 'Unlimited' | 'Wait';
   scheduleSummary: SavedMissionScheduleSummaryDto;
 }
 
@@ -51,6 +53,8 @@ export interface SavedCustomMissionCreateRequest {
   unlockMissionCode?: string | null;
   missionStepsJson: string;
   isActive?: boolean;  // Defaults to true on backend
+  /** Concurrency mode: "Unlimited" (default) or "Wait" */
+  concurrencyMode?: 'Unlimited' | 'Wait';
 }
 
 export interface SavedCustomMissionUpdateRequest {
@@ -72,6 +76,8 @@ export interface SavedCustomMissionUpdateRequest {
   unlockMissionCode?: string | null;
   missionStepsJson: string;
   isActive: boolean;
+  /** Concurrency mode: "Unlimited" or "Wait" */
+  concurrencyMode: 'Unlimited' | 'Wait';
 }
 
 export interface TriggerMissionResponse {
@@ -117,6 +123,8 @@ export interface MissionTemplate {
 export interface SaveMissionAsTemplateRequest {
   missionName: string;
   description: string;
+  /** Concurrency mode: "Unlimited" (default) or "Wait" */
+  concurrencyMode?: 'Unlimited' | 'Wait';
   missionTemplate: MissionTemplate;
 }
 
@@ -156,6 +164,8 @@ export interface SavedCustomMissionsDisplayData {
   lastRunUtc: string;
   missionStepsJson: string;
   isActive: boolean;
+  /** Concurrency mode: "Unlimited" or "Wait" */
+  concurrencyMode: 'Unlimited' | 'Wait';
 }
 
 // Enums for mission data
@@ -220,7 +230,8 @@ export class SavedCustomMissionsUtils {
       lastStatus: dto.scheduleSummary.lastStatus || '-',
       lastRunUtc: dto.scheduleSummary.lastRunUtc ? formatDateTime(dto.scheduleSummary.lastRunUtc) : '-',
       missionStepsJson: dto.missionStepsJson,
-      isActive: dto.isActive
+      isActive: dto.isActive,
+      concurrencyMode: dto.concurrencyMode || 'Unlimited'
     };
   }
 

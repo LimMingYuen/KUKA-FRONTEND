@@ -128,23 +128,19 @@ export class MapZonesComponent implements OnInit, OnDestroy {
         this.syncMapZones();
         break;
       case 'view':
-        console.log('View map zone:', event.row);
         this.viewMapZone(event.row);
         break;
       case 'edit':
-        console.log('Edit map zone:', event.row);
         this.editMapZone(event.row);
         break;
       case 'export':
-        console.log('Export map zone:', event.row);
         this.exportMapZone(event.row);
         break;
       case 'delete':
-        console.log('Delete map zone:', event.row);
         this.deleteMapZone(event.row);
         break;
       default:
-        console.log('Unknown action:', event.action, event.row);
+        break;
     }
   }
 
@@ -153,7 +149,6 @@ export class MapZonesComponent implements OnInit, OnDestroy {
    */
   private viewMapZone(zone: MapZoneDisplayData): void {
     // TODO: Implement view functionality
-    console.log('Viewing map zone:', zone);
   }
 
   /**
@@ -161,7 +156,6 @@ export class MapZonesComponent implements OnInit, OnDestroy {
    */
   private editMapZone(zone: MapZoneDisplayData): void {
     // TODO: Implement edit functionality
-    console.log('Editing map zone:', zone);
   }
 
   /**
@@ -169,7 +163,6 @@ export class MapZonesComponent implements OnInit, OnDestroy {
    */
   private exportMapZone(zone: MapZoneDisplayData): void {
     // TODO: Implement export functionality
-    console.log('Exporting map zone:', zone);
   }
 
   /**
@@ -177,7 +170,6 @@ export class MapZonesComponent implements OnInit, OnDestroy {
    */
   private deleteMapZone(zone: MapZoneDisplayData): void {
     // TODO: Implement delete functionality
-    console.log('Deleting map zone:', zone);
   }
 
   /**

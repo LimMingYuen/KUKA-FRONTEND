@@ -38,7 +38,7 @@
     <form [formGroup]="templateForm" class="template-form">
       <div class="form-columns">
         <!-- LEFT COLUMN: Workflow Reference, Basic Info, Mission Config -->
-        <div class="left-column">
+        <div class="left-column" [class.full-width]="isWorkflowSelected()">
           <mat-card class="form-card">
             <mat-card-content>
               <!-- Workflow Reference Section (Create mode only) -->
@@ -98,6 +98,41 @@
                   ></textarea>
                   <mat-icon matPrefix>description</mat-icon>
                 </mat-form-field>
+
+                <!-- Concurrency Mode Section -->
+                <div class="concurrency-section">
+                  <label class="concurrency-label">Concurrency Mode</label>
+                  <div class="concurrency-toggles">
+                    <div class="toggle-card" [class.active]="templateForm.get('concurrencyMode')?.value === 'Unlimited'"
+                         (click)="onConcurrencyModeChange(false)">
+                      <div class="toggle-header">
+                        <mat-icon>loop</mat-icon>
+                        <span class="toggle-title">Unlimited</span>
+                        <mat-slide-toggle
+                          [checked]="templateForm.get('concurrencyMode')?.value === 'Unlimited'"
+                          (change)="onConcurrencyModeChange(!$event.checked)"
+                          (click)="$event.stopPropagation()"
+                          color="primary">
+                        </mat-slide-toggle>
+                      </div>
+                      <p class="toggle-description">Can trigger multiple times, missions queue up.</p>
+                    </div>
+                    <div class="toggle-card" [class.active]="templateForm.get('concurrencyMode')?.value === 'Wait'"
+                         (click)="onConcurrencyModeChange(true)">
+                      <div class="toggle-header">
+                        <mat-icon>hourglass_empty</mat-icon>
+                        <span class="toggle-title">Wait</span>
+                        <mat-slide-toggle
+                          [checked]="templateForm.get('concurrencyMode')?.value === 'Wait'"
+                          (change)="onConcurrencyModeChange($event.checked)"
+                          (click)="$event.stopPropagation()"
+                          color="primary">
+                        </mat-slide-toggle>
+                      </div>
+                      <p class="toggle-description">Must wait for all active missions to complete before triggering again.</p>
+                    </div>
+                  </div>
+                </div>
               </section>
 
               <mat-divider></mat-divider>
@@ -112,7 +147,11 @@
                 <div class="form-row">
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Organization ID</mat-label>
-                    <input matInput formControlName="orgId" placeholder="Org ID" />
+                    <mat-select formControlName="orgId">
+                      <mat-option *ngFor="let org of activeOrganizationIds()" [value]="org.actualValue">
+                        {{ org.displayName }}
+                      </mat-option>
+                    </mat-select>
                     <mat-icon matPrefix>business</mat-icon>
                     <mat-error>Required</mat-error>
                   </mat-form-field>
@@ -239,28 +278,30 @@
                     <div class="step-row">
                       <mat-form-field appearance="outline" class="flex-1">
                         <mat-label>Type (Area)</mat-label>
-                        <mat-select formControlName="type" (selectionChange)="onTypeChange(i)">
-                          <mat-option *ngFor="let area of activeAreas()" [value]="area">
+                        <input matInput
+                               formControlName="type"
+                               [matAutocomplete]="typeAuto"
+                               (input)="onTypeChange(i)"
+                               placeholder="Search type...">
+                        <mat-autocomplete #typeAuto="matAutocomplete" (optionSelected)="onTypeChange(i)">
+                          <mat-option *ngFor="let area of filterTypes(step.get('type')?.value)" [value]="area">
                             {{ area }}
                           </mat-option>
-                        </mat-select>
+                        </mat-autocomplete>
                         <mat-error>Required</mat-error>
                       </mat-form-field>
 
                       <mat-form-field appearance="outline" class="flex-1">
                         <mat-label>Position</mat-label>
-                        <mat-select formControlName="position">
-                          <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_POINT'" label="QR Codes">
-                            <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
-                              {{ position }}
-                            </mat-option>
-                          </mat-optgroup>
-                          <mat-optgroup *ngIf="step.get('type')?.value === 'NODE_AREA'" label="Map Zones">
-                            <mat-option *ngFor="let position of getAvailablePositionsForStep(i)" [value]="position">
-                              {{ position }}
-                            </mat-option>
-                          </mat-optgroup>
-                        </mat-select>
+                        <input matInput
+                               formControlName="position"
+                               [matAutocomplete]="positionAuto"
+                               placeholder="Search position...">
+                        <mat-autocomplete #positionAuto="matAutocomplete">
+                          <mat-option *ngFor="let position of filterPositions(i, step.get('position')?.value)" [value]="position">
+                            {{ position }}
+                          </mat-option>
+                        </mat-autocomplete>
                         <mat-error>Required</mat-error>
                       </mat-form-field>
                     </div>
@@ -268,21 +309,30 @@
                     <div class="step-row">
                       <mat-form-field appearance="outline" class="flex-1">
                         <mat-label>Pass Strategy</mat-label>
-                        <mat-select formControlName="passStrategy">
-                          <mat-option *ngFor="let strategy of activeResumeStrategies()" [value]="strategy.actualValue">
+                        <input matInput
+                               formControlName="passStrategy"
+                               [matAutocomplete]="strategyAuto"
+                               [value]="displayStrategy(step.get('passStrategy')?.value)"
+                               placeholder="Search strategy...">
+                        <mat-autocomplete #strategyAuto="matAutocomplete">
+                          <mat-option *ngFor="let strategy of filterStrategies(step.get('passStrategy')?.value)" [value]="strategy.actualValue">
                             {{ strategy.displayName }}
                           </mat-option>
-                        </mat-select>
+                        </mat-autocomplete>
                         <mat-error>Required</mat-error>
                       </mat-form-field>
 
                       <mat-form-field appearance="outline" class="flex-1">
                         <mat-label>Shelf Decision Rule</mat-label>
-                        <mat-select formControlName="putDown">
-                          <mat-option *ngFor="let rule of activeShelfRules()" [value]="rule">
+                        <input matInput
+                               formControlName="putDown"
+                               [matAutocomplete]="ruleAuto"
+                               placeholder="Search rule...">
+                        <mat-autocomplete #ruleAuto="matAutocomplete">
+                          <mat-option *ngFor="let rule of filterShelfRules(step.get('putDown')?.value)" [value]="rule">
                             {{ rule }}
                           </mat-option>
-                        </mat-select>
+                        </mat-autocomplete>
                         <mat-error>Required</mat-error>
                       </mat-form-field>
                     </div>

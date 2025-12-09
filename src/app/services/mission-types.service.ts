@@ -1,7 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 
 import {
   MissionTypeDto,
@@ -17,12 +17,18 @@ import {
   isValidDescription,
   sortMissionTypesByPriority
 } from '../models/mission-types.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MissionTypesService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/mission-types';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/mission-types';
+  }
 
   // Reactive state using signals
   public missionTypes = signal<MissionTypeDisplayData[]>([]);
@@ -60,23 +66,45 @@ export class MissionTypesService {
     return (error: any): Observable<T> => {
       console.error(`${operation} failed:`, error);
 
+      let errorMessage: string;
+
       // Set error state
-      if (error.status === 401) {
-        this.error.set('Authentication failed. Please log in again.');
+      if (error.status === 400) {
+        // Bad Request - validation errors
+        errorMessage = error.error?.detail || error.error?.title || error.error?.msg || 'Invalid request. Please check your input.';
+      } else if (error.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
       } else if (error.status === 403) {
-        this.error.set('You do not have permission to perform this action.');
+        errorMessage = 'You do not have permission to perform this action.';
       } else if (error.status === 404) {
-        this.error.set('The requested mission type was not found.');
+        errorMessage = 'The requested mission type was not found.';
       } else if (error.status === 409) {
-        this.error.set('A mission type with this actual value already exists.');
+        errorMessage = 'A mission type with this actual value already exists.';
       } else if (error.status >= 500) {
-        this.error.set('Server error. Please try again later.');
+        errorMessage = 'Server error. Please try again later.';
       } else {
-        this.error.set(error.error?.msg || error.message || 'An unexpected error occurred.');
+        errorMessage = error.error?.msg || error.message || 'An unexpected error occurred.';
       }
+
+      this.error.set(errorMessage);
+      this.showErrorMessage(errorMessage);
 
       return throwError(() => error);
     };
+  }
+
+  /**
+   * Show success message
+   */
+  private showSuccessMessage(message: string): void {
+    this.notificationService.success(message);
+  }
+
+  /**
+   * Show error message
+   */
+  private showErrorMessage(message: string): void {
+    this.notificationService.error(message);
   }
 
   /**
@@ -161,12 +189,16 @@ export class MissionTypesService {
           const updatedMissionTypes = sortMissionTypesByPriority([...currentMissionTypes, newMissionType]);
           this.missionTypes.set(updatedMissionTypes);
           this.isCreating.set(false);
+          this.showSuccessMessage('Mission type created successfully');
           return newMissionType;
         } else {
           throw new Error(response.msg || 'Failed to create mission type');
         }
       }),
-      catchError(this.handleError<MissionTypeDisplayData>('createMissionType'))
+      catchError((error) => {
+        this.isCreating.set(false);
+        return this.handleError<MissionTypeDisplayData>('createMissionType')(error);
+      })
     );
   }
 
@@ -203,12 +235,16 @@ export class MissionTypesService {
           const sortedMissionTypes = sortMissionTypesByPriority(updatedMissionTypes);
           this.missionTypes.set(sortedMissionTypes);
           this.isUpdating.set(false);
+          this.showSuccessMessage('Mission type updated successfully');
           return updatedMissionType;
         } else {
           throw new Error(response.msg || 'Failed to update mission type');
         }
       }),
-      catchError(this.handleError<MissionTypeDisplayData>('updateMissionType'))
+      catchError((error) => {
+        this.isUpdating.set(false);
+        return this.handleError<MissionTypeDisplayData>('updateMissionType')(error);
+      })
     );
   }
 
@@ -228,11 +264,15 @@ export class MissionTypesService {
           const updatedMissionTypes = currentMissionTypes.filter(mt => mt.id !== id);
           this.missionTypes.set(updatedMissionTypes);
           this.isDeleting.set(false);
+          this.showSuccessMessage('Mission type deleted successfully');
         } else {
           throw new Error(response.msg || 'Failed to delete mission type');
         }
       }),
-      catchError(this.handleError<void>('deleteMissionType'))
+      catchError((error) => {
+        this.isDeleting.set(false);
+        return this.handleError<void>('deleteMissionType')(error);
+      })
     );
   }
 
@@ -339,40 +379,5 @@ export class MissionTypesService {
    */
   public hasValidToken(): boolean {
     return !!this.getAuthToken();
-  }
-
-  /**
-   * Check if a mission type is being used by any workflow templates
-   * Returns the count of templates using this mission type
-   */
-  public checkUsageInTemplates(missionTypeValue: string): Observable<{
-    isUsed: boolean;
-    usageCount: number;
-    templateNames: string[];
-  }> {
-    const url = `${this.API_URL.replace('/v1/mission-types', '')}/saved-custom-missions`;
-
-    return this.http.get<ApiResponse<any[]>>(url, {
-      headers: this.getHttpHeaders()
-    }).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          const templatesUsingThisType = response.data.filter(
-            (template: any) => template.missionType === missionTypeValue
-          );
-
-          return {
-            isUsed: templatesUsingThisType.length > 0,
-            usageCount: templatesUsingThisType.length,
-            templateNames: templatesUsingThisType.map((t: any) => t.missionName)
-          };
-        }
-        return { isUsed: false, usageCount: 0, templateNames: [] };
-      }),
-      catchError(error => {
-        console.error('Error checking mission type usage:', error);
-        return throwError(() => error);
-      })
-    );
   }
 }

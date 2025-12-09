@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -9,12 +9,16 @@ import {
   ToggleScheduleRequest,
   ScheduleTriggerResult
 } from '../models/workflow-schedule.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowScheduleService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/workflow-schedules';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/workflow-schedules';
+  }
 
   constructor(private http: HttpClient) {}
 

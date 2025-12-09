@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   SubmitMissionRequest,
   SubmitMissionResponse,
@@ -17,12 +17,16 @@ import {
   RobotQueryRequest,
   RobotQueryResponse
 } from '../models/missions.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MissionsService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly MISSIONS_ENDPOINT = '/missions';
 
   // Reactive state using Angular signals
@@ -30,9 +34,10 @@ export class MissionsService {
   public isCancelling = signal<boolean>(false);
   public isQuerying = signal<boolean>(false);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
+    private http: HttpClient
   ) {}
 
   /**
@@ -241,23 +246,13 @@ export class MissionsService {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 8000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

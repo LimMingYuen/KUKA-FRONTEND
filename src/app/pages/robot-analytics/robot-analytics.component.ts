@@ -61,7 +61,7 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   public isLoading = false;
   public error: string | null = null;
   public availableRobots: RobotInfo[] = [];
-  public filtersExpanded = true; // Expanded by default on first load
+  public hasSearched = false; // Track if user has performed a search
 
   // Filter values
   public selectedRobotId: string = '';
@@ -146,7 +146,7 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
         next: (robots) => {
           if (robots && robots.length > 0) {
             this.selectedRobotId = robots[0].id;
-            this.loadDefaultData();
+            // Don't auto-load data - user must click Search button
           }
         },
         error: (error) => {
@@ -214,10 +214,8 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
    * This is triggered by the Search button
    */
   public applyFilters(): void {
+    this.hasSearched = true;
     this.loadDefaultData();
-
-    // Auto-collapse filters after search to show results
-    this.filtersExpanded = false;
   }
 
   /**
@@ -233,9 +231,10 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
     this.endMinute = '59';
     this.groupBy = 'day';
 
-    // Optionally clear the current data
+    // Clear the current data and reset search state
     this.utilizationData = null;
     this.error = null;
+    this.hasSearched = false;
   }
 
   /**

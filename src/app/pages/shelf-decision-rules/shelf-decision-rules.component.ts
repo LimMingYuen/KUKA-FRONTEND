@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -48,7 +48,8 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
 
   constructor(
     public shelfDecisionRulesService: ShelfDecisionRulesService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {
     // Configure empty state action
     this.tableConfig.empty!.action = () => this.openCreateDialog();
@@ -153,6 +154,16 @@ export class ShelfDecisionRulesComponent implements OnInit, OnDestroy {
    * Delete rule with confirmation
    */
   private deleteRule(rule: ShelfDecisionRuleDisplayData): void {
+    if (rule.isActive) {
+      this.snackBar.open('Cannot delete an active shelf decision rule. Please set it to inactive first.', 'Dismiss', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
     const dialogData: ConfirmationDialogData = {
       title: 'Delete Rule',
       message: `Are you sure you want to delete rule "${rule.displayName}"?`,

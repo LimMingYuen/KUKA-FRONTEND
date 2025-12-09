@@ -108,7 +108,7 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       type: 'icon',
       tooltip: 'Delete mission type',
       color: 'warn',
-      disabled: (row: any) => row.isActive
+      disabled: () => false
     } as ActionConfig
   ],
 

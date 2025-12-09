@@ -117,13 +117,16 @@ export class MissionFlowchartComponent implements OnInit, AfterViewInit, OnDestr
             'color': '#fff',
             'text-outline-color': '#ff6f00',
             'text-outline-width': 2,
-            'font-size': '12px',
+            'font-size': '11px',
             'font-weight': 'bold',
-            'width': '140px',
-            'height': '80px',
+            'width': '200px',
+            'height': '70px',
             'shape': 'roundrectangle',
             'border-width': 2,
-            'border-color': '#e65100'
+            'border-color': '#e65100',
+            'text-wrap': 'wrap',
+            'text-max-width': '190px',
+            'text-justification': 'center'
           }
         },
         {
@@ -229,10 +232,8 @@ export class MissionFlowchartComponent implements OnInit, AfterViewInit, OnDestr
         nodeClass = 'zone';
       }
 
-      // Create label with step information
-      const typeLabel = step.type === 'NODE_POINT' ? 'QR Code' : 'Zone';
-      const waitTime = step.waitingMillis > 0 ? `\n⏱ ${step.waitingMillis}ms` : '';
-      const label = `Step ${index + 1}: ${typeLabel}\n${this.truncateText(step.position, 20)}${waitTime}`;
+      // Create label with step information (Step, Type, Position - full name)
+      const label = `Step ${index + 1}: ${step.type}\n${step.position}`;
 
       elements.push({
         data: {
@@ -313,9 +314,7 @@ export class MissionFlowchartComponent implements OnInit, AfterViewInit, OnDestr
       const step = node.data('step') as MissionStepFlowData;
 
       if (step) {
-        const typeLabel = step.type === 'NODE_POINT' ? 'QR Code' : 'Zone';
-        const waitTime = step.waitingMillis > 0 ? `\n⏱ ${step.waitingMillis}ms` : '';
-        const label = `Step ${step.sequence + 1}: ${typeLabel}\n${this.truncateText(step.position, 20)}${waitTime}`;
+        const label = `Step ${step.sequence + 1}: ${step.type}\n${step.position}`;
         node.style('label', label);
       }
     });

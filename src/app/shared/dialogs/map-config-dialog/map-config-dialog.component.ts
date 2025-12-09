@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, signal } from '@angular/core';
+import { Component, Inject, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -19,6 +19,7 @@ import {
   DEFAULT_DISPLAY_SETTINGS
 } from '../../../models/robot-monitoring.models';
 import { RobotMonitoringService } from '../../../services/robot-monitoring.service';
+import { ConfigService } from '../../../services/config.service';
 
 export interface MapConfigDialogData {
   mode: 'create' | 'edit';
@@ -48,6 +49,8 @@ export interface MapConfigDialogData {
   styleUrls: ['./map-config-dialog.component.scss']
 })
 export class MapConfigDialogComponent implements OnInit {
+  private config = inject(ConfigService);
+
   form!: FormGroup;
   isSubmitting = signal(false);
   isUploadingImage = signal(false);
@@ -208,7 +211,7 @@ export class MapConfigDialogComponent implements OnInit {
     if (path.startsWith('http')) {
       return path;
     }
-    return `http://localhost:5109${path}`;
+    return `${this.config.apiUrl}${path}`;
   }
 
   onCancel(): void {

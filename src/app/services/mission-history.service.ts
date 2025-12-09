@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   MissionHistorySummaryDto,
   MissionHistoryRequest,
@@ -11,12 +11,16 @@ import {
   MissionHistoryDisplayData,
   transformMissionHistoryForDisplay
 } from '../models/mission-history.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MissionHistoryService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly MISSION_HISTORY_ENDPOINT = '/mission-history';
 
   // Reactive state using Angular signals
@@ -25,9 +29,10 @@ export class MissionHistoryService {
   public missionCount = signal<number>(0);
   public maxRecords = signal<number>(5000);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
+    private http: HttpClient
   ) {}
 
   /**
@@ -107,11 +112,7 @@ export class MissionHistoryService {
       { headers: this.createHeaders() }
     ).pipe(
       map(mission => transformMissionHistoryForDisplay([mission])[0]),
-      tap(() => {
-        console.log(`Mission history updated for ${missionCode}`);
-      }),
       catchError(error => {
-        console.error(`Failed to update mission history for ${missionCode}:`, error);
         return throwError(() => error);
       })
     );
@@ -240,30 +241,19 @@ export class MissionHistoryService {
     }
 
     this.showErrorMessage(errorMessage);
-    console.error('Mission History Service Error:', error);
   }
 
   /**
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 8000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

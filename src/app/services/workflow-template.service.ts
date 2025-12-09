@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   SavedCustomMissionDto,
   SavedCustomMissionsDisplayData,
@@ -15,12 +15,16 @@ import {
   SaveMissionAsTemplateResponse
 } from '../models/saved-custom-missions.models';
 import { AuthService } from './auth.service';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowTemplateService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly SAVED_CUSTOM_MISSIONS_ENDPOINT = '/saved-custom-missions';
 
   // Reactive state using Angular signals
@@ -30,9 +34,10 @@ export class WorkflowTemplateService {
   public isDeleting = signal<boolean>(false);
   public isTriggering = signal<boolean>(false);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
     private http: HttpClient,
-    private snackBar: MatSnackBar,
     private authService: AuthService
   ) {}
 
@@ -257,18 +262,6 @@ export class WorkflowTemplateService {
   saveMissionAsTemplate(request: SaveMissionAsTemplateRequest): Observable<SaveMissionAsTemplateResponse> {
     this.isCreating.set(true);
 
-    // Debug logging to see what we're sending
-    console.log('=== Save Mission as Template Request ===');
-    console.log('Endpoint:', `${this.API_URL}/missions/save-as-template`);
-    console.log('Request Payload:', JSON.stringify(request, null, 2));
-    console.log('missionName:', request.missionName, '(type:', typeof request.missionName, ')');
-    console.log('description:', request.description, '(type:', typeof request.description, ')');
-    console.log('missionTemplate.missionType:', request.missionTemplate?.missionType, '(type:', typeof request.missionTemplate?.missionType, ')');
-    console.log('missionTemplate.robotType:', request.missionTemplate?.robotType, '(type:', typeof request.missionTemplate?.robotType, ')');
-    console.log('missionTemplate.missionData length:', request.missionTemplate?.missionData?.length);
-    console.log('missionTemplate.missionData:', JSON.stringify(request.missionTemplate?.missionData, null, 2));
-    console.log('=====================================');
-
     return this.http.post<SaveMissionAsTemplateResponse>(
       `${this.API_URL}/missions/save-as-template`,
       request,
@@ -318,7 +311,8 @@ export class WorkflowTemplateService {
       unlockRobotId: request.missionTemplate.unlockRobotId,
       unlockMissionCode: request.missionTemplate.unlockMissionCode,
       missionStepsJson: JSON.stringify(request.missionTemplate.missionData),
-      isActive: true  // Preserve as active when editing through dialog
+      isActive: true,  // Preserve as active when editing through dialog
+      concurrencyMode: request.concurrencyMode || 'Unlimited'
     };
 
     return this.http.put<ApiResponse<SavedCustomMissionDto>>(
@@ -402,24 +396,6 @@ export class WorkflowTemplateService {
   private handleError(error: any, defaultMessage: string): void {
     let errorMessage = defaultMessage;
 
-    // Log full error details for debugging
-    console.error('=== HTTP Error Details ===');
-    console.error('Status:', error.status);
-    console.error('Status Text:', error.statusText);
-    console.error('Error Object:', error);
-    console.error('Error Response Body:', error.error);
-
-    // Check if there are validation errors
-    if (error.error?.errors) {
-      console.error('Validation Errors:', JSON.stringify(error.error.errors, null, 2));
-    }
-
-    if (error.error?.title) {
-      console.error('Error Title:', error.error.title);
-    }
-
-    console.error('==========================');
-
     if (error.status === 400) {
       // Bad Request - likely validation errors
       if (error.error?.errors) {
@@ -454,30 +430,19 @@ export class WorkflowTemplateService {
     }
 
     this.showErrorMessage(errorMessage);
-    console.error('Saved Custom Missions Service Error:', error);
   }
 
   /**
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 8000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

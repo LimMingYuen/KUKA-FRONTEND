@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,7 +68,8 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
   constructor(
     public resumeStrategiesService: ResumeStrategiesService,
     private dialog: MatDialog,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar
   ) {
     // Initialize form
     this.initializeForm();
@@ -215,40 +216,19 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Delete resume strategy with confirmation and usage check
+   * Delete resume strategy with confirmation
    */
   private deleteResumeStrategy(resumeStrategy: ResumeStrategyDisplayData): void {
-    // First check if this resume strategy is in use
-    this.resumeStrategiesService.checkUsageInTemplates(resumeStrategy.actualValue)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (usage) => {
-          if (usage.isUsed) {
-            // Show warning about templates using this resume strategy
-            const templateList = usage.templateNames.join('\n  - ');
-            const alertData: ConfirmationDialogData = {
-              title: 'Cannot Delete',
-              message: `Cannot delete resume strategy "${resumeStrategy.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this resume strategy instead.`,
-              icon: 'error',
-              confirmText: 'OK',
-              showCancel: false,
-              confirmColor: 'primary'
-            };
-            this.dialog.open(ConfirmationDialogComponent, {
-              width: '450px',
-              data: alertData
-            });
-          } else {
-            // Not in use, proceed with deletion after confirmation
-            this.showDeleteResumeStrategyConfirmation(resumeStrategy);
-          }
-        },
-        error: (error) => {
-          console.error('Error checking resume strategy usage:', error);
-          // On error, still allow deletion with a warning
-          this.showDeleteResumeStrategyConfirmationWithWarning(resumeStrategy);
-        }
+    if (resumeStrategy.isActive) {
+      this.snackBar.open('Cannot delete an active resume strategy. Please set it to inactive first.', 'Dismiss', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
       });
+      return;
+    }
+    this.showDeleteResumeStrategyConfirmation(resumeStrategy);
   }
 
   /**
@@ -258,38 +238,6 @@ export class ResumeStrategiesComponent implements OnInit, OnDestroy {
     const dialogData: ConfirmationDialogData = {
       title: 'Delete Resume Strategy',
       message: `Are you sure you want to delete resume strategy "${resumeStrategy.displayName}"?`,
-      icon: 'warning',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      showCancel: true,
-      confirmColor: 'warn'
-    };
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
-      if (result === true) {
-        this.resumeStrategiesService.deleteResumeStrategy(resumeStrategy.id)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            error: (error) => {
-              console.error('Error deleting resume strategy:', error);
-            }
-          });
-      }
-    });
-  }
-
-  /**
-   * Show delete confirmation with warning about unable to verify usage
-   */
-  private showDeleteResumeStrategyConfirmationWithWarning(resumeStrategy: ResumeStrategyDisplayData): void {
-    const dialogData: ConfirmationDialogData = {
-      title: 'Delete Resume Strategy',
-      message: `Unable to verify usage. Delete resume strategy "${resumeStrategy.displayName}" anyway?`,
       icon: 'warning',
       confirmText: 'Delete',
       cancelText: 'Cancel',

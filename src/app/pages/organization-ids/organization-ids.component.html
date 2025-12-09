@@ -1,0 +1,10 @@
+<!-- Table Component -->
+<app-generic-table
+  [config]="tableConfig"
+  [data]="organizationIdsService.organizationIds()"
+  [loading]="organizationIdsService.isLoading()"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+</app-generic-table>

@@ -118,7 +118,7 @@ export class WorkflowsComponent implements OnInit, OnDestroy {
         this.syncWorkflows();
         break;
       default:
-        console.log('Unknown action:', event.action, event.row);
+        break;
     }
   }
 

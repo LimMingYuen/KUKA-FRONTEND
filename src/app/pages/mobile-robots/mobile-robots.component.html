@@ -26,32 +26,6 @@
   </div>
 </div>
 
-<!-- Sync Result Banner -->
-<div class="sync-result" *ngIf="lastSyncResult">
-  <mat-card class="sync-result-card">
-    <div class="sync-result-content">
-      <mat-icon class="sync-icon">check_circle</mat-icon>
-      <div class="sync-details">
-        <h3>Sync Completed Successfully</h3>
-        <p>
-          {{ lastSyncResult.total }} total mobile robots:
-          {{ lastSyncResult.inserted }} new,
-          {{ lastSyncResult.updated }} updated
-        </p>
-        <p *ngIf="lastSyncResult.skippedDuplicates && lastSyncResult.skippedDuplicates.length > 0" class="warning-text">
-          <mat-icon class="warning-icon">warning</mat-icon>
-          Skipped {{ lastSyncResult.skippedDuplicates.length }} duplicate RobotId(s): {{ lastSyncResult.skippedDuplicates.join(', ') }}
-        </p>
-      </div>
-      <button mat-icon-button
-              (click)="clearSyncResult()"
-              matTooltip="Dismiss">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-  </mat-card>
-</div>
-
 <!-- Search Bar -->
 <div class="search-section">
   <mat-form-field class="search-field" appearance="outline">

@@ -108,7 +108,7 @@ export const RESUME_STRATEGIES_TABLE_CONFIG: TableConfig<ResumeStrategyDisplayDa
       type: 'icon',
       tooltip: 'Delete resume strategy',
       color: 'warn',
-      disabled: (row: any) => row.isActive
+      disabled: () => false
     } as ActionConfig
   ],
 

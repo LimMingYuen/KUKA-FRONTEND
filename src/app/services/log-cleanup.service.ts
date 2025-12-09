@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
+import { ConfigService } from './config.service';
 
 export interface LogRetentionSetting {
   key: string;
@@ -24,7 +25,10 @@ export interface LogFoldersResult {
   providedIn: 'root'
 })
 export class LogCleanupService {
-  private readonly API_URL = 'http://localhost:5109/api/LogCleanup';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/LogCleanup';
+  }
 
   // Reactive state using signals
   public retentionMonths = signal<number>(1);

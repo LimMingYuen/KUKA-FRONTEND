@@ -33,6 +33,16 @@
         <mat-icon [class.spinning]="isLoading()">refresh</mat-icon>
       </button>
 
+      <!-- View Toggle -->
+      <mat-button-toggle-group [value]="viewMode()" (change)="setViewMode($event.value)" class="view-toggle">
+        <mat-button-toggle value="card" matTooltip="Card view">
+          <mat-icon>grid_view</mat-icon>
+        </mat-button-toggle>
+        <mat-button-toggle value="table" matTooltip="Table view">
+          <mat-icon>table_rows</mat-icon>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
       <!-- Filter Toggle Button -->
       <button mat-icon-button
               (click)="toggleFilters()"
@@ -204,131 +214,152 @@
     </mat-card>
   }
 
-  <!-- Jobs Grid -->
+  <!-- Jobs Display -->
   @if (jobs().length > 0) {
-    <div class="jobs-grid">
-      @for (job of jobs(); track trackByJobCode($index, job)) {
-        <mat-card class="job-card" [class]="job.statusColorClass">
-          <!-- Card Header -->
-          <div class="job-header">
-            <div class="status-badge" [class]="job.statusColorClass">
-              <mat-icon>{{ job.statusIcon }}</mat-icon>
-              <span>{{ job.statusText }}</span>
-            </div>
-            <div class="header-actions">
-              <span class="workflow-name" [matTooltip]="job.workflowName || 'Unknown'">
-                {{ job.workflowName || 'Unknown' }}
-              </span>
-              <!-- Dismiss button for error/warning jobs -->
-              @if (job.statusColorClass === 'status-error' || job.statusColorClass === 'status-warning') {
-                <button mat-icon-button
-                        class="dismiss-btn"
-                        (click)="dismissJob(job.jobCode)"
-                        matTooltip="Dismiss from live view">
-                  <mat-icon>close</mat-icon>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Warning Banner -->
-          @if (job.hasWarning) {
-            <div class="warning-banner">
-              <mat-icon>warning</mat-icon>
-              <span>{{ job.warnCode || 'Warning detected' }}</span>
-            </div>
-          }
-
-          <mat-card-content>
-            <!-- Job Code -->
-            <div class="job-info-row primary">
-              <span class="label">Job Code:</span>
-              <span class="value job-code">{{ job.jobCode }}</span>
+    <!-- Card View -->
+    @if (viewMode() === 'card') {
+      <div class="jobs-grid">
+        @for (job of jobs(); track trackByJobCode($index, job)) {
+          <mat-card class="job-card" [class]="job.statusColorClass">
+            <!-- Card Header -->
+            <div class="job-header">
+              <div class="status-badge" [class]="job.statusColorClass">
+                <mat-icon>{{ job.statusIcon }}</mat-icon>
+                <span>{{ job.statusText }}</span>
+              </div>
+              <div class="header-actions">
+                <span class="workflow-name" [matTooltip]="job.workflowName || 'Unknown'">
+                  {{ job.workflowName || 'Unknown' }}
+                </span>
+                <!-- Dismiss button for error/warning jobs -->
+                @if (job.statusColorClass === 'status-error' || job.statusColorClass === 'status-warning') {
+                  <button mat-icon-button
+                          class="dismiss-btn"
+                          (click)="dismissJob(job.jobCode)"
+                          matTooltip="Dismiss from live view">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </div>
             </div>
 
-            <mat-divider></mat-divider>
+            <!-- Warning Banner -->
+            @if (job.hasWarning) {
+              <div class="warning-banner">
+                <mat-icon>warning</mat-icon>
+                <span>{{ job.warnCode || 'Warning detected' }}</span>
+              </div>
+            }
 
-            <!-- Robot Info -->
-            <div class="job-info-row">
-              <span class="label">
-                <mat-icon>smart_toy</mat-icon>
-                Robot:
-              </span>
-              <span class="value">{{ job.robotId || 'Not Assigned' }}</span>
-            </div>
+            <!-- Error Banner -->
+            @if (job.statusColorClass === 'status-error') {
+              <div class="error-banner">
+                <mat-icon>error</mat-icon>
+                <span>{{ job.robotErrorMessage || 'Startup error occurred' }}</span>
+              </div>
+            }
 
-            <!-- Progress Bar -->
-            @if (job.progressPercent > 0) {
-              <div class="progress-section">
-                <div class="progress-header">
-                  <span class="label">Progress:</span>
-                  <span class="value">{{ job.progressPercent }}%</span>
+            <mat-card-content>
+              <!-- Job Code -->
+              <div class="job-info-row primary">
+                <span class="label">Job Code:</span>
+                <span class="value job-code">{{ job.jobCode }}</span>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <!-- Robot Info -->
+              <div class="job-info-row">
+                <span class="label">
+                  <mat-icon>smart_toy</mat-icon>
+                  Robot:
+                </span>
+                <span class="value">{{ job.robotId || 'Not Assigned' }}</span>
+              </div>
+
+              <!-- Progress Bar -->
+              @if (job.progressPercent > 0) {
+                <div class="progress-section">
+                  <div class="progress-header">
+                    <span class="label">Progress:</span>
+                    <span class="value">{{ job.progressPercent }}%</span>
+                  </div>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="job.progressPercent"
+                    [color]="job.isActiveJob ? 'primary' : 'accent'">
+                  </mat-progress-bar>
                 </div>
-                <mat-progress-bar
-                  mode="determinate"
-                  [value]="job.progressPercent"
-                  [color]="job.isActiveJob ? 'primary' : 'accent'">
-                </mat-progress-bar>
-              </div>
-            }
+              }
 
-            <!-- Location -->
-            <div class="job-info-row">
-              <span class="label">
-                <mat-icon>location_on</mat-icon>
-                Location:
-              </span>
-              <span class="value">{{ job.locationDisplay }}</span>
-            </div>
-
-            <mat-divider></mat-divider>
-
-            <!-- Timestamps -->
-            <div class="job-info-row">
-              <span class="label">
-                <mat-icon>schedule</mat-icon>
-                Created:
-              </span>
-              <span class="value" [matTooltip]="job.createdDateDisplay">
-                {{ job.createdDateRelative }}
-              </span>
-            </div>
-
-            <!-- Duration -->
-            @if (job.spendTime) {
+              <!-- Location -->
               <div class="job-info-row">
                 <span class="label">
-                  <mat-icon>timer</mat-icon>
-                  Duration:
+                  <mat-icon>location_on</mat-icon>
+                  Location:
                 </span>
-                <span class="value">{{ job.durationDisplay }}</span>
+                <span class="value">{{ job.locationDisplay }}</span>
               </div>
-            }
 
-            <!-- Map -->
-            @if (job.mapCode) {
+              <mat-divider></mat-divider>
+
+              <!-- Timestamps -->
               <div class="job-info-row">
                 <span class="label">
-                  <mat-icon>map</mat-icon>
-                  Map:
+                  <mat-icon>schedule</mat-icon>
+                  Created:
                 </span>
-                <span class="value">{{ job.mapCode }}</span>
+                <span class="value" [matTooltip]="job.createdDateDisplay">
+                  {{ job.createdDateRelative }}
+                </span>
               </div>
-            }
 
-            <!-- Priority -->
-            @if (job.workflowPriority) {
-              <div class="job-info-row">
-                <span class="label">
-                  <mat-icon>low_priority</mat-icon>
-                  Priority:
-                </span>
-                <span class="value">{{ job.workflowPriority }}</span>
-              </div>
-            }
-          </mat-card-content>
-        </mat-card>
-      }
-    </div>
+              <!-- Duration -->
+              @if (job.spendTime) {
+                <div class="job-info-row">
+                  <span class="label">
+                    <mat-icon>timer</mat-icon>
+                    Duration:
+                  </span>
+                  <span class="value">{{ job.durationDisplay }}</span>
+                </div>
+              }
+
+              <!-- Map -->
+              @if (job.mapCode) {
+                <div class="job-info-row">
+                  <span class="label">
+                    <mat-icon>map</mat-icon>
+                    Map:
+                  </span>
+                  <span class="value">{{ job.mapCode }}</span>
+                </div>
+              }
+
+              <!-- Priority -->
+              @if (job.workflowPriority) {
+                <div class="job-info-row">
+                  <span class="label">
+                    <mat-icon>low_priority</mat-icon>
+                    Priority:
+                  </span>
+                  <span class="value">{{ job.workflowPriority }}</span>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+
+    <!-- Table View -->
+    @if (viewMode() === 'table') {
+      <app-generic-table
+        [data]="jobs()"
+        [config]="tableConfig"
+        [loading]="isLoading()"
+        (action)="handleTableAction($event)">
+      </app-generic-table>
+    }
   }
 </div>

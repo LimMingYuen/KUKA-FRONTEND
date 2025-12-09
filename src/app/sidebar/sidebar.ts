@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, effect, signal, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,11 +7,14 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
 
 import { NavigationService } from '../services/navigation.service';
 import { AuthService } from '../services/auth.service';
+import { NotificationService } from '../services/notification.service';
 import { SidebarItem, SidebarSection } from '../models/sidebar.models';
 import { Subject, takeUntil } from 'rxjs';
+import { NotificationPanelComponent } from '../shared/components/notification-panel/notification-panel.component';
 
 @Component({
   selector: 'app-sidebar',
@@ -24,7 +27,9 @@ import { Subject, takeUntil } from 'rxjs';
     MatSidenavModule,
     MatTooltipModule,
     MatDividerModule,
-    MatMenuModule
+    MatMenuModule,
+    MatBadgeModule,
+    NotificationPanelComponent
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss'
@@ -36,13 +41,23 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   public activeRoute = '';
   public sidebarCollapsed = true; // Start collapsed
   public expandedItems = new Set<string>();
+  public showNotificationPanel = signal<boolean>(false);
+
+  // ViewChild for notification button to calculate dropdown position
+  @ViewChild('notificationButton', { read: ElementRef })
+  notificationButtonRef!: ElementRef;
+
+  // Dynamic position for notification panel dropdown
+  public notificationPanelTop = 0;
+  public notificationPanelLeft = 0;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     public navigationService: NavigationService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public notificationService: NotificationService
   ) {
     // Set up reactive effects for navigation state changes
     effect(() => {
@@ -193,6 +208,26 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   public logout(): void {
     this.authService.logout();
+  }
+
+  /**
+   * Toggle notification panel visibility
+   */
+  public toggleNotificationPanel(): void {
+    if (!this.showNotificationPanel()) {
+      // Calculate position before showing the panel
+      const rect = this.notificationButtonRef.nativeElement.getBoundingClientRect();
+      this.notificationPanelTop = rect.bottom + 8; // 8px gap below button
+      this.notificationPanelLeft = rect.left;      // Align left edge with button
+    }
+    this.showNotificationPanel.update(value => !value);
+  }
+
+  /**
+   * Close notification panel
+   */
+  public closeNotificationPanel(): void {
+    this.showNotificationPanel.set(false);
   }
 
   /**

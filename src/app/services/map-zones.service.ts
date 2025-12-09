@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   MapZoneSummaryDto,
   MapZoneSyncResultDto,
@@ -11,12 +11,16 @@ import {
   getAreaPurpose,
   getZoneStatusText
 } from '../models/map-zone.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapZonesService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly MAP_ZONES_ENDPOINT = '/MapZones';
 
   // Reactive state using Angular signals
@@ -24,9 +28,10 @@ export class MapZonesService {
   public isSyncing = signal<boolean>(false);
   public lastSyncResult = signal<MapZoneSyncResultDto | null>(null);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
+    private http: HttpClient
   ) {}
 
   /**
@@ -119,11 +124,7 @@ export class MapZonesService {
 
         // Show success message
         const message = `Sync completed: ${result.inserted} new, ${result.updated} updated, ${result.total} total`;
-        this.snackBar.open(message, 'Close', {
-          duration: 5000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom'
-        });
+        this.notificationService.success(message);
       }),
       catchError(error => {
         this.isSyncing.set(false);
@@ -156,12 +157,7 @@ export class MapZonesService {
       errorMessage = error.message;
     }
 
-    this.snackBar.open(errorMessage, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(errorMessage);
 
     console.error('Map zones service error:', error);
   }

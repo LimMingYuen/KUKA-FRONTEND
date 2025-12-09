@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   WorkflowSummaryDto,
   WorkflowSyncResultDto,
@@ -10,12 +10,16 @@ import {
   WorkflowDisplayData,
   getWorkflowStatusText
 } from '../models/workflow.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly WORKFLOW_ENDPOINT = '/Workflows';
 
   // Reactive state using Angular signals
@@ -23,9 +27,10 @@ export class WorkflowService {
   public isSyncing = signal<boolean>(false);
   public lastSyncResult = signal<WorkflowSyncResultDto | null>(null);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
+    private http: HttpClient
   ) {}
 
   /**
@@ -101,11 +106,7 @@ export class WorkflowService {
 
         // Show success message
         const message = `Sync completed: ${result.inserted} new, ${result.updated} updated, ${result.total} total`;
-        this.snackBar.open(message, 'Close', {
-          duration: 5000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom'
-        });
+        this.notificationService.success(message);
       }),
       catchError(error => {
         this.isSyncing.set(false);
@@ -136,12 +137,7 @@ export class WorkflowService {
       errorMessage = error.message;
     }
 
-    this.snackBar.open(errorMessage, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(errorMessage);
 
     console.error('Workflow service error:', error);
   }

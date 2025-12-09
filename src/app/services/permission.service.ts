@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -23,12 +23,16 @@ import {
   UserTemplatePermissionBulkSetRequest,
   ApiResponse
 } from '../models/permission.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionService {
-  private readonly API_URL = 'http://localhost:5109/api/v1';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1';
+  }
 
   constructor(private http: HttpClient) {}
 

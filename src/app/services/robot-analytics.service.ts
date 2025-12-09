@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -14,12 +14,16 @@ import {
 } from '../models/robot-analytics.models';
 import { MobileRobotsService } from './mobile-robots.service';
 import { MobileRobotDisplayData } from '../models/mobile-robot.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RobotAnalyticsService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/robots';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/robots';
+  }
 
   // Reactive state using signals
   public utilizationData = signal<UtilizationMetrics | null>(null);
@@ -36,9 +40,7 @@ export class RobotAnalyticsService {
    * Get JWT token from localStorage
    */
   private getAuthToken(): string | null {
-    const token = localStorage.getItem('auth_token');
-    console.log('[RobotAnalytics] JWT Token retrieved from localStorage:', token ? `Yes (length: ${token.length})` : 'No token found');
-    return token;
+    return localStorage.getItem('auth_token');
   }
 
   /**
@@ -46,15 +48,10 @@ export class RobotAnalyticsService {
    */
   private getHttpHeaders(): HttpHeaders {
     const token = this.getAuthToken();
-    const headers = new HttpHeaders({
+    return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     });
-    console.log('[RobotAnalytics] HTTP Headers constructed:', {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token.substring(0, 20)}...` : '(empty)'
-    });
-    return headers;
   }
 
   /**
@@ -125,10 +122,6 @@ export class RobotAnalyticsService {
 
     const headers = this.getHttpHeaders();
     const requestUrl = `${this.API_URL}/utilization`;
-
-    console.log('[RobotAnalytics] Making GET request to:', requestUrl);
-    console.log('[RobotAnalytics] Request params:', params.toString());
-    console.log('[RobotAnalytics] Authorization header present:', headers.has('Authorization'));
 
     return this.http.get<ApiResponse<any>>(requestUrl, {
       headers: headers,

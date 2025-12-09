@@ -68,7 +68,13 @@ export class WorkflowSchedulesComponent implements OnInit, OnDestroy, AfterViewI
     // Deep clone the config to avoid modifying the original
     this.tableConfig = {
       ...WORKFLOW_SCHEDULES_TABLE_CONFIG,
-      columns: WORKFLOW_SCHEDULES_TABLE_CONFIG.columns.map(col => ({ ...col }))
+      columns: WORKFLOW_SCHEDULES_TABLE_CONFIG.columns.map(col => ({ ...col })),
+      empty: {
+        message: WORKFLOW_SCHEDULES_TABLE_CONFIG.empty?.message || 'No schedules found',
+        icon: WORKFLOW_SCHEDULES_TABLE_CONFIG.empty?.icon,
+        actionText: WORKFLOW_SCHEDULES_TABLE_CONFIG.empty?.actionText,
+        action: () => this.openCreateDialog()
+      }
     };
   }
 
@@ -160,13 +166,6 @@ export class WorkflowSchedulesComponent implements OnInit, OnDestroy, AfterViewI
         this.deleteSchedule(event.row as WorkflowScheduleDisplayData);
         break;
     }
-  }
-
-  /**
-   * Handle empty state action (create first schedule)
-   */
-  handleEmptyAction(): void {
-    this.openCreateDialog();
   }
 
   /**

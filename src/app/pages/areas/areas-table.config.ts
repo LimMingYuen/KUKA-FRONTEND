@@ -108,7 +108,7 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       type: 'icon',
       tooltip: 'Delete area',
       color: 'warn',
-      disabled: (row: any) => row.isActive
+      disabled: () => false
     } as ActionConfig
   ],
 

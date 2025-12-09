@@ -1,8 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   MissionQueueDto,
   MissionQueueDisplayData,
@@ -12,6 +11,8 @@ import {
   transformQueueItem,
   transformQueueItems
 } from '../models/mission-queue.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 /**
  * API Response wrapper interface
@@ -26,7 +27,11 @@ interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class MissionQueueService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly ENDPOINT = '/MissionQueue';
 
   // Reactive state using Angular signals
@@ -34,10 +39,7 @@ export class MissionQueueService {
   public statistics = signal<MissionQueueStatistics | null>(null);
   public queueItems = signal<MissionQueueDisplayData[]>([]);
 
-  constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
-  ) {}
+  constructor(private http: HttpClient) {}
 
   /**
    * Get JWT token from localStorage
@@ -305,6 +307,24 @@ export class MissionQueueService {
   }
 
   /**
+   * Get count of active mission instances for a saved template
+   * Active means: Queued, Processing, or Assigned status
+   */
+  getActiveCount(savedMissionId: number): Observable<number> {
+    return this.http.get<ApiResponse<number>>(
+      `${this.API_URL}${this.ENDPOINT}/active-count/${savedMissionId}`,
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(response => response.data || 0),
+      catchError(error => {
+        console.error('Error getting active count:', error);
+        // Return 0 on error so triggering can continue
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Handle HTTP errors and show user-friendly messages
    */
   private handleError(error: any, defaultMessage: string): void {
@@ -334,23 +354,13 @@ export class MissionQueueService {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

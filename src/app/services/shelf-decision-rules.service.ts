@@ -1,8 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   ShelfDecisionRuleDto,
   ShelfDecisionRuleCreateRequest,
@@ -12,12 +11,18 @@ import {
   transformShelfDecisionRulesForDisplay,
   hasValueConflict
 } from '../models/shelf-decision-rules.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ShelfDecisionRulesService {
-  private readonly API_URL = 'http://localhost:5109/api/v1';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1';
+  }
   private readonly SHELF_DECISION_RULES_ENDPOINT = '/shelf-decision-rules';
 
   // Reactive state using Angular signals
@@ -27,10 +32,7 @@ export class ShelfDecisionRulesService {
   public isDeleting = signal<boolean>(false);
   public rules = signal<ShelfDecisionRuleDisplayData[]>([]);
 
-  constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
-  ) {}
+  constructor(private http: HttpClient) {}
 
   /**
    * Get JWT token from localStorage
@@ -276,7 +278,9 @@ export class ShelfDecisionRulesService {
   private handleError(error: any, defaultMessage: string): void {
     let errorMessage = defaultMessage;
 
-    if (error.status === 401) {
+    if (error.status === 400) {
+      errorMessage = error.error?.detail || error.error?.title || error.error?.msg || 'Invalid request. Please check your input.';
+    } else if (error.status === 401) {
       errorMessage = 'Authentication failed. Please log in again.';
       localStorage.removeItem('auth_token');
     } else if (error.status === 403) {
@@ -303,23 +307,13 @@ export class ShelfDecisionRulesService {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Dismiss', {
-      duration: 8000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

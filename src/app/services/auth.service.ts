@@ -2,7 +2,6 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, catchError, map } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 import {
   LoginRequest,
@@ -11,12 +10,16 @@ import {
   User
 } from '../models/auth.models';
 import { PageInitializationService } from './page-initialization.service';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'user_data';
@@ -31,11 +34,12 @@ export class AuthService {
   private refreshPromise: Promise<boolean> | null = null;
 
   private pageInitService = inject(PageInitializationService);
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
 
   constructor(
     private http: HttpClient,
-    private router: Router,
-    private snackBar: MatSnackBar
+    private router: Router
   ) {
     this.checkAuthStatus();
   }
@@ -84,17 +88,11 @@ export class AuthService {
             console.warn('Page initialization failed (non-critical):', err);
           });
 
-          this.snackBar.open('Login successful!', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
+          this.notificationService.success('Login successful!');
 
           return true;
         } else {
-          this.snackBar.open(response.msg || 'Login failed', 'Close', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
+          this.notificationService.error(response.msg || 'Login failed');
           return false;
         }
       }),
@@ -109,10 +107,7 @@ export class AuthService {
           errorMessage = 'Server error. Please try again later.';
         }
 
-        this.snackBar.open(errorMessage, 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
+        this.notificationService.error(errorMessage);
 
         return throwError(() => error);
       }),
@@ -146,10 +141,7 @@ export class AuthService {
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
 
-    this.snackBar.open('Logged out successfully', 'Close', {
-      duration: 3000,
-      panelClass: ['info-snackbar']
-    });
+    this.notificationService.info('Logged out successfully');
 
     // Navigate to login page
     this.router.navigate(['/login']);
@@ -253,13 +245,11 @@ export class AuthService {
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
 
-        console.log('Token refreshed successfully');
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Token refresh failed:', error);
       return false;
     }
   }

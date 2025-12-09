@@ -1,19 +1,23 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   WorkflowNodeCodeSyncResult,
   SyncAndClassifyAllResult,
   WorkflowZoneMapping
 } from '../models/workflow-node-codes.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowNodeCodesService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly ENDPOINT = '/workflow-node-codes';
 
   // Reactive state using Angular signals
@@ -22,9 +26,10 @@ export class WorkflowNodeCodesService {
   public isSyncingAndClassifying = signal<boolean>(false);
   public lastSyncClassifyResult = signal<SyncAndClassifyAllResult | null>(null);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
-    private http: HttpClient,
-    private snackBar: MatSnackBar
+    private http: HttpClient
   ) {}
 
   /**
@@ -73,26 +78,16 @@ export class WorkflowNodeCodesService {
         const durationSeconds = (duration / 1000).toFixed(1);
 
         // Show success/failure message based on results
-        let message: string;
-        let panelClass: string[] = [];
-
         if (result.failureCount === 0) {
-          message = `✓ Sync completed successfully in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} workflows, ${result.nodeCodesInserted} inserted, ${result.nodeCodesDeleted} deleted`;
-          panelClass = ['success-snackbar'];
+          const message = `✓ Sync completed successfully in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} workflows, ${result.nodeCodesInserted} inserted, ${result.nodeCodesDeleted} deleted`;
+          this.notificationService.success(message);
         } else if (result.successCount > 0) {
-          message = `⚠ Sync completed with ${result.failureCount} failures in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} succeeded`;
-          panelClass = ['warning-snackbar'];
+          const message = `⚠ Sync completed with ${result.failureCount} failures in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} succeeded`;
+          this.notificationService.warning(message);
         } else {
-          message = `✗ Sync failed: All ${result.totalWorkflows} workflows failed`;
-          panelClass = ['error-snackbar'];
+          const message = `✗ Sync failed: All ${result.totalWorkflows} workflows failed`;
+          this.notificationService.error(message);
         }
-
-        this.snackBar.open(message, 'Close', {
-          duration: 7000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom',
-          panelClass
-        });
       }),
       catchError(error => {
         this.isSyncing.set(false);
@@ -124,12 +119,7 @@ export class WorkflowNodeCodesService {
       errorMessage = error.message;
     }
 
-    this.snackBar.open(errorMessage, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(errorMessage);
 
     console.error('Workflow node codes service error:', error);
   }
@@ -159,31 +149,21 @@ export class WorkflowNodeCodesService {
         const durationSeconds = (duration / 1000).toFixed(1);
 
         // Show success/failure message based on results
-        let message: string;
-        let panelClass: string[] = [];
-
         const hasIssues = result.failureCount > 0 || result.noZoneMatchCount > 0;
 
         if (!hasIssues) {
-          message = `✓ Sync & classify completed successfully in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} workflows classified`;
-          panelClass = ['success-snackbar'];
+          const message = `✓ Sync & classify completed successfully in ${durationSeconds}s: ${result.successCount}/${result.totalWorkflows} workflows classified`;
+          this.notificationService.success(message);
         } else if (result.successCount > 0) {
           const issues = [];
           if (result.failureCount > 0) issues.push(`${result.failureCount} failures`);
           if (result.noZoneMatchCount > 0) issues.push(`${result.noZoneMatchCount} no zone match`);
-          message = `⚠ Sync & classify completed with issues in ${durationSeconds}s: ${issues.join(', ')}`;
-          panelClass = ['warning-snackbar'];
+          const message = `⚠ Sync & classify completed with issues in ${durationSeconds}s: ${issues.join(', ')}`;
+          this.notificationService.warning(message);
         } else {
-          message = `✗ Sync & classify failed: All ${result.totalWorkflows} workflows failed`;
-          panelClass = ['error-snackbar'];
+          const message = `✗ Sync & classify failed: All ${result.totalWorkflows} workflows failed`;
+          this.notificationService.error(message);
         }
-
-        this.snackBar.open(message, 'Close', {
-          duration: 7000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom',
-          panelClass
-        });
       }),
       catchError(error => {
         this.isSyncingAndClassifying.set(false);

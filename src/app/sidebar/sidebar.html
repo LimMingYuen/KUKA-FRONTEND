@@ -12,14 +12,40 @@
       <!-- Hamburger Toggle Button -->
       <div class="sidebar-action">
         <span class="sidebar-title" *ngIf="!sidebarCollapsed">QES WMS</span>
-        <button mat-fab
-                class="action-button"
-                (click)="toggleSidebar()"
-                [matTooltip]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                matTooltipPosition="right">
-          <mat-icon>menu</mat-icon>
-        </button>
+        <div class="sidebar-action__buttons">
+          <!-- Notification Bell Button -->
+          <button mat-fab
+                  #notificationButton
+                  class="notification-button"
+                  (click)="toggleNotificationPanel()"
+                  matTooltip="Notifications"
+                  matTooltipPosition="right"
+                  [matBadge]="notificationService.unreadCount()"
+                  [matBadgeHidden]="!notificationService.hasUnread()"
+                  matBadgeColor="warn"
+                  matBadgeSize="small">
+            <mat-icon>notifications</mat-icon>
+          </button>
+          <!-- Menu Toggle Button -->
+          <button mat-fab
+                  class="action-button"
+                  (click)="toggleSidebar()"
+                  [matTooltip]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+                  matTooltipPosition="right">
+            <mat-icon>menu</mat-icon>
+          </button>
+        </div>
       </div>
+
+      <!-- Notification Panel Overlay -->
+      @if (showNotificationPanel()) {
+        <div class="notification-panel-overlay" (click)="closeNotificationPanel()"></div>
+        <div class="notification-panel-container"
+             [style.top.px]="notificationPanelTop"
+             [style.left.px]="notificationPanelLeft">
+          <app-notification-panel (closePanel)="closeNotificationPanel()"></app-notification-panel>
+        </div>
+      }
 
       <!-- Navigation Icons -->
       <nav class="sidebar-nav">

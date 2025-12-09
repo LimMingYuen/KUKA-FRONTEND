@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -8,12 +8,16 @@ import {
   AutoSyncRunResult,
   SyncResult
 } from '../models/auto-sync.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AutoSyncService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/auto-sync-settings';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/auto-sync-settings';
+  }
 
   constructor(private http: HttpClient) {}
 

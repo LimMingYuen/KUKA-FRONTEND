@@ -1,5 +1,6 @@
-import { Injectable, signal, OnDestroy } from '@angular/core';
+import { Injectable, signal, OnDestroy, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
+import { ConfigService } from './config.service';
 
 export interface MissionStatusChange {
   missionId: number;
@@ -11,8 +12,11 @@ export interface MissionStatusChange {
   providedIn: 'root'
 })
 export class SignalRService implements OnDestroy {
+  private config = inject(ConfigService);
   private hubConnection: signalR.HubConnection | null = null;
-  private readonly HUB_URL = 'http://localhost:5109/hubs/queue';
+  private get HUB_URL(): string {
+    return this.config.apiUrl + '/hubs/queue';
+  }
 
   // Signals to notify components of updates
   public queueUpdated = signal<boolean>(false);
@@ -37,7 +41,6 @@ export class SignalRService implements OnDestroy {
    */
   public async startConnection(): Promise<void> {
     if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
-      console.log('SignalR: Already connected');
       return;
     }
 
@@ -62,11 +65,9 @@ export class SignalRService implements OnDestroy {
 
     try {
       await this.hubConnection.start();
-      console.log('SignalR: Connected to QueueHub');
       this.connectionState.set('connected');
       this.reconnectAttempts = 0;
     } catch (err) {
-      console.error('SignalR: Connection failed', err);
       this.connectionState.set('error');
       this.attemptReconnect();
     }
@@ -80,7 +81,6 @@ export class SignalRService implements OnDestroy {
       await this.hubConnection.stop();
       this.hubConnection = null;
       this.connectionState.set('disconnected');
-      console.log('SignalR: Disconnected');
     }
   }
 
@@ -92,7 +92,6 @@ export class SignalRService implements OnDestroy {
 
     // Queue updated event
     this.hubConnection.on('QueueUpdated', () => {
-      console.log('SignalR: QueueUpdated received');
       this.queueUpdated.set(true);
       // Reset after a short delay to allow re-triggering
       setTimeout(() => this.queueUpdated.set(false), 100);
@@ -100,31 +99,26 @@ export class SignalRService implements OnDestroy {
 
     // Mission status changed event
     this.hubConnection.on('MissionStatusChanged', (data: MissionStatusChange) => {
-      console.log('SignalR: MissionStatusChanged received', data);
       this.missionStatusChanged.set(data);
     });
 
     // Statistics updated event
     this.hubConnection.on('StatisticsUpdated', () => {
-      console.log('SignalR: StatisticsUpdated received');
       this.statisticsUpdated.set(true);
       setTimeout(() => this.statisticsUpdated.set(false), 100);
     });
 
     // Connection lifecycle events
     this.hubConnection.onreconnecting((error) => {
-      console.warn('SignalR: Reconnecting...', error);
       this.connectionState.set('connecting');
     });
 
     this.hubConnection.onreconnected((connectionId) => {
-      console.log('SignalR: Reconnected', connectionId);
       this.connectionState.set('connected');
       this.reconnectAttempts = 0;
     });
 
     this.hubConnection.onclose((error) => {
-      console.warn('SignalR: Connection closed', error);
       this.connectionState.set('disconnected');
       this.attemptReconnect();
     });
@@ -135,13 +129,11 @@ export class SignalRService implements OnDestroy {
    */
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('SignalR: Max reconnection attempts reached');
       this.connectionState.set('error');
       return;
     }
 
     this.reconnectAttempts++;
-    console.log(`SignalR: Reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
 
     setTimeout(() => {
       this.startConnection();

@@ -317,6 +317,29 @@
     }
   }
 
+  .error-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #ffebee;
+    color: #c62828;
+    font-size: 13px;
+    border-left: 4px solid #f44336;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #f44336;
+    }
+
+    span {
+      flex: 1;
+      word-break: break-word;
+    }
+  }
+
   mat-card-content {
     padding: 16px;
   }
@@ -540,6 +563,20 @@
   .stat-card {
     .stat-value {
       font-size: 22px;
+    }
+  }
+}
+
+// View Toggle Button Group
+.view-toggle {
+  mat-button-toggle {
+    width: 40px;
+    height: 40px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
   }
 }

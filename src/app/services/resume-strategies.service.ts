@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -17,12 +17,18 @@ import {
   isValidDescription,
   sortResumeStrategiesByPriority
 } from '../models/resume-strategies.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ResumeStrategiesService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/resume-strategies';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/resume-strategies';
+  }
 
   // Reactive state using signals
   public resumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
@@ -60,23 +66,44 @@ export class ResumeStrategiesService {
     return (error: any): Observable<T> => {
       console.error(`${operation} failed:`, error);
 
+      let errorMessage: string;
+
       // Set error state
-      if (error.status === 401) {
-        this.error.set('Authentication failed. Please log in again.');
+      if (error.status === 400) {
+        errorMessage = error.error?.detail || error.error?.title || error.error?.msg || 'Invalid request. Please check your input.';
+      } else if (error.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
       } else if (error.status === 403) {
-        this.error.set('You do not have permission to perform this action.');
+        errorMessage = 'You do not have permission to perform this action.';
       } else if (error.status === 404) {
-        this.error.set('The requested resume strategy was not found.');
+        errorMessage = 'The requested resume strategy was not found.';
       } else if (error.status === 409) {
-        this.error.set('A resume strategy with this actual value already exists.');
+        errorMessage = 'A resume strategy with this actual value already exists.';
       } else if (error.status >= 500) {
-        this.error.set('Server error. Please try again later.');
+        errorMessage = 'Server error. Please try again later.';
       } else {
-        this.error.set(error.error?.msg || error.message || 'An unexpected error occurred.');
+        errorMessage = error.error?.msg || error.message || 'An unexpected error occurred.';
       }
+
+      this.error.set(errorMessage);
+      this.showErrorMessage(errorMessage);
 
       return throwError(() => error);
     };
+  }
+
+  /**
+   * Show success message
+   */
+  private showSuccessMessage(message: string): void {
+    this.notificationService.success(message);
+  }
+
+  /**
+   * Show error message
+   */
+  private showErrorMessage(message: string): void {
+    this.notificationService.error(message);
   }
 
   /**
@@ -161,12 +188,16 @@ export class ResumeStrategiesService {
           const updatedResumeStrategies = sortResumeStrategiesByPriority([...currentResumeStrategies, newResumeStrategy]);
           this.resumeStrategies.set(updatedResumeStrategies);
           this.isCreating.set(false);
+          this.showSuccessMessage('Resume strategy created successfully');
           return newResumeStrategy;
         } else {
           throw new Error(response.msg || 'Failed to create resume strategy');
         }
       }),
-      catchError(this.handleError<ResumeStrategyDisplayData>('createResumeStrategy'))
+      catchError((error) => {
+        this.isCreating.set(false);
+        return this.handleError<ResumeStrategyDisplayData>('createResumeStrategy')(error);
+      })
     );
   }
 
@@ -203,12 +234,16 @@ export class ResumeStrategiesService {
           const sortedResumeStrategies = sortResumeStrategiesByPriority(updatedResumeStrategies);
           this.resumeStrategies.set(sortedResumeStrategies);
           this.isUpdating.set(false);
+          this.showSuccessMessage('Resume strategy updated successfully');
           return updatedResumeStrategy;
         } else {
           throw new Error(response.msg || 'Failed to update resume strategy');
         }
       }),
-      catchError(this.handleError<ResumeStrategyDisplayData>('updateResumeStrategy'))
+      catchError((error) => {
+        this.isUpdating.set(false);
+        return this.handleError<ResumeStrategyDisplayData>('updateResumeStrategy')(error);
+      })
     );
   }
 
@@ -228,11 +263,15 @@ export class ResumeStrategiesService {
           const updatedResumeStrategies = currentResumeStrategies.filter(rs => rs.id !== id);
           this.resumeStrategies.set(updatedResumeStrategies);
           this.isDeleting.set(false);
+          this.showSuccessMessage('Resume strategy deleted successfully');
         } else {
           throw new Error(response.msg || 'Failed to delete resume strategy');
         }
       }),
-      catchError(this.handleError<void>('deleteResumeStrategy'))
+      catchError((error) => {
+        this.isDeleting.set(false);
+        return this.handleError<void>('deleteResumeStrategy')(error);
+      })
     );
   }
 
@@ -339,52 +378,5 @@ export class ResumeStrategiesService {
    */
   public hasValidToken(): boolean {
     return !!this.getAuthToken();
-  }
-
-  /**
-   * Check if a resume strategy is being used by any workflow templates
-   * Returns the count of templates using this resume strategy in their mission steps
-   */
-  public checkUsageInTemplates(resumeStrategyValue: string): Observable<{
-    isUsed: boolean;
-    usageCount: number;
-    templateNames: string[];
-  }> {
-    const url = `${this.API_URL.replace('/v1/resume-strategies', '')}/saved-custom-missions`;
-
-    return this.http.get<ApiResponse<any[]>>(url, {
-      headers: this.getHttpHeaders()
-    }).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          const templatesUsingThisStrategy: any[] = [];
-
-          response.data.forEach((template: any) => {
-            try {
-              const missionSteps = JSON.parse(template.missionStepsJson || '[]');
-              const usesStrategy = missionSteps.some(
-                (step: any) => step.passStrategy === resumeStrategyValue
-              );
-              if (usesStrategy) {
-                templatesUsingThisStrategy.push(template);
-              }
-            } catch (error) {
-              console.error(`Error parsing mission steps for template ${template.id}:`, error);
-            }
-          });
-
-          return {
-            isUsed: templatesUsingThisStrategy.length > 0,
-            usageCount: templatesUsingThisStrategy.length,
-            templateNames: templatesUsingThisStrategy.map((t: any) => t.missionName)
-          };
-        }
-        return { isUsed: false, usageCount: 0, templateNames: [] };
-      }),
-      catchError(error => {
-        console.error('Error checking resume strategy usage:', error);
-        return throwError(() => error);
-      })
-    );
   }
 }

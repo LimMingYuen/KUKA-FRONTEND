@@ -82,10 +82,12 @@ export interface ScheduleDialogData {
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Workflow Template</mat-label>
           <mat-select formControlName="savedMissionId">
-            <mat-option *ngFor="let mission of missions" [value]="mission.id">
+            <mat-option *ngFor="let mission of missions" [value]="mission.id" [disabled]="!mission.isActive">
               {{ mission.missionName }}
+              <span *ngIf="!mission.isActive" class="inactive-badge">(Inactive)</span>
             </mat-option>
           </mat-select>
+          <mat-hint *ngIf="hasInactiveMissions">Inactive workflows cannot be scheduled</mat-hint>
           <mat-error *ngIf="form.get('savedMissionId')?.hasError('required')">
             Workflow template is required
           </mat-error>
@@ -277,6 +279,13 @@ export interface ScheduleDialogData {
       display: inline-block;
       margin-right: 8px;
     }
+
+    .inactive-badge {
+      color: rgba(0, 0, 0, 0.38);
+      font-size: 12px;
+      font-style: italic;
+      margin-left: 8px;
+    }
   `]
 })
 export class ScheduleDialogComponent implements OnInit, OnDestroy {
@@ -287,6 +296,11 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
 
   isLoadingMissions = false;
   isSaving = false;
+
+  /** Returns true if any mission in the list is inactive */
+  get hasInactiveMissions(): boolean {
+    return this.missions.some(m => !m.isActive);
+  }
 
   private destroy$ = new Subject<void>();
 

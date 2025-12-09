@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from './notification.service';
 import {
   SavedCustomMissionDto,
   SavedCustomMissionsDisplayData,
@@ -10,20 +10,25 @@ import {
   ApiResponse
 } from '../models/saved-custom-missions.models';
 import { AuthService } from './auth.service';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SavedCustomMissionsService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
   private readonly ENDPOINT = '/saved-custom-missions';
 
   // Reactive state using Angular signals
   public isLoading = signal<boolean>(false);
 
+  private notificationService = inject(NotificationService);
+
   constructor(
     private http: HttpClient,
-    private snackBar: MatSnackBar,
     private authService: AuthService
   ) {}
 
@@ -176,23 +181,13 @@ export class SavedCustomMissionsService {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(message);
   }
 }

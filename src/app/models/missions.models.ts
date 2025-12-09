@@ -197,6 +197,12 @@ export interface RobotData {
     progress: number;
   };
   lastUpdated?: string;
+  /** Indicates if robot is waiting at a manual waypoint for confirmation */
+  isWaitingForManualResume?: boolean;
+  /** The current step position (area or node code) when waiting at manual waypoint */
+  currentStepPosition?: string;
+  /** Robot error message from AMR system */
+  errorMessage?: string;
 }
 
 export interface RobotQueryResponse {
@@ -311,9 +317,9 @@ export class MissionsUtils {
       case 20: return 'Executing';
       case 25: return 'Waiting';
       case 28: return 'Cancelling';
-      case 30: return 'Complete';
+      case 30: return 'Completed';
       case 31: return 'Cancelled';
-      case 35: return 'Manual Complete';
+      case 35: return 'Manual Completed';
       case 50: return 'Warning';
       case 60: return 'Startup Error';
       default: return `Status ${status}`;

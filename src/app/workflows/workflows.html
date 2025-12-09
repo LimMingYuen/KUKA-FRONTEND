@@ -1,26 +1,3 @@
-<!-- Sync Result Banner -->
-<div class="sync-result"
-     *ngIf="lastSyncResult">
-  <mat-card class="sync-result-card">
-    <div class="sync-result-content">
-      <mat-icon class="sync-icon">cloud_done</mat-icon>
-      <div class="sync-details">
-        <h3>Sync Completed Successfully</h3>
-        <p>
-          {{ lastSyncResult.total }} total workflows:
-          {{ lastSyncResult.inserted }} new,
-          {{ lastSyncResult.updated }} updated
-        </p>
-      </div>
-      <button mat-icon-button
-              (click)="clearSyncResult()"
-              matTooltip="Dismiss">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-  </mat-card>
-</div>
-
 <!-- Generic Table Component -->
 <app-generic-table class="workflow-table"
   [data]="workflows"

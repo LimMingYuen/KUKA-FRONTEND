@@ -115,7 +115,6 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
     actionText: 'Sync Map Zones',
     action: () => {
       // This will be overridden in the component
-      console.log('Sync map zones from empty state');
     }
   },
 

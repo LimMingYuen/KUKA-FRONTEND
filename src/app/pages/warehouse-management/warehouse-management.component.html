@@ -40,6 +40,10 @@
           <span class="stat-value">{{ getConfigurationStats().totalAreas }}</span>
           <span class="stat-label">Areas</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ getConfigurationStats().totalOrganizationIds }}</span>
+          <span class="stat-label">Organization IDs</span>
+        </div>
       </div>
     </div>
   </mat-card>
@@ -106,6 +110,17 @@
           </ng-template>
           <div class="tab-content">
             <app-areas></app-areas>
+          </div>
+        </mat-tab>
+
+        <!-- Organization IDs Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">business</mat-icon>
+            <span class="tab-label">Organization IDs</span>
+          </ng-template>
+          <div class="tab-content">
+            <app-organization-ids></app-organization-ids>
           </div>
         </mat-tab>
       </mat-tab-group>

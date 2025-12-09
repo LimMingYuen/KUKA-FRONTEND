@@ -67,7 +67,7 @@ export const JOB_STATUS_CONFIG: Record<number, StatusConfig> = {
   },
   [JobStatusCode.Complete]: {
     code: JobStatusCode.Complete,
-    text: 'Complete',
+    text: 'Completed',
     colorClass: 'status-complete',
     icon: 'check_circle',
     isActive: false
@@ -81,7 +81,7 @@ export const JOB_STATUS_CONFIG: Record<number, StatusConfig> = {
   },
   [JobStatusCode.ManualComplete]: {
     code: JobStatusCode.ManualComplete,
-    text: 'Manual Complete',
+    text: 'Manual Completed',
     colorClass: 'status-complete',
     icon: 'check_circle',
     isActive: false
@@ -147,6 +147,9 @@ export interface LiveJobDisplayData extends JobData {
   durationDisplay: string;
   progressPercent: number;
   locationDisplay: string;
+
+  // Robot info from robot query (populated asynchronously)
+  robotErrorMessage?: string;
 }
 
 /**

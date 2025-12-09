@@ -1,0 +1,55 @@
+<div class="notification-panel">
+  <!-- Header -->
+  <div class="notification-panel__header">
+    <span class="notification-panel__title">Notifications</span>
+    <div class="notification-panel__actions">
+      @if (notificationService.hasUnread()) {
+        <button mat-icon-button
+                matTooltip="Mark all as read"
+                (click)="onMarkAllRead()">
+          <mat-icon>done_all</mat-icon>
+        </button>
+      }
+      @if (notificationService.notifications().length > 0) {
+        <button mat-icon-button
+                matTooltip="Clear all"
+                (click)="onClearAll()">
+          <mat-icon>delete_sweep</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Notification List -->
+  <div class="notification-panel__list">
+    @if (notificationService.notifications().length === 0) {
+      <div class="notification-panel__empty">
+        <mat-icon>notifications_off</mat-icon>
+        <span>No notifications</span>
+      </div>
+    } @else {
+      @for (notification of notificationService.notifications(); track trackById($index, notification)) {
+        <div class="notification-item"
+             [class.notification-item--unread]="!notification.read"
+             [ngClass]="getTypeClass(notification.type)"
+             (click)="onNotificationClick(notification)">
+          <mat-icon class="notification-item__icon">
+            {{ getIcon(notification.type) }}
+          </mat-icon>
+          <div class="notification-item__content">
+            <span class="notification-item__message">{{ notification.message }}</span>
+            <span class="notification-item__time">{{ formatTime(notification.timestamp) }}</span>
+          </div>
+          <button mat-icon-button
+                  class="notification-item__delete"
+                  matTooltip="Delete"
+                  (click)="onDeleteNotification($event, notification)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

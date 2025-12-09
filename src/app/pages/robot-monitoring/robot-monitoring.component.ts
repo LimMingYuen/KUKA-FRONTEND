@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, signal, effect, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, signal, effect, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -33,6 +33,7 @@ import {
   DrawingMode,
   Point
 } from '../../models/robot-monitoring.models';
+import { ConfigService } from '../../services/config.service';
 
 @Component({
   selector: 'app-robot-monitoring',
@@ -94,7 +95,10 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   });
 
   private destroy$ = new Subject<void>();
-  private readonly API_BASE = 'http://localhost:5109';
+  private config = inject(ConfigService);
+  private get API_BASE(): string {
+    return this.config.apiUrl;
+  }
 
   constructor(
     private robotMonitoringService: RobotMonitoringService,

@@ -151,6 +151,71 @@ $nav-item-size: 48px;
     white-space: nowrap;
     letter-spacing: 0.5px;
   }
+
+  &__buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .notification-button {
+    width: $action-button-size;
+    height: $action-button-size;
+    min-width: $action-button-size;
+    background-color: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface-variant);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50% !important;
+
+    &:hover {
+      background-color: var(--mat-sys-primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(47, 64, 154, 0.3);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// ==========================================
+// NOTIFICATION PANEL
+// ==========================================
+.notification-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  z-index: 1000;
+}
+
+.notification-panel-container {
+  position: fixed;
+  // top and left are now set dynamically via [style.top.px] and [style.left.px]
+  z-index: 1001;
+  animation: slideInNotification 0.2s ease-out;
+}
+
+@keyframes slideInNotification {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // ==========================================

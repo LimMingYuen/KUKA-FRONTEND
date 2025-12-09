@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
+import { ConfigService } from '../../../services/config.service';
 
 export interface AdminAuthorizationDialogData {
   title: string;
@@ -52,7 +53,10 @@ interface ApiResponse<T> {
   styleUrl: './admin-authorization-dialog.component.scss'
 })
 export class AdminAuthorizationDialogComponent {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
 
   public username: string = '';
   public password: string = '';

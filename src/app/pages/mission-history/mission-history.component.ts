@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,10 +8,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 import { MissionHistoryService } from '../../services/mission-history.service';
+import { MobileRobotsService } from '../../services/mobile-robots.service';
 import { MissionHistoryDisplayData, getStatusClass, getWorkflowClass } from '../../models/mission-history.models';
-import { Subject, takeUntil, Observable } from 'rxjs';
+import { MobileRobotDisplayData } from '../../models/mobile-robot.models';
+import { Subject, takeUntil, Observable, startWith, map } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { MISSION_HISTORY_TABLE_CONFIG } from './mission-history-table.config';
@@ -25,6 +31,8 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatSnackBarModule,
     MatIconModule,
@@ -32,6 +40,9 @@ import {
     MatButtonModule,
     MatDialogModule,
     MatProgressBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatAutocompleteModule,
     GenericTableComponent
   ],
   templateUrl: './mission-history.component.html',
@@ -40,6 +51,7 @@ import {
 export class MissionHistoryComponent implements OnInit, OnDestroy {
   // Table data
   public missionHistory: MissionHistoryDisplayData[] = [];
+  public filteredMissionHistory: MissionHistoryDisplayData[] = [];
 
   // Table configuration
   public tableConfig = MISSION_HISTORY_TABLE_CONFIG;
@@ -54,6 +66,12 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
   public storageUsagePercentage = 0;
   public isNearLimit = false;
 
+  // Robot filter
+  public robots: MobileRobotDisplayData[] = [];
+  public robotFilterControl = new FormControl<string | MobileRobotDisplayData>('');
+  public filteredRobots$!: Observable<MobileRobotDisplayData[]>;
+  public selectedRobot: MobileRobotDisplayData | null = null;
+
   // Cleanup subject
   private destroy$ = new Subject<void>();
 
@@ -64,6 +82,7 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
 
   constructor(
     public missionHistoryService: MissionHistoryService,
+    private mobileRobotsService: MobileRobotsService,
     private dialog: MatDialog
   ) {
     // Create observables from signals within constructor (injection context)
@@ -79,6 +98,8 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
     this.loadMissionHistory();
     this.subscribeToServiceState();
     this.loadMissionCount();
+    this.loadRobots();
+    this.setupRobotAutocomplete();
   }
 
   ngOnDestroy(): void {
@@ -121,11 +142,95 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (missionHistory) => {
           this.missionHistory = missionHistory;
+          this.applyRobotFilter();
         },
         error: (error) => {
           console.error('Error loading mission history:', error);
         }
       });
+  }
+
+  /**
+   * Load robots for the filter dropdown
+   */
+  private loadRobots(): void {
+    this.mobileRobotsService.getMobileRobots()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (robots) => {
+          this.robots = robots;
+        },
+        error: (error) => {
+          console.error('Error loading robots:', error);
+        }
+      });
+  }
+
+  /**
+   * Setup robot autocomplete filtering
+   */
+  private setupRobotAutocomplete(): void {
+    this.filteredRobots$ = this.robotFilterControl.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const filterValue = typeof value === 'string' ? value : value?.robotId || '';
+        return this.filterRobots(filterValue);
+      })
+    );
+  }
+
+  /**
+   * Filter robots based on search term
+   */
+  private filterRobots(searchTerm: string): MobileRobotDisplayData[] {
+    if (!searchTerm) {
+      return this.robots;
+    }
+    const filterValue = searchTerm.toLowerCase();
+    return this.robots.filter(robot =>
+      robot.robotId.toLowerCase().includes(filterValue) ||
+      robot.robotTypeCode?.toLowerCase().includes(filterValue)
+    );
+  }
+
+  /**
+   * Display function for robot autocomplete
+   */
+  public displayRobot(robot: MobileRobotDisplayData | string): string {
+    if (!robot) return '';
+    if (typeof robot === 'string') return robot;
+    return robot.robotId;
+  }
+
+  /**
+   * Handle robot selection from autocomplete
+   */
+  public onRobotSelected(event: any): void {
+    const selectedRobot = event.option.value as MobileRobotDisplayData;
+    this.selectedRobot = selectedRobot;
+    this.applyRobotFilter();
+  }
+
+  /**
+   * Clear robot filter
+   */
+  public clearRobotFilter(): void {
+    this.selectedRobot = null;
+    this.robotFilterControl.setValue('');
+    this.applyRobotFilter();
+  }
+
+  /**
+   * Apply robot filter to mission history
+   */
+  private applyRobotFilter(): void {
+    if (!this.selectedRobot) {
+      this.filteredMissionHistory = [...this.missionHistory];
+    } else {
+      this.filteredMissionHistory = this.missionHistory.filter(mission =>
+        mission.assignedRobotId === this.selectedRobot!.robotId
+      );
+    }
   }
 
   /**
@@ -204,7 +309,6 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
   private viewMissionHistory(mission: MissionHistoryDisplayData): void {
     // TODO: Implement view dialog or navigation
     // Could open a dialog with detailed mission information
-    console.log('View mission:', mission);
   }
 
   /**
@@ -213,7 +317,6 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
   private exportMissionHistory(mission: MissionHistoryDisplayData): void {
     // TODO: Implement export functionality for single record
     // Could export single mission data to CSV/JSON
-    console.log('Export mission:', mission);
   }
 
   /**
@@ -238,7 +341,6 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result === true) {
         // This would require a DELETE endpoint for individual records
-        console.log('Delete mission:', mission);
       }
     });
   }

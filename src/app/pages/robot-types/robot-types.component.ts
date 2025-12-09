@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -69,7 +69,8 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
   constructor(
     public robotTypesService: RobotTypesService,
     private dialog: MatDialog,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar
   ) {
     // Initialize form
     this.initializeForm();
@@ -216,40 +217,19 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Delete robot type with confirmation and usage check
+   * Delete robot type with confirmation
    */
   private deleteRobotType(robotType: RobotTypeDisplayData): void {
-    // First check if this robot type is in use
-    this.robotTypesService.checkUsageInTemplates(robotType.actualValue)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (usage) => {
-          if (usage.isUsed) {
-            // Show warning about templates using this robot type
-            const templateList = usage.templateNames.join('\n  - ');
-            const alertData: ConfirmationDialogData = {
-              title: 'Cannot Delete',
-              message: `Cannot delete robot type "${robotType.displayName}" because it is used by ${usage.usageCount} workflow template(s):\n\n  - ${templateList}\n\nPlease update or delete these templates first, or deactivate this robot type instead.`,
-              icon: 'error',
-              confirmText: 'OK',
-              showCancel: false,
-              confirmColor: 'primary'
-            };
-            this.dialog.open(ConfirmationDialogComponent, {
-              width: '450px',
-              data: alertData
-            });
-          } else {
-            // Not in use, proceed with deletion after confirmation
-            this.showDeleteRobotTypeConfirmation(robotType);
-          }
-        },
-        error: (error) => {
-          console.error('Error checking robot type usage:', error);
-          // On error, still allow deletion with a warning
-          this.showDeleteRobotTypeConfirmationWithWarning(robotType);
-        }
+    if (robotType.isActive) {
+      this.snackBar.open('Cannot delete an active robot type. Please set it to inactive first.', 'Dismiss', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
       });
+      return;
+    }
+    this.showDeleteRobotTypeConfirmation(robotType);
   }
 
   /**
@@ -259,38 +239,6 @@ export class RobotTypesComponent implements OnInit, OnDestroy {
     const dialogData: ConfirmationDialogData = {
       title: 'Delete Robot Type',
       message: `Are you sure you want to delete robot type "${robotType.displayName}"?`,
-      icon: 'warning',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      showCancel: true,
-      confirmColor: 'warn'
-    };
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
-      if (result === true) {
-        this.robotTypesService.deleteRobotType(robotType.id)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            error: (error) => {
-              console.error('Error deleting robot type:', error);
-            }
-          });
-      }
-    });
-  }
-
-  /**
-   * Show delete confirmation with warning about unable to verify usage
-   */
-  private showDeleteRobotTypeConfirmationWithWarning(robotType: RobotTypeDisplayData): void {
-    const dialogData: ConfirmationDialogData = {
-      title: 'Delete Robot Type',
-      message: `Unable to verify usage. Delete robot type "${robotType.displayName}" anyway?`,
       icon: 'warning',
       confirmText: 'Delete',
       cancelText: 'Cancel',

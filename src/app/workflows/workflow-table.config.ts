@@ -100,7 +100,6 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
     actionText: 'Sync Workflows',
     action: () => {
       // This will be overridden in the component
-      console.log('Sync workflows from empty state');
     }
   },
 

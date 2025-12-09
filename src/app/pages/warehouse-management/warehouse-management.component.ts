@@ -12,6 +12,7 @@ import { MissionTypesComponent } from '../mission-types/mission-types.component'
 import { RobotTypesComponent } from '../robot-types/robot-types.component';
 import { ResumeStrategiesComponent } from '../resume-strategies/resume-strategies.component';
 import { AreasComponent } from '../areas/areas.component';
+import { OrganizationIdsComponent } from '../organization-ids/organization-ids.component';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 import { ShelfDecisionRulesService } from '../../services/shelf-decision-rules.service';
@@ -19,6 +20,7 @@ import { MissionTypesService } from '../../services/mission-types.service';
 import { RobotTypesService } from '../../services/robot-types.service';
 import { ResumeStrategiesService } from '../../services/resume-strategies.service';
 import { AreasService } from '../../services/areas.service';
+import { OrganizationIdsService } from '../../services/organization-ids.service';
 
 export interface TabItem {
   label: string;
@@ -41,7 +43,8 @@ export interface TabItem {
     MissionTypesComponent,
     RobotTypesComponent,
     ResumeStrategiesComponent,
-    AreasComponent
+    AreasComponent,
+    OrganizationIdsComponent
   ],
   templateUrl: './warehouse-management.component.html',
   styleUrl: './warehouse-management.component.css'
@@ -57,6 +60,7 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
   public totalRobotTypes = 0;
   public totalResumeStrategies = 0;
   public totalAreas = 0;
+  public totalOrganizationIds = 0;
 
   // Tabs configuration
   public tabs: TabItem[] = [
@@ -89,6 +93,12 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
       icon: 'location_on',
       component: AreasComponent,
       description: 'Manage workflow template area configurations and settings'
+    },
+    {
+      label: 'Organization IDs',
+      icon: 'business',
+      component: OrganizationIdsComponent,
+      description: 'Manage workflow template organization ID configurations and settings'
     }
   ];
 
@@ -102,7 +112,8 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
     private missionTypesService: MissionTypesService,
     private robotTypesService: RobotTypesService,
     private resumeStrategiesService: ResumeStrategiesService,
-    private areasService: AreasService
+    private areasService: AreasService,
+    private organizationIdsService: OrganizationIdsService
   ) {}
 
   ngOnInit(): void {
@@ -131,7 +142,8 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
       missionTypes: this.missionTypesService.getMissionTypes(),
       robotTypes: this.robotTypesService.getRobotTypes(),
       resumeStrategies: this.resumeStrategiesService.getResumeStrategies(),
-      areas: this.areasService.getAreas()
+      areas: this.areasService.getAreas(),
+      organizationIds: this.organizationIdsService.getOrganizationIds()
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (results) => {
         this.totalRules = results.rules?.length || 0;
@@ -139,6 +151,7 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
         this.totalRobotTypes = results.robotTypes?.length || 0;
         this.totalResumeStrategies = results.resumeStrategies?.length || 0;
         this.totalAreas = results.areas?.length || 0;
+        this.totalOrganizationIds = results.organizationIds?.length || 0;
         this.isLoading = false;
       },
       error: (error) => {
@@ -249,13 +262,15 @@ export class WarehouseManagementComponent implements OnInit, OnDestroy {
     totalRobotTypes: number;
     totalResumeStrategies: number;
     totalAreas: number;
+    totalOrganizationIds: number;
   } {
     return {
       totalRules: this.totalRules,
       totalMissionTypes: this.totalMissionTypes,
       totalRobotTypes: this.totalRobotTypes,
       totalResumeStrategies: this.totalResumeStrategies,
-      totalAreas: this.totalAreas
+      totalAreas: this.totalAreas,
+      totalOrganizationIds: this.totalOrganizationIds
     };
   }
 

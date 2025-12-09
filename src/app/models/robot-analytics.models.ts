@@ -146,11 +146,12 @@ export function calculateIdleTime(workingMins: number, chargingMins: number, tot
 }
 
 /**
- * Calculate utilization rate
+ * Calculate utilization rate: Working / (Available - Charging)
  */
-export function calculateUtilizationRate(workingMins: number, totalMinsInPeriod: number): number {
-  if (totalMinsInPeriod === 0) return 0;
-  return Math.round((workingMins / totalMinsInPeriod) * 100 * 10) / 10;
+export function calculateUtilizationRate(workingMins: number, chargingMins: number, totalMinsInPeriod: number): number {
+  const effectiveAvailable = totalMinsInPeriod - chargingMins;
+  if (effectiveAvailable <= 0) return 0;
+  return Math.round((workingMins / effectiveAvailable) * 100 * 10) / 10;
 }
 
 /**
@@ -202,9 +203,10 @@ export function transformUtilizationData(apiData: any, request: UtilizationReque
 
   // Transform breakdown array to dataPoints
   const dataPoints: UtilizationDataPoint[] = backendData.breakdown.map(bucket => {
-    // Calculate utilization rate for this bucket
-    const utilizationRate = bucket.totalAvailableMinutes > 0
-      ? Math.round((bucket.workingMinutes / bucket.totalAvailableMinutes) * 100 * 10) / 10
+    // Calculate utilization rate for this bucket: Working / (Available - Charging)
+    const effectiveAvailable = bucket.totalAvailableMinutes - bucket.chargingMinutes;
+    const utilizationRate = effectiveAvailable > 0
+      ? Math.round((bucket.workingMinutes / effectiveAvailable) * 100 * 10) / 10
       : 0;
 
     return {

@@ -16,154 +16,93 @@
         <mat-icon class="title-icon">filter_alt</mat-icon>
         <h2>Analysis Filters</h2>
       </div>
-      <button mat-icon-button (click)="filtersExpanded = !filtersExpanded" class="collapse-button">
-        <mat-icon>{{ filtersExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-      </button>
     </div>
 
-    <div class="filters-summary" *ngIf="!filtersExpanded">
-      <div class="summary-item">
-        <mat-icon>smart_toy</mat-icon>
-        <span>{{ selectedRobotId ? 'Robot ' + selectedRobotId : 'No robot selected' }}</span>
-      </div>
-      <div class="summary-divider">|</div>
-      <div class="summary-item">
-        <mat-icon>event_note</mat-icon>
-        <span>{{ startDate | date:'MMM dd, yyyy' }} {{ startHour }}:{{ startMinute }}</span>
-      </div>
-      <div class="summary-arrow">→</div>
-      <div class="summary-item">
-        <mat-icon>event</mat-icon>
-        <span>{{ endDate | date:'MMM dd, yyyy' }} {{ endHour }}:{{ endMinute }}</span>
-      </div>
-      <div class="summary-divider">|</div>
-      <div class="summary-item">
-        <mat-icon>view_timeline</mat-icon>
-        <span>{{ groupBy === 'day' ? 'Daily View' : 'Hourly View' }}</span>
-      </div>
-    </div>
-
-    <div class="filters-content" *ngIf="filtersExpanded">
-      <!-- Robot Selection -->
-      <div class="filter-section">
-        <div class="section-label">
-          <mat-icon>smart_toy</mat-icon>
-          <span>Robot Selection</span>
-        </div>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Select Robot</mat-label>
-          <mat-select [(value)]="selectedRobotId">
-            <mat-option *ngFor="let robot of availableRobots" [value]="robot.id">
-              <mat-icon class="option-icon">smart_toy</mat-icon>
-              {{ robot.name }}
-            </mat-option>
-          </mat-select>
-          <mat-icon matPrefix>smart_toy</mat-icon>
-        </mat-form-field>
-      </div>
-
-      <!-- Date and Time Range -->
-      <div class="filter-section">
-        <div class="section-label">
-          <mat-icon>schedule</mat-icon>
-          <span>Date & Time Range</span>
+    <div class="filters-content compact">
+      <div class="filters-row">
+        <!-- Robot Selection -->
+        <div class="filter-item robot-select">
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Robot</mat-label>
+            <mat-select [(value)]="selectedRobotId">
+              <mat-option *ngFor="let robot of availableRobots" [value]="robot.id">
+                {{ robot.name }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>smart_toy</mat-icon>
+          </mat-form-field>
         </div>
 
-        <div class="datetime-row">
-          <!-- Start DateTime -->
-          <div class="datetime-group start">
-            <div class="datetime-label">
-              <mat-icon>play_arrow</mat-icon>
-              <span>Start</span>
-            </div>
-            <div class="datetime-fields">
-              <mat-form-field appearance="outline" class="date-field">
-                <mat-label>Date</mat-label>
-                <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate">
-                <mat-datepicker-toggle matPrefix [for]="startPicker"></mat-datepicker-toggle>
-                <mat-datepicker #startPicker></mat-datepicker>
-              </mat-form-field>
-              <div class="time-fields">
-                <mat-form-field appearance="outline" class="time-field">
-                  <mat-label>Hour</mat-label>
-                  <mat-select [(value)]="startHour">
-                    <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
-                  </mat-select>
-                  <mat-icon matPrefix>schedule</mat-icon>
-                </mat-form-field>
-                <span class="time-separator">:</span>
-                <mat-form-field appearance="outline" class="time-field">
-                  <mat-label>Min</mat-label>
-                  <mat-select [(value)]="startMinute">
-                    <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-
-          <!-- End DateTime -->
-          <div class="datetime-group end">
-            <div class="datetime-label">
-              <mat-icon>stop</mat-icon>
-              <span>End</span>
-            </div>
-            <div class="datetime-fields">
-              <mat-form-field appearance="outline" class="date-field">
-                <mat-label>Date</mat-label>
-                <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate">
-                <mat-datepicker-toggle matPrefix [for]="endPicker"></mat-datepicker-toggle>
-                <mat-datepicker #endPicker></mat-datepicker>
-              </mat-form-field>
-              <div class="time-fields">
-                <mat-form-field appearance="outline" class="time-field">
-                  <mat-label>Hour</mat-label>
-                  <mat-select [(value)]="endHour">
-                    <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
-                  </mat-select>
-                  <mat-icon matPrefix>schedule</mat-icon>
-                </mat-form-field>
-                <span class="time-separator">:</span>
-                <mat-form-field appearance="outline" class="time-field">
-                  <mat-label>Min</mat-label>
-                  <mat-select [(value)]="endMinute">
-                    <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
+        <!-- Start Date/Time -->
+        <div class="filter-item datetime-compact">
+          <mat-form-field appearance="outline" class="compact-field date-compact">
+            <mat-label>Start Date</mat-label>
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate">
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="compact-field time-compact">
+            <mat-label>Time</mat-label>
+            <mat-select [(value)]="startHour">
+              <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <span class="time-sep">:</span>
+          <mat-form-field appearance="outline" class="compact-field min-compact">
+            <mat-select [(value)]="startMinute">
+              <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
-      </div>
 
-      <!-- Grouping -->
-      <div class="filter-section">
-        <div class="section-label">
-          <mat-icon>view_timeline</mat-icon>
-          <span>Data Grouping</span>
+        <span class="range-arrow">→</span>
+
+        <!-- End Date/Time -->
+        <div class="filter-item datetime-compact">
+          <mat-form-field appearance="outline" class="compact-field date-compact">
+            <mat-label>End Date</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate">
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="compact-field time-compact">
+            <mat-label>Time</mat-label>
+            <mat-select [(value)]="endHour">
+              <mat-option *ngFor="let hour of hours" [value]="hour">{{ hour }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <span class="time-sep">:</span>
+          <mat-form-field appearance="outline" class="compact-field min-compact">
+            <mat-select [(value)]="endMinute">
+              <mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute }}</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
-        <mat-button-toggle-group [(ngModel)]="groupBy" class="grouping-toggle">
-          <mat-button-toggle value="day">
-            <mat-icon>today</mat-icon>
-            <span>Daily</span>
-          </mat-button-toggle>
-          <mat-button-toggle value="hour">
-            <mat-icon>schedule</mat-icon>
-            <span>Hourly</span>
-          </mat-button-toggle>
-        </mat-button-toggle-group>
-      </div>
 
-      <!-- Search Actions -->
-      <div class="filter-actions">
-        <button mat-raised-button color="primary" class="search-button" (click)="applyFilters()" [disabled]="!selectedRobotId || isLoading">
-          <mat-icon>search</mat-icon>
-          <span>{{ isLoading ? 'Searching...' : 'Search Analytics' }}</span>
-        </button>
-        <button mat-stroked-button class="reset-button" (click)="resetFilters()" [disabled]="isLoading">
-          <mat-icon>refresh</mat-icon>
-          <span>Reset</span>
-        </button>
+        <!-- Grouping Toggle -->
+        <div class="filter-item grouping-compact">
+          <mat-button-toggle-group [(ngModel)]="groupBy" class="grouping-toggle-compact">
+            <mat-button-toggle value="day">
+              <mat-icon>today</mat-icon>
+              Daily
+            </mat-button-toggle>
+            <mat-button-toggle value="hour">
+              <mat-icon>schedule</mat-icon>
+              Hourly
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <!-- Actions -->
+        <div class="filter-item actions-compact">
+          <button mat-raised-button color="primary" class="search-btn" (click)="applyFilters()" [disabled]="!selectedRobotId || isLoading">
+            <mat-icon>search</mat-icon>
+            {{ isLoading ? 'Searching...' : 'Search' }}
+          </button>
+          <button mat-stroked-button class="reset-btn" (click)="resetFilters()" [disabled]="isLoading">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
   </mat-card>
@@ -184,18 +123,22 @@
     </button>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!utilizationData && !isLoading && !error">
+  <!-- Initial State - Before Search -->
+  <div class="empty-state" *ngIf="!hasSearched && !isLoading">
     <mat-icon>analytics</mat-icon>
-    <h3>No Data Available</h3>
-    <p>Select a robot and date range to view analytics</p>
-    <button mat-raised-button color="primary" (click)="loadDefaultData()">
-      Load Last 7 Days
-    </button>
+    <h3>Select Filters and Search</h3>
+    <p>Choose a robot and date range, then click Search to view analytics</p>
+  </div>
+
+  <!-- Empty State - After Search with No Data -->
+  <div class="empty-state" *ngIf="hasSearched && !utilizationData && !isLoading && !error">
+    <mat-icon>search_off</mat-icon>
+    <h3>No Data Found</h3>
+    <p>No analytics data available for the selected filters. Try adjusting the date range.</p>
   </div>
 
   <!-- Analytics Content -->
-  <div *ngIf="utilizationData && !isLoading && !error">
+  <div *ngIf="hasSearched && utilizationData && !isLoading && !error">
     <!-- KPI Cards -->
     <div class="kpi-container">
       <mat-card class="kpi-card">

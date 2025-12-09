@@ -1,15 +1,19 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, catchError, map, of } from 'rxjs';
 
 import { ApiResponse } from '../models/auth.models';
 import { MachineIdResponse, LicenseStatusResponse, RobotLicenseStatus } from '../models/license.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LicenseService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
 
   // Reactive state using Angular signals
   public licenseStatus = signal<LicenseStatusResponse | null>(null);

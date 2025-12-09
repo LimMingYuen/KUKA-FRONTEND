@@ -111,7 +111,7 @@ export class CreateWorkflowTemplateComponent implements OnInit, OnDestroy {
         this.refreshTemplates();
         break;
       default:
-        console.log('Unknown action:', event.action);
+        break;
     }
   }
 

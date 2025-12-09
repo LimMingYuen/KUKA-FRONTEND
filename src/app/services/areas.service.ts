@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -17,12 +17,18 @@ import {
   isValidDescription,
   sortAreasByPriority
 } from '../models/areas.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AreasService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/areas';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/areas';
+  }
 
   // Reactive state using signals
   public areas = signal<AreaDisplayData[]>([]);
@@ -60,23 +66,44 @@ export class AreasService {
     return (error: any): Observable<T> => {
       console.error(`${operation} failed:`, error);
 
+      let errorMessage: string;
+
       // Set error state
-      if (error.status === 401) {
-        this.error.set('Authentication failed. Please log in again.');
+      if (error.status === 400) {
+        errorMessage = error.error?.detail || error.error?.title || error.error?.msg || 'Invalid request. Please check your input.';
+      } else if (error.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
       } else if (error.status === 403) {
-        this.error.set('You do not have permission to perform this action.');
+        errorMessage = 'You do not have permission to perform this action.';
       } else if (error.status === 404) {
-        this.error.set('The requested area was not found.');
+        errorMessage = 'The requested area was not found.';
       } else if (error.status === 409) {
-        this.error.set('An area with this actual value already exists.');
+        errorMessage = 'An area with this actual value already exists.';
       } else if (error.status >= 500) {
-        this.error.set('Server error. Please try again later.');
+        errorMessage = 'Server error. Please try again later.';
       } else {
-        this.error.set(error.error?.msg || error.message || 'An unexpected error occurred.');
+        errorMessage = error.error?.msg || error.message || 'An unexpected error occurred.';
       }
+
+      this.error.set(errorMessage);
+      this.showErrorMessage(errorMessage);
 
       return throwError(() => error);
     };
+  }
+
+  /**
+   * Show success message
+   */
+  private showSuccessMessage(message: string): void {
+    this.notificationService.success(message);
+  }
+
+  /**
+   * Show error message
+   */
+  private showErrorMessage(message: string): void {
+    this.notificationService.error(message);
   }
 
   /**
@@ -161,12 +188,16 @@ export class AreasService {
           const updatedAreas = sortAreasByPriority([...currentAreas, newArea]);
           this.areas.set(updatedAreas);
           this.isCreating.set(false);
+          this.showSuccessMessage('Area created successfully');
           return newArea;
         } else {
           throw new Error(response.msg || 'Failed to create area');
         }
       }),
-      catchError(this.handleError<AreaDisplayData>('createArea'))
+      catchError((error) => {
+        this.isCreating.set(false);
+        return this.handleError<AreaDisplayData>('createArea')(error);
+      })
     );
   }
 
@@ -203,12 +234,16 @@ export class AreasService {
           const sortedAreas = sortAreasByPriority(updatedAreas);
           this.areas.set(sortedAreas);
           this.isUpdating.set(false);
+          this.showSuccessMessage('Area updated successfully');
           return updatedArea;
         } else {
           throw new Error(response.msg || 'Failed to update area');
         }
       }),
-      catchError(this.handleError<AreaDisplayData>('updateArea'))
+      catchError((error) => {
+        this.isUpdating.set(false);
+        return this.handleError<AreaDisplayData>('updateArea')(error);
+      })
     );
   }
 
@@ -228,11 +263,15 @@ export class AreasService {
           const updatedAreas = currentAreas.filter(a => a.id !== id);
           this.areas.set(updatedAreas);
           this.isDeleting.set(false);
+          this.showSuccessMessage('Area deleted successfully');
         } else {
           throw new Error(response.msg || 'Failed to delete area');
         }
       }),
-      catchError(this.handleError<void>('deleteArea'))
+      catchError((error) => {
+        this.isDeleting.set(false);
+        return this.handleError<void>('deleteArea')(error);
+      })
     );
   }
 

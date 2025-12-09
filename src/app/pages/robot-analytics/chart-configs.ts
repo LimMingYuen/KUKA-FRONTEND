@@ -261,8 +261,16 @@ export function getTimeDistributionChartConfig(): any {
           ticks: {
             ...BASE_CHART_OPTIONS.scales?.['y']?.ticks,
             callback: function(value: any) {
-              const hours = Math.floor(Number(value) / 60);
-              return hours + 'h';
+              const minutes = Number(value);
+              if (minutes < 60) {
+                return minutes + 'm';
+              }
+              const hours = Math.floor(minutes / 60);
+              const remainingMinutes = Math.round(minutes % 60);
+              if (remainingMinutes === 0) {
+                return hours + 'h';
+              }
+              return hours + 'h ' + remainingMinutes + 'm';
             }
           }
         },

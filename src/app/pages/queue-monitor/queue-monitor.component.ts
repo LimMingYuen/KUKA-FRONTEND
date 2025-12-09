@@ -75,12 +75,15 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     'actions'
   ];
 
-  // Auto-refresh (fallback when SignalR disconnected)
-  public autoRefresh = signal<boolean>(false); // Disabled by default when SignalR is active
+  // Auto-refresh (automatic fallback when SignalR disconnected)
+  public autoRefresh = signal<boolean>(false);
   private autoRefreshInterval = 5000; // 5 seconds
 
   // SignalR connection status
   public connectionState = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
+
+  // Whether fallback polling is active (for UI indicator)
+  public usingFallbackPolling = signal<boolean>(false);
 
   // Priority options for dropdown
   public priorityOptions = Object.entries(PRIORITY_CONFIG).map(([value, config]) => ({
@@ -126,6 +129,20 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     effect(() => {
       if (this.signalRService.statisticsUpdated()) {
         this.loadStatisticsSilently();
+      }
+    });
+
+    // Effect: Auto-enable/disable fallback polling based on SignalR connection state
+    effect(() => {
+      const state = this.signalRService.connectionState();
+      if (state === 'error' || state === 'disconnected') {
+        // SignalR failed - enable fallback polling
+        this.autoRefresh.set(true);
+        this.usingFallbackPolling.set(true);
+      } else if (state === 'connected') {
+        // SignalR connected - disable fallback polling
+        this.autoRefresh.set(false);
+        this.usingFallbackPolling.set(false);
       }
     });
   }
@@ -216,18 +233,6 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Toggle auto-refresh
-   */
-  toggleAutoRefresh(): void {
-    this.autoRefresh.update(v => !v);
-    if (this.autoRefresh()) {
-      this.snackBar.open('Auto-refresh enabled', '', { duration: 2000 });
-    } else {
-      this.snackBar.open('Auto-refresh disabled', '', { duration: 2000 });
-    }
-  }
-
-  /**
    * Manual refresh
    */
   refresh(): void {
@@ -300,54 +305,6 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     this.addProcessingAction(item.id);
 
     this.queueService.retry(item.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.removeProcessingAction(item.id);
-          this.loadData();
-        },
-        error: () => {
-          this.removeProcessingAction(item.id);
-        }
-      });
-  }
-
-  /**
-   * Move item up in queue
-   */
-  moveUp(item: MissionQueueDisplayData): void {
-    if (!item.canMoveUp) {
-      this.snackBar.open('This item cannot be moved up', 'Close', { duration: 3000 });
-      return;
-    }
-
-    this.addProcessingAction(item.id);
-
-    this.queueService.moveUp(item.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.removeProcessingAction(item.id);
-          this.loadData();
-        },
-        error: () => {
-          this.removeProcessingAction(item.id);
-        }
-      });
-  }
-
-  /**
-   * Move item down in queue
-   */
-  moveDown(item: MissionQueueDisplayData): void {
-    if (!item.canMoveDown) {
-      this.snackBar.open('This item cannot be moved down', 'Close', { duration: 3000 });
-      return;
-    }
-
-    this.addProcessingAction(item.id);
-
-    this.queueService.moveDown(item.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {

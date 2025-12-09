@@ -9,6 +9,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,11 +17,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Subject, takeUntil, interval } from 'rxjs';
 
 import { MissionsService } from '../../services/missions.service';
-import { JobQueryRequest } from '../../models/missions.models';
+import { AuthService } from '../../services/auth.service';
+import { JobQueryRequest, MissionCancelRequest } from '../../models/missions.models';
+import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
+import { AdminAuthorizationDialogComponent } from '../../shared/dialogs/admin-authorization-dialog/admin-authorization-dialog.component';
+import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
+import { TableConfig, ActionEvent } from '../../shared/models/table.models';
 import {
   LiveJobDisplayData,
   LiveJobStatistics,
@@ -51,7 +58,10 @@ import {
     MatInputModule,
     MatSlideToggleModule,
     MatExpansionModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatButtonToggleModule,
+    MatDialogModule,
+    GenericTableComponent
   ],
   templateUrl: './live-jobs.component.html',
   styleUrl: './live-jobs.component.scss'
@@ -71,6 +81,117 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
   public autoRefresh = signal<boolean>(true);
   public filtersExpanded = signal<boolean>(false);
   public lastRefreshed = signal<Date | null>(null);
+  public viewMode = signal<'card' | 'table'>('table');
+
+  // Table configuration for table view
+  public tableConfig: TableConfig<LiveJobDisplayData> = {
+    title: '',
+    showRowNumbers: true,
+    columns: [
+      {
+        key: 'statusText',
+        header: 'Status',
+        sortable: true,
+        filterable: true,
+        transform: (value, row) => value
+      },
+      {
+        key: 'jobCode',
+        header: 'Job Code',
+        sortable: true,
+        filterable: true
+      },
+      {
+        key: 'workflowName',
+        header: 'Workflow',
+        sortable: true,
+        filterable: true,
+        transform: (value) => value || 'Unknown'
+      },
+      {
+        key: 'robotId',
+        header: 'Robot',
+        sortable: true,
+        filterable: true,
+        transform: (value) => value || 'Not Assigned'
+      },
+      {
+        key: 'progressPercent',
+        header: 'Progress',
+        sortable: true,
+        filterable: false,
+        transform: (value) => `${value || 0}%`
+      },
+      {
+        key: 'locationDisplay',
+        header: 'Location',
+        sortable: false,
+        filterable: true
+      },
+      {
+        key: 'createdDateRelative',
+        header: 'Created',
+        sortable: false,
+        filterable: false
+      },
+      {
+        key: 'durationDisplay',
+        header: 'Duration',
+        sortable: false,
+        filterable: false,
+        transform: (value) => value || '-'
+      },
+      {
+        key: 'robotErrorMessage',
+        header: 'Error Message',
+        sortable: false,
+        filterable: true,
+        transform: (value, row) => {
+          if (row?.statusColorClass === 'status-error' || row?.statusColorClass === 'status-warning') {
+            return value || row?.warnCode || 'Error occurred';
+          }
+          return '-';
+        }
+      }
+    ],
+    actions: [
+      {
+        action: 'cancel',
+        label: 'Cancel',
+        icon: 'cancel',
+        type: 'icon',
+        color: 'warn',
+        tooltip: 'Cancel this job',
+        hidden: (row: LiveJobDisplayData) => !row.isActiveJob
+      },
+      {
+        action: 'dismiss',
+        label: 'Dismiss',
+        icon: 'close',
+        type: 'icon',
+        color: 'accent',
+        tooltip: 'Dismiss from live view',
+        hidden: (row: LiveJobDisplayData) =>
+          row.statusColorClass !== 'status-error' && row.statusColorClass !== 'status-warning'
+      }
+    ],
+    pagination: {
+      enabled: false,
+      pageSize: 100,
+      pageSizeOptions: [10, 25, 50, 100]
+    },
+    filter: {
+      enabled: false,
+      placeholder: 'Search jobs...'
+    },
+    empty: {
+      message: 'No active jobs',
+      icon: 'inbox'
+    },
+    hoverable: true,
+    striped: false,
+    bordered: false
+  };
 
   // Dismissed error jobs (stored in localStorage for persistence)
   private readonly DISMISSED_JOBS_KEY = 'live_jobs_dismissed';
@@ -93,7 +214,9 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
 
   constructor(
     private missionsService: MissionsService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -156,6 +279,8 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
             this.updateFilterOptions(liveJobs);
             // Clean up dismissed jobs that are no longer in the system
             this.cleanupDismissedJobs(allJobs);
+            // Fetch robot info (including error messages) for all jobs with robotId
+            this.fetchRobotInfo();
           } else {
             this.jobs.set([]);
             this.statistics.set(null);
@@ -245,6 +370,8 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
             this.updateFilterOptions(liveJobs);
             // Clean up dismissed jobs that are no longer in the system
             this.cleanupDismissedJobs(allJobs);
+            // Fetch robot info (including error messages) for all jobs with robotId
+            this.fetchRobotInfo();
           }
           this.lastRefreshed.set(new Date());
         },
@@ -276,6 +403,102 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
    */
   toggleFilters(): void {
     this.filtersExpanded.update(v => !v);
+  }
+
+  /**
+   * Set view mode (card or table)
+   */
+  setViewMode(mode: 'card' | 'table'): void {
+    this.viewMode.set(mode);
+  }
+
+  /**
+   * Handle table action events
+   */
+  handleTableAction(event: ActionEvent): void {
+    if (event.action === 'dismiss' && event.row) {
+      this.dismissJob(event.row.jobCode);
+    } else if (event.action === 'cancel' && event.row) {
+      this.cancelJob(event.row);
+    }
+  }
+
+  /**
+   * Cancel a job - requires admin authorization for non-SuperAdmin users
+   */
+  cancelJob(job: LiveJobDisplayData): void {
+    // SuperAdmin bypasses authorization
+    if (this.authService.isSuperAdmin()) {
+      this.openCancelDialog(job);
+      return;
+    }
+
+    // Non-admin requires authorization
+    const authDialogRef = this.dialog.open(AdminAuthorizationDialogComponent, {
+      width: '400px',
+      disableClose: true
+    });
+
+    authDialogRef.afterClosed().subscribe(authorized => {
+      if (authorized) {
+        this.openCancelDialog(job);
+      }
+    });
+  }
+
+  /**
+   * Open cancel dialog for mode selection
+   */
+  private openCancelDialog(job: LiveJobDisplayData): void {
+    const dialogData: CancelMissionDialogData = {
+      missionName: job.workflowName || 'Unknown',
+      missionCode: job.jobCode
+    };
+
+    const dialogRef = this.dialog.open(CancelMissionDialogComponent, {
+      width: '500px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: CancelMissionDialogResult) => {
+      if (result) {
+        this.executeCancellation(job, result);
+      }
+    });
+  }
+
+  /**
+   * Execute the cancellation API call
+   */
+  private executeCancellation(job: LiveJobDisplayData, result: CancelMissionDialogResult): void {
+    const request: MissionCancelRequest = {
+      requestId: this.generateRequestId(),
+      missionCode: job.jobCode,
+      containerCode: '',
+      position: '',
+      cancelMode: result.cancelMode,
+      reason: result.reason
+    };
+
+    this.missionsService.cancelMission(request).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Job cancelled successfully', '', { duration: 3000 });
+          this.loadJobs(); // Refresh the list
+        }
+      },
+      error: () => {
+        // Error handled by service
+      }
+    });
+  }
+
+  /**
+   * Generate a unique request ID for cancellation
+   */
+  private generateRequestId(): string {
+    const now = new Date();
+    return `request${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}${String(now.getMilliseconds()).padStart(3, '0')}`;
   }
 
   /**
@@ -390,5 +613,47 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
       this.dismissedJobCodes.set(cleanedDismissed);
       this.saveDismissedJobs();
     }
+  }
+
+  /**
+   * Fetch robot information for all live jobs with a robotId.
+   * Updates jobs with robot error messages from the Robot Query API.
+   */
+  private fetchRobotInfo(): void {
+    const currentJobs = this.jobs();
+
+    // Get unique robot IDs to avoid duplicate queries
+    const uniqueRobotIds = [...new Set(
+      currentJobs
+        .filter(job => job.robotId)
+        .map(job => job.robotId!)
+    )];
+
+    // Query each unique robot
+    uniqueRobotIds.forEach(robotId => {
+      this.missionsService.queryRobots({ robotId })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success && response.data?.[0]) {
+              const robotData = response.data[0];
+              // Update all jobs with this robotId
+              const updatedJobs = this.jobs().map(job => {
+                if (job.robotId === robotId) {
+                  return {
+                    ...job,
+                    robotErrorMessage: robotData.errorMessage
+                  };
+                }
+                return job;
+              });
+              this.jobs.set(updatedJobs);
+            }
+          },
+          error: () => {
+            // Silently fail - job will show generic error message if needed
+          }
+        });
+    });
   }
 }

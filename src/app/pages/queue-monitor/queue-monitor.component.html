@@ -10,13 +10,11 @@
         </div>
       </div>
       <div class="header-actions">
-        <button mat-stroked-button
-                [class.active]="autoRefresh()"
-                (click)="toggleAutoRefresh()"
-                matTooltip="Toggle auto-refresh (every 5 seconds)">
-          <mat-icon>{{ autoRefresh() ? 'sync' : 'sync_disabled' }}</mat-icon>
-          Auto-refresh {{ autoRefresh() ? 'ON' : 'OFF' }}
-        </button>
+        <!-- Connection status indicator -->
+        <span class="connection-status" [class.connected]="connectionState() === 'connected'" [class.fallback]="usingFallbackPolling()">
+          <mat-icon>{{ connectionState() === 'connected' ? 'wifi' : 'wifi_off' }}</mat-icon>
+          {{ connectionState() === 'connected' ? 'Real-time' : (connectionState() === 'connecting' ? 'Connecting...' : 'Polling') }}
+        </span>
         <button mat-flat-button color="primary" (click)="refresh()">
           <mat-icon>refresh</mat-icon>
           Refresh
@@ -163,7 +161,7 @@
         <ng-container matColumnDef="queuePosition">
           <th mat-header-cell *matHeaderCellDef>#</th>
           <td mat-cell *matCellDef="let item">
-            <span class="position-badge">{{ item.queuePosition || '-' }}</span>
+            <span class="position-badge">{{ item.statusCode === 0 ? item.queuePosition : '-' }}</span>
           </td>
         </ng-container>
 
@@ -232,24 +230,6 @@
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let item">
             <div class="action-buttons">
-              <!-- Move Up -->
-              <button mat-icon-button
-                      color="primary"
-                      matTooltip="Move Up"
-                      [disabled]="!item.canMoveUp || isProcessing(item.id)"
-                      (click)="moveUp(item)">
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-
-              <!-- Move Down -->
-              <button mat-icon-button
-                      color="primary"
-                      matTooltip="Move Down"
-                      [disabled]="!item.canMoveDown || isProcessing(item.id)"
-                      (click)="moveDown(item)">
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-
               <!-- Cancel -->
               <button mat-icon-button
                       color="warn"

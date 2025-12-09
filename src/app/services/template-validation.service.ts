@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { WorkflowTemplateService } from './workflow-template.service';
 import { SavedCustomMissionDto } from '../models/saved-custom-missions.models';
+import { ConfigService } from './config.service';
 
 /**
  * Template Validation Result
@@ -60,7 +61,10 @@ interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class TemplateValidationService {
-  private readonly API_URL = 'http://localhost:5109/api';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api';
+  }
 
   // Reactive state
   public isValidating = signal<boolean>(false);

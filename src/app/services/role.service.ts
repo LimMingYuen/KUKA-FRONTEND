@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map, catchError, throwError } from 'rxjs';
 import {
@@ -7,12 +7,16 @@ import {
   RoleUpdateRequest,
   ApiResponse
 } from '../models/role.models';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoleService {
-  private readonly API_URL = 'http://localhost:5109/api/v1/roles';
+  private config = inject(ConfigService);
+  private get API_URL(): string {
+    return this.config.apiUrl + '/api/v1/roles';
+  }
 
   constructor(private http: HttpClient) {}
 

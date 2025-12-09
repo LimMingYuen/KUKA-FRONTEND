@@ -195,6 +195,38 @@
       }
     }
 
+    // Blocked template styling (for Wait mode concurrency)
+    &.blocked-template {
+      border-left: 4px solid #ff9800;
+      opacity: 0.9;
+    }
+
+    // Concurrency mode badge
+    .concurrency-badge {
+      position: absolute;
+      top: 8px;
+      right: 80px; // Position to the left of status chip
+      background: #ff9800;
+      color: white;
+      border-radius: 12px;
+      padding: 0 10px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      height: 24px;
+      box-sizing: border-box;
+
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+    }
+
     // Status chip in top-right corner (SuperAdmin only)
     .status-chip {
       position: absolute;
@@ -485,6 +517,140 @@
           font-family: inherit;
         }
       }
+
+      // Manual Waypoint Confirmation Section
+      .manual-confirm-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+        border-radius: 12px;
+        margin-top: 12px;
+        border: 2px solid #ffc107;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        position: relative;
+        overflow: hidden;
+
+        // Animated border glow effect
+        &::before {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(45deg, #ffc107, #ff9800, #ffc107, #ff9800);
+          background-size: 400% 400%;
+          border-radius: 14px;
+          z-index: -1;
+          animation: borderGlow 3s ease infinite;
+        }
+
+        // Inner content wrapper
+        .waiting-content {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+        }
+
+        .waiting-icon {
+          color: #f57c00;
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+          animation: pulse 1.5s infinite, bounce 2s ease-in-out infinite;
+          filter: drop-shadow(0 2px 4px rgba(245, 124, 0, 0.4));
+        }
+
+        .waiting-text {
+          flex: 1;
+          font-weight: 600;
+          color: #e65100;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+
+        // Enhanced Confirm Button
+        .confirm-btn {
+          width: 100%;
+          height: 48px;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #4caf50 0%, #43a047 50%, #388e3c 100%);
+          color: white;
+          border: none;
+          box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4),
+                      0 2px 6px rgba(0, 0, 0, 0.15);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+
+          // Shine effect
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.3),
+              transparent
+            );
+            transition: left 0.5s ease;
+          }
+
+          &:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5),
+                        0 4px 10px rgba(0, 0, 0, 0.2);
+
+            &::before {
+              left: 100%;
+            }
+          }
+
+          &:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+          }
+
+          mat-icon {
+            font-size: 22px;
+            width: 22px;
+            height: 22px;
+            color: white;
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+
+        @keyframes borderGlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      }
     }
 
     // Enhanced Chip Styling
@@ -559,8 +725,33 @@
     // Card Actions
     mat-card-actions.card-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       padding: 12px;
+
+      // Blocked indicator for concurrency
+      .blocked-indicator {
+        width: 100%;
+        background: #fff3e0;
+        border: 1px solid #ff9800;
+        border-radius: 4px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+          color: #ff9800;
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        span {
+          font-size: 12px;
+          color: #e65100;
+        }
+      }
 
       .action-btn {
         flex: 1;

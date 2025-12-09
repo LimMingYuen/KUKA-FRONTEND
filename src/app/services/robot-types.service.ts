@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
 
@@ -10,12 +10,18 @@ import {
   ApiResponse,
   transformRobotTypeDtoToDisplayData
 } from '../models/robot-types.models';
+import { ConfigService } from './config.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RobotTypesService {
-  private readonly apiUrl = 'http://localhost:5109/api/v1/robot-types';
+  private config = inject(ConfigService);
+  private notificationService = inject(NotificationService);
+  private get apiUrl(): string {
+    return this.config.apiUrl + '/api/v1/robot-types';
+  }
 
   // Reactive state using signals
   public robotTypes = signal<RobotTypeDisplayData[]>([]);
@@ -53,16 +59,27 @@ export class RobotTypesService {
     return (error: any): Observable<never> => {
       console.error(`${operation} failed:`, error);
 
+      let errorMessage: string;
+
       // Set error state
-      if (error.status === 401) {
-        this.error.set('Authentication failed. Please log in again.');
+      if (error.status === 400) {
+        errorMessage = error.error?.detail || error.error?.title || error.error?.msg || 'Invalid request. Please check your input.';
+      } else if (error.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
       } else if (error.status === 403) {
-        this.error.set('You do not have permission to perform this action.');
+        errorMessage = 'You do not have permission to perform this action.';
       } else if (error.status === 404) {
-        this.error.set('The requested robot type was not found.');
+        errorMessage = 'The requested robot type was not found.';
+      } else if (error.status === 409) {
+        errorMessage = 'A robot type with this actual value already exists.';
+      } else if (error.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
       } else {
-        this.error.set('An unexpected error occurred. Please try again.');
+        errorMessage = error.error?.msg || error.message || 'An unexpected error occurred.';
       }
+
+      this.error.set(errorMessage);
+      this.showErrorMessage(errorMessage);
 
       this.isLoading.set(false);
       this.isCreating.set(false);
@@ -71,6 +88,20 @@ export class RobotTypesService {
 
       return throwError(() => error);
     };
+  }
+
+  /**
+   * Show success message
+   */
+  private showSuccessMessage(message: string): void {
+    this.notificationService.success(message);
+  }
+
+  /**
+   * Show error message
+   */
+  private showErrorMessage(message: string): void {
+    this.notificationService.error(message);
   }
 
   /**
@@ -121,6 +152,7 @@ export class RobotTypesService {
         const current = this.robotTypes();
         this.robotTypes.set([...current, displayData]);
         this.isCreating.set(false);
+        this.showSuccessMessage('Robot type created successfully');
         return displayData;
       }),
       catchError(this.handleError('Failed to create robot type'))
@@ -145,6 +177,7 @@ export class RobotTypesService {
           this.robotTypes.set(updated);
         }
         this.isUpdating.set(false);
+        this.showSuccessMessage('Robot type updated successfully');
         return displayData;
       }),
       catchError(this.handleError('Failed to update robot type'))
@@ -163,6 +196,7 @@ export class RobotTypesService {
         const current = this.robotTypes();
         this.robotTypes.set(current.filter(item => item.id !== id));
         this.isDeleting.set(false);
+        this.showSuccessMessage('Robot type deleted successfully');
       }),
       catchError(this.handleError('Failed to delete robot type'))
     );
@@ -220,40 +254,5 @@ export class RobotTypesService {
    */
   public clearError(): void {
     this.error.set(null);
-  }
-
-  /**
-   * Check if a robot type is being used by any workflow templates
-   * Returns the count of templates using this robot type
-   */
-  public checkUsageInTemplates(robotTypeValue: string): Observable<{
-    isUsed: boolean;
-    usageCount: number;
-    templateNames: string[];
-  }> {
-    const url = `${this.apiUrl.replace('/v1/robot-types', '')}/saved-custom-missions`;
-
-    return this.http.get<ApiResponse<any[]>>(url, {
-      headers: this.getHttpHeaders()
-    }).pipe(
-      map(response => {
-        if (response.success && response.data) {
-          const templatesUsingThisType = response.data.filter(
-            (template: any) => template.robotType === robotTypeValue
-          );
-
-          return {
-            isUsed: templatesUsingThisType.length > 0,
-            usageCount: templatesUsingThisType.length,
-            templateNames: templatesUsingThisType.map((t: any) => t.missionName)
-          };
-        }
-        return { isUsed: false, usageCount: 0, templateNames: [] };
-      }),
-      catchError(error => {
-        console.error('Error checking robot type usage:', error);
-        return throwError(() => error);
-      })
-    );
   }
 }

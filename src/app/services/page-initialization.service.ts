@@ -16,29 +16,19 @@ export class PageInitializationService {
    */
   async initializePages(): Promise<void> {
     if (this.initialized) {
-      console.log('Pages already initialized, skipping...');
       return;
     }
 
     try {
-      console.log('Initializing page registration...');
-
       const pages = this.getFrontendPages();
       const syncRequest: PageSyncRequest = { pages };
 
       const result = await this.permissionService.syncPages(syncRequest).toPromise();
 
       if (result) {
-        console.log(`✓ Page sync completed:`, result);
-        console.log(`  - Total: ${result.totalPages}`);
-        console.log(`  - New: ${result.newPages}`);
-        console.log(`  - Updated: ${result.updatedPages}`);
-        console.log(`  - Unchanged: ${result.unchangedPages}`);
-
         this.initialized = true;
       }
     } catch (error) {
-      console.error('Failed to initialize pages:', error);
       // Don't throw - app should continue even if page sync fails
     }
   }

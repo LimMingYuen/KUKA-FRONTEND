@@ -92,8 +92,8 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
           <div class="cleanup-info">
             <mat-icon class="info-icon">info</mat-icon>
             <p>
-              Clicking "Run Cleanup" will delete all log folders older than
-              <strong>{{ retentionMonths }} month(s)</strong>.
+              Clicking "Run Cleanup" will keep the last
+              <strong>{{ retentionMonths + 1 }} month(s)</strong> of logs.
               This action cannot be undone.
             </p>
           </div>
@@ -476,6 +476,7 @@ export class LogCleanupComponent implements OnInit, OnDestroy {
   /**
    * Check if a folder is older than the retention period
    * Folder format expected: yyyy-MM
+   * Note: Backend keeps (retentionMonths + 1) months due to keepPreviousMonth = true
    */
   isOldFolder(folderName: string): boolean {
     const match = folderName.match(/^(\d{4})-(\d{2})$/);
@@ -487,8 +488,10 @@ export class LogCleanupComponent implements OnInit, OnDestroy {
     const month = parseInt(match[2], 10);
     const folderDate = new Date(year, month - 1, 1);
 
+    // Backend keeps retentionMonths + 1 (current month + retention months)
+    const keepCount = this.retentionMonths + 1;
     const cutoffDate = new Date();
-    cutoffDate.setMonth(cutoffDate.getMonth() - this.retentionMonths);
+    cutoffDate.setMonth(cutoffDate.getMonth() - (keepCount - 1));
     cutoffDate.setDate(1);
     cutoffDate.setHours(0, 0, 0, 0);
 

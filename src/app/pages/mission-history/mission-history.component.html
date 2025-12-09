@@ -26,12 +26,46 @@
   </mat-card>
 </div>
 
+<!-- Robot Filter Section -->
+<div class="robot-filter-section">
+  <mat-form-field appearance="outline" class="robot-filter-field">
+    <mat-label>Filter by Robot</mat-label>
+    <input type="text"
+           matInput
+           [formControl]="robotFilterControl"
+           [matAutocomplete]="robotAuto"
+           placeholder="Select or type robot ID...">
+    <mat-icon matPrefix>smart_toy</mat-icon>
+    <button mat-icon-button
+            matSuffix
+            *ngIf="selectedRobot"
+            (click)="clearRobotFilter()"
+            matTooltip="Clear robot filter">
+      <mat-icon>clear</mat-icon>
+    </button>
+    <mat-autocomplete #robotAuto="matAutocomplete"
+                      [displayWith]="displayRobot"
+                      (optionSelected)="onRobotSelected($event)">
+      <mat-option *ngFor="let robot of filteredRobots$ | async" [value]="robot">
+        <div class="robot-option">
+          <mat-icon class="robot-option-icon">smart_toy</mat-icon>
+          <div class="robot-option-details">
+            <span class="robot-option-id">{{ robot.robotId }}</span>
+            <span class="robot-option-type" *ngIf="robot.robotTypeCode">{{ robot.robotTypeCode }}</span>
+          </div>
+        </div>
+      </mat-option>
+    </mat-autocomplete>
+    <mat-hint *ngIf="selectedRobot">Filtering by: {{ selectedRobot.robotId }}</mat-hint>
+  </mat-form-field>
+</div>
+
 <!-- Generic Table Component -->
 <app-generic-table class="mission-history-table"
-  [data]="missionHistory"
+  [data]="filteredMissionHistory"
   [config]="tableConfig"
   [loading]="isLoading"
-  [empty]="missionHistory.length === 0"
+  [empty]="filteredMissionHistory.length === 0"
   (action)="onTableAction($event)"
   (sortChange)="onSortChange($event)"
   (pageChange)="onPageChange($event)"

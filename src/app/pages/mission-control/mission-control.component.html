@@ -70,10 +70,16 @@
               </mat-expansion-panel-header>
 
               <div class="missions-grid">
-                <mat-card *ngFor="let template of zone.value" class="mission-card" [class.inactive-template]="!template.isActive">
+                <mat-card *ngFor="let template of zone.value" class="mission-card"
+                          [class.inactive-template]="!template.isActive"
+                          [class.blocked-template]="isTemplateBlocked(template.id)">
                   <!-- Status chip in top-right corner (SuperAdmin only) -->
                   <span *ngIf="isSuperAdmin" class="status-chip" [class.status-active]="template.isActive" [class.status-inactive]="!template.isActive">
                     {{ template.isActive ? 'ACTIVE' : 'INACTIVE' }}
+                  </span>
+                  <!-- Concurrency mode badge (Wait mode only) -->
+                  <span *ngIf="template.concurrencyMode === 'Wait'" class="concurrency-badge" matTooltip="Wait for completion mode - only one instance at a time">
+                    <mat-icon>hourglass_empty</mat-icon>
                   </span>
 
                   <mat-card-header>
@@ -130,16 +136,36 @@
                         <div class="mission-code-row">
                           <strong>Mission:</strong> {{ job.missionCode }}
                         </div>
+
+                        <!-- Manual Waypoint Confirmation -->
+                        <div *ngIf="isWaitingForManualConfirm(template.id)" class="manual-confirm-section">
+                          <div class="waiting-content">
+                            <mat-icon class="waiting-icon">pan_tool</mat-icon>
+                            <span class="waiting-text">
+                              Robot waiting at: <strong>{{ getManualWaypointPosition(template.id) }}</strong>
+                            </span>
+                          </div>
+                          <button class="confirm-btn"
+                                  (click)="confirmManualWaypoint(template.id); $event.stopPropagation()">
+                            <mat-icon>check_circle</mat-icon>
+                            Confirm & Continue
+                          </button>
+                        </div>
                       </div>
                     </mat-expansion-panel>
                   </mat-card-content>
 
                   <mat-card-actions class="card-actions">
+                    <!-- Blocked indicator for Wait mode -->
+                    <div *ngIf="isTemplateBlocked(template.id)" class="blocked-indicator">
+                      <mat-icon>block</mat-icon>
+                      <span>{{ getBlockReason(template.id) }}</span>
+                    </div>
                     <button
                       mat-raised-button
                       color="primary"
                       (click)="triggerWorkflow(template)"
-                      [disabled]="isTriggering(template.id) || hasActiveJob(template.id)"
+                      [disabled]="isTriggering(template.id) || isTemplateBlocked(template.id) || (template.concurrencyMode === 'Wait' && hasActiveJob(template.id))"
                       class="action-btn trigger-btn">
                       <mat-spinner *ngIf="isTriggering(template.id)" diameter="20"></mat-spinner>
                       <mat-icon *ngIf="!isTriggering(template.id)">play_arrow</mat-icon>

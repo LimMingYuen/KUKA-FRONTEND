@@ -16,6 +16,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import {
   SaveMissionAsTemplateRequest,
@@ -31,9 +33,11 @@ import { QrCodesService } from '../../services/qr-codes.service';
 import { MapZonesService } from '../../services/map-zones.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { WorkflowTemplateService } from '../../services/workflow-template.service';
+import { OrganizationIdsService } from '../../services/organization-ids.service';
 import { MissionTypeDisplayData } from '../../models/mission-types.models';
 import { RobotTypeDisplayData } from '../../models/robot-types.models';
 import { ResumeStrategyDisplayData } from '../../models/resume-strategies.models';
+import { OrganizationIdDisplayData } from '../../models/organization-ids.models';
 import { createQrCodeUniqueIds } from '../../models/qr-code.models';
 import { WorkflowDisplayData } from '../../models/workflow.models';
 import { MissionFlowchartComponent, MissionStepFlowData } from '../../shared/components/mission-flowchart/mission-flowchart.component';
@@ -59,6 +63,8 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from './confirmat
     MatCardModule,
     MatProgressSpinnerModule,
     MatButtonToggleModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule,
     MissionFlowchartComponent
   ],
   templateUrl: './workflow-template-form.component.html',
@@ -76,6 +82,7 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
   public activeMissionTypes = signal<MissionTypeDisplayData[]>([]);
   public activeRobotTypes = signal<RobotTypeDisplayData[]>([]);
   public activeResumeStrategies = signal<ResumeStrategyDisplayData[]>([]);
+  public activeOrganizationIds = signal<OrganizationIdDisplayData[]>([]);
   public activeAreas = signal<string[]>([]);
   public activeShelfRules = signal<string[]>([]);
   public qrCodePositions = signal<string[]>([]);
@@ -138,7 +145,8 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
     private qrCodesService: QrCodesService,
     private mapZonesService: MapZonesService,
     private workflowService: WorkflowService,
-    private workflowTemplateService: WorkflowTemplateService
+    private workflowTemplateService: WorkflowTemplateService,
+    private organizationIdsService: OrganizationIdsService
   ) {}
 
   ngOnInit(): void {
@@ -254,15 +262,17 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
       shelfRules: this.shelfDecisionRulesService.getShelfDecisionRules(),
       qrCodes: this.qrCodesService.getQrCodes(),
       mapZones: this.mapZonesService.getMapZones(),
-      workflows: this.workflowService.getWorkflows()
+      workflows: this.workflowService.getWorkflows(),
+      organizationIds: this.organizationIdsService.getOrganizationIds()
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots, areas, shelfRules, qrCodes, mapZones, workflows }) => {
+        next: ({ missionTypes, robotTypes, resumeStrategies, mobileRobots, areas, shelfRules, qrCodes, mapZones, workflows, organizationIds }) => {
           // Filter for active items only
           this.activeMissionTypes.set(missionTypes.filter(mt => mt.isActive));
           this.activeRobotTypes.set(robotTypes.filter(rt => rt.isActive));
           this.activeResumeStrategies.set(resumeStrategies.filter(rs => rs.isActive));
+          this.activeOrganizationIds.set(organizationIds.filter(oid => oid.isActive));
 
           // Store synced workflows (only active ones)
           const activeWorkflows = workflows.filter(w => w.status === 1);
@@ -308,6 +318,7 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
     this.templateForm = this.fb.group({
       missionName: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
+      concurrencyMode: ['Unlimited'], // 'Unlimited' or 'Wait'
       missionTemplate: this.fb.group({
         orgId: ['', [Validators.required]],
         missionType: ['', [Validators.required]],
@@ -344,7 +355,8 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
 
       this.templateForm.patchValue({
         missionName: template.missionName,
-        description: template.description !== '-' ? template.description : ''
+        description: template.description !== '-' ? template.description : '',
+        concurrencyMode: template.concurrencyMode || 'Unlimited'
       });
 
       this.missionTemplate.patchValue({
@@ -477,6 +489,10 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
     this.viewMode.set(mode);
   }
 
+  onConcurrencyModeChange(isWaitMode: boolean): void {
+    this.templateForm.get('concurrencyMode')?.setValue(isWaitMode ? 'Wait' : 'Unlimited');
+  }
+
   onWorkflowSelected(workflow: WorkflowDisplayData | null): void {
     if (workflow) {
       this.isWorkflowSelected.set(true);
@@ -534,6 +550,7 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
     const request: SaveMissionAsTemplateRequest = {
       missionName: formValue.missionName,
       description: formValue.description,
+      concurrencyMode: formValue.concurrencyMode || 'Unlimited',
       missionTemplate: {
         ...formValue.missionTemplate,
         missionData: missionDataWithConvertedPositions,
@@ -615,5 +632,43 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
 
   private navigateToList(): void {
     this.router.navigate(['/workflow-templates']);
+  }
+
+  // Autocomplete filter methods
+  filterTypes(value: unknown): string[] {
+    const filterValue = (typeof value === 'string' ? value : '').toLowerCase();
+    return this.activeAreas().filter(area =>
+      area.toLowerCase().includes(filterValue)
+    );
+  }
+
+  filterPositions(stepIndex: number, value: unknown): string[] {
+    const filterValue = (typeof value === 'string' ? value : '').toLowerCase();
+    const positions = this.getAvailablePositionsForStep(stepIndex);
+    return positions.filter(pos =>
+      pos.toLowerCase().includes(filterValue)
+    );
+  }
+
+  filterStrategies(value: unknown): { displayName: string; actualValue: string }[] {
+    const filterValue = (typeof value === 'string' ? value : '').toLowerCase();
+    return this.activeResumeStrategies().filter(strategy =>
+      strategy.displayName.toLowerCase().includes(filterValue) ||
+      strategy.actualValue.toLowerCase().includes(filterValue)
+    );
+  }
+
+  filterShelfRules(value: unknown): string[] {
+    const filterValue = (typeof value === 'string' ? value : '').toLowerCase();
+    return this.activeShelfRules().filter(rule =>
+      rule.toLowerCase().includes(filterValue)
+    );
+  }
+
+  // Display functions for autocomplete
+  displayStrategy(value: unknown): string {
+    if (!value || typeof value !== 'string') return '';
+    const strategy = this.activeResumeStrategies().find(s => s.actualValue === value);
+    return strategy ? strategy.displayName : value;
   }
 }

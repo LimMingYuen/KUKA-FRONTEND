@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,7 +68,8 @@ export class AreasComponent implements OnInit, OnDestroy {
   constructor(
     public areasService: AreasService,
     private dialog: MatDialog,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar
   ) {
     // Initialize form
     this.initializeForm();
@@ -218,6 +219,16 @@ export class AreasComponent implements OnInit, OnDestroy {
    * Delete area with confirmation
    */
   private deleteArea(area: AreaDisplayData): void {
+    if (area.isActive) {
+      this.snackBar.open('Cannot delete an active area. Please set it to inactive first.', 'Dismiss', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
     const dialogData: ConfirmationDialogData = {
       title: 'Delete Area',
       message: `Are you sure you want to delete area "${area.displayName}"?`,

@@ -81,265 +81,203 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 10px 20px;
+  background-color: var(--mat-sys-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .filters-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: white;
 }
 
 .filters-title .title-icon {
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
-}
-
-.filters-title h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
-}
-
-.collapse-button {
-  color: white;
-}
-
-/* Filters Summary (Collapsed State) */
-.filters-summary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  flex-wrap: wrap;
-  background: #f8f9fa;
-}
-
-.summary-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  font-size: 13px;
-  color: #333;
-}
-
-.summary-item mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  color: #667eea;
-}
-
-.summary-divider {
-  color: #ccc;
-  font-weight: 300;
-}
-
-.summary-arrow {
-  color: #667eea;
-  font-weight: bold;
-  font-size: 16px;
-}
-
-/* Filters Content (Expanded State) */
-.filters-content {
-  padding: 24px;
-  background: #fafafa;
-}
-
-/* Filter Sections */
-.filter-section {
-  margin-bottom: 24px;
-}
-
-.filter-section:last-child {
-  margin-bottom: 0;
-}
-
-.section-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-weight: 500;
-  font-size: 14px;
-  color: #667eea;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.section-label mat-icon {
   font-size: 20px;
   width: 20px;
   height: 20px;
 }
 
+.filters-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+
+/* Filters Content (Expanded State) - Compact Layout */
+.filters-content.compact {
+  padding: 16px 20px;
+  background: #fafafa;
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Compact Form Fields */
+.compact-field {
+  margin-bottom: 0 !important;
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding: 0 8px !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 40px !important;
+    padding: 8px 0 !important;
+  }
+
+  ::ng-deep .mdc-floating-label {
+    font-size: 13px;
+  }
+
+  ::ng-deep .mat-mdc-select-value {
+    font-size: 13px;
+  }
+
+  ::ng-deep input {
+    font-size: 13px;
+  }
+}
+
+/* Robot Selection */
+.robot-select {
+  .compact-field {
+    width: 160px;
+  }
+}
+
+/* DateTime Compact */
+.datetime-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.date-compact {
+  width: 140px;
+}
+
+.time-compact {
+  width: 70px;
+}
+
+.min-compact {
+  width: 65px;
+}
+
+.time-sep {
+  font-weight: bold;
+  color: var(--mat-sys-primary);
+  font-size: 16px;
+  margin: 0 2px;
+}
+
+.range-arrow {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--mat-sys-primary);
+  margin: 0 4px;
+}
+
+/* Grouping Toggle Compact */
+.grouping-compact {
+  margin-left: 8px;
+}
+
+.grouping-toggle-compact {
+  border-radius: 6px !important;
+  overflow: hidden;
+
+  ::ng-deep .mat-button-toggle {
+    border: none !important;
+  }
+
+  ::ng-deep .mat-button-toggle-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    height: 40px;
+  }
+
+  ::ng-deep .mat-button-toggle mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  ::ng-deep .mat-button-toggle-checked {
+    background-color: var(--mat-sys-primary) !important;
+    color: white !important;
+  }
+
+  ::ng-deep .mat-button-toggle-checked mat-icon {
+    color: white !important;
+  }
+}
+
+/* Actions Compact */
+.actions-compact {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.search-btn {
+  height: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 16px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
+}
+
+.reset-btn {
+  height: 40px;
+  min-width: 40px;
+  padding: 0 8px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Legacy styles kept for backward compatibility */
 .full-width {
   width: 100%;
 }
 
-/* DateTime Row */
-.datetime-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-/* DateTime Groups */
-.datetime-group {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.datetime-group.start {
-  border-left: 4px solid #4caf50;
-}
-
-.datetime-group.end {
-  border-left: 4px solid #f44336;
-}
-
-.datetime-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-weight: 500;
-  font-size: 13px;
-  color: #666;
-}
-
-.datetime-group.start .datetime-label mat-icon {
-  color: #4caf50;
-}
-
-.datetime-group.end .datetime-label mat-icon {
-  color: #f44336;
-}
-
-.datetime-label mat-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-}
-
-.datetime-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.date-field {
-  width: 100%;
-}
-
-/* Time Fields */
-.time-fields {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.time-field {
-  flex: 1;
-}
-
-.time-separator {
-  font-size: 20px;
-  font-weight: bold;
-  color: #667eea;
-  margin: 0 4px;
-  padding-bottom: 12px;
-}
-
-/* Grouping Toggle */
-.grouping-toggle {
-  display: flex;
-  gap: 12px;
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.grouping-toggle ::ng-deep .mat-button-toggle {
-  border: none !important;
-  border-radius: 6px !important;
-  flex: 1;
-}
-
-.grouping-toggle ::ng-deep .mat-button-toggle-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  font-weight: 500;
-}
-
-.grouping-toggle ::ng-deep .mat-button-toggle-checked {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-}
-
-.grouping-toggle ::ng-deep .mat-button-toggle-checked mat-icon {
-  color: white !important;
-}
-
-/* Option Icons */
 .option-icon {
   margin-right: 8px;
   font-size: 18px;
   width: 18px;
   height: 18px;
   vertical-align: middle;
-}
-
-/* Filter Actions */
-.filter-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 2px solid #e0e0e0;
-  margin-top: 24px;
-}
-
-.search-button {
-  min-width: 180px;
-  height: 48px;
-  font-size: 16px;
-  font-weight: 500;
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-}
-
-.search-button mat-icon {
-  margin-right: 8px;
-}
-
-.search-button:hover:not([disabled]) {
-  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
-  transform: translateY(-1px);
-}
-
-.reset-button {
-  min-width: 120px;
-  height: 48px;
-  font-size: 16px;
-}
-
-.reset-button mat-icon {
-  margin-right: 8px;
 }
 
 /* KPI Cards Section */
@@ -570,6 +508,33 @@
   }
 }
 
+@media (max-width: 1200px) {
+  .filters-row {
+    flex-wrap: wrap;
+  }
+
+  .actions-compact {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 900px) {
+  .filters-row {
+    gap: 8px;
+  }
+
+  .datetime-compact {
+    flex-wrap: wrap;
+  }
+
+  .range-arrow {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .robot-analytics-container {
     padding: 16px;
@@ -600,47 +565,62 @@
     gap: 8px;
   }
 
-  .filters-content {
-    padding: 16px;
-  }
-
-  /* DateTime Row Mobile */
-  .datetime-row {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .datetime-group {
+  /* Compact Filters Mobile */
+  .filters-content.compact {
     padding: 12px;
   }
 
-  .time-fields {
-    flex-wrap: nowrap;
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
 
-  .time-field {
+  .filter-item {
+    width: 100%;
+  }
+
+  .robot-select .compact-field {
+    width: 100%;
+  }
+
+  .datetime-compact {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .date-compact {
+    flex: 1;
     min-width: 0;
   }
 
-  .time-separator {
-    font-size: 16px;
+  .time-compact,
+  .min-compact {
+    width: 60px;
+    min-width: 60px;
   }
 
-  /* Grouping Toggle Mobile */
-  .grouping-toggle ::ng-deep .mat-button-toggle-button {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-
-  /* Filter Actions Mobile */
-  .filter-actions {
-    flex-direction: column;
-  }
-
-  .search-button,
-  .reset-button {
+  .grouping-compact {
+    margin-left: 0;
     width: 100%;
-    min-width: 100%;
+  }
+
+  .grouping-toggle-compact {
+    width: 100%;
+    display: flex;
+
+    ::ng-deep .mat-button-toggle {
+      flex: 1;
+    }
+  }
+
+  .actions-compact {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .search-btn {
+    flex: 1;
   }
 
   /* Other Mobile Styles */
