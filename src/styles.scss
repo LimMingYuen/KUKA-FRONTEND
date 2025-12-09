@@ -211,7 +211,17 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 /* Global table overrides for generic table component - restore original Material Design */
 app-generic-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+
   .mat-mdc-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
     border-radius: 12px !important;
     overflow: hidden !important;
     background-color: var(--mat-sys-surface-container-lowest) !important;
@@ -227,14 +237,74 @@ app-generic-table {
   }
 
   .mat-mdc-header-row {
-    background-color: var(--mat-sys-surface-container) !important;
+    background-color: rgb(74, 93, 184) !important;
   }
 
   .mat-mdc-header-cell {
     font-weight: 500 !important;
-    color: var(--mat-sys-on-surface) !important;
-    border-bottom: 2px solid var(--mat-sys-primary) !important;
-    background-color: var(--mat-sys-surface-container) !important;
+    color: white !important;
+    border-bottom: 2px solid rgb(58, 77, 168) !important;
+    background-color: rgb(74, 93, 184) !important;
+
+    .mat-sort-header-arrow {
+      color: white !important;
+    }
+  }
+
+  // Blue paginator styling - sticky at bottom
+  .mat-mdc-paginator {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background-color: rgb(74, 93, 184) !important;
+    color: white !important;
+    border-top: 1px solid rgb(58, 77, 168) !important;
+
+    .mat-mdc-paginator-outer-container,
+    .mat-mdc-paginator-container {
+      background-color: rgb(74, 93, 184) !important;
+      color: white !important;
+    }
+
+    .mat-mdc-paginator-page-size-label,
+    .mat-mdc-paginator-range-label {
+      color: white !important;
+    }
+
+    .mat-mdc-paginator-page-size-select {
+      .mat-mdc-select-value,
+      .mat-mdc-select-arrow {
+        color: white !important;
+      }
+    }
+
+    .mat-mdc-select-value {
+      color: white !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: white !important;
+    }
+
+    .mat-mdc-icon-button {
+      color: white !important;
+
+      &:disabled {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
+    }
+
+    .mat-mdc-paginator-icon {
+      fill: white !important;
+    }
+
+    .mdc-icon-button {
+      color: white !important;
+    }
+
+    svg {
+      fill: white !important;
+    }
   }
 
   .mat-mdc-row:hover {

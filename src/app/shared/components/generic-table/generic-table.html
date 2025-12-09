@@ -70,6 +70,9 @@
 
   <!-- Filter Section -->
   <div class="filter-section" *ngIf="config.filter?.enabled">
+    <!-- Additional filters projected from parent component -->
+    <ng-content select="[additionalFilters]"></ng-content>
+
     <mat-form-field appearance="outline" class="search-field">
       <mat-label>{{ config.filter?.placeholder }}</mat-label>
       <input matInput

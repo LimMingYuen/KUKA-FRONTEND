@@ -32,7 +32,7 @@ import { WorkflowDisplayData } from '../../models/workflow.models';
 import { JobData, RobotData, MissionsUtils, MissionStepData, OperationFeedbackRequest } from '../../models/missions.models';
 import { MissionHistoryRequest } from '../../models/mission-history.models';
 import { WorkflowZoneMapping } from '../../models/workflow-node-codes.models';
-import { Subject, takeUntil, interval, forkJoin } from 'rxjs';
+import { Subject, takeUntil, interval, forkJoin, of, switchMap, catchError } from 'rxjs';
 import { CancelMissionDialogComponent, CancelMissionDialogData, CancelMissionDialogResult } from '../../shared/dialogs/cancel-mission-dialog/cancel-mission-dialog.component';
 import { SelectTemplatesDialogComponent, SelectTemplatesDialogData, SelectTemplatesDialogResult } from '../../shared/dialogs/select-templates-dialog/select-templates-dialog.component';
 import { AdminAuthorizationDialogComponent, AdminAuthorizationDialogData, AdminAuthorizationDialogResult } from '../../shared/dialogs/admin-authorization-dialog/admin-authorization-dialog.component';
@@ -101,6 +101,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
   // Loading states
   public isLoadingTemplates = false;
   public isLoadingZoneMappings = false;
+  public isAutoSyncingZones = false;
   public triggeringMissions: Set<number> = new Set();
   public cancellingMissions: Set<number> = new Set();
 
@@ -208,6 +209,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
 
   /**
    * Load ALL saved templates (both sync workflow and custom mission templates)
+   * Auto-syncs zone mappings if they are empty
    */
   loadWorkflowsAndZones(): void {
     this.isLoadingTemplates = true;
@@ -217,9 +219,41 @@ export class MissionControlComponent implements OnInit, OnDestroy {
       templates: this.savedCustomMissionsService.getAllSavedMissions(),
       workflows: this.workflowService.getWorkflows(),
       zoneMappings: this.workflowNodeCodesService.getZoneMappings()
-    }).pipe(takeUntil(this.destroy$))
-      .subscribe({
+    }).pipe(
+      switchMap(result => {
+        // If zone mappings are empty, auto-sync and reload
+        if (result.zoneMappings.length === 0 && result.workflows.length > 0) {
+          this.isAutoSyncingZones = true;
+          this.snackBar.open('Auto-syncing workflow zone mappings...', '', { duration: 3000 });
+
+          return this.workflowNodeCodesService.syncAndClassifyAllWorkflows().pipe(
+            switchMap(() => {
+              // After sync, reload zone mappings
+              return this.workflowNodeCodesService.getZoneMappings().pipe(
+                switchMap(newZoneMappings => {
+                  this.isAutoSyncingZones = false;
+                  return of({
+                    ...result,
+                    zoneMappings: newZoneMappings
+                  });
+                })
+              );
+            }),
+            catchError(error => {
+              // If auto-sync fails, continue with empty zone mappings
+              this.isAutoSyncingZones = false;
+              console.warn('Auto-sync zone mappings failed:', error);
+              return of(result);
+            })
+          );
+        }
+        return of(result);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
         next: (result) => {
+          this.isAutoSyncingZones = false;
+
           // Get allowed templates from auth (SuperAdmin sees all)
           const allowedTemplateIds = new Set(this.authService.getAllowedTemplates());
           const isSuperAdmin = this.authService.isSuperAdmin();
@@ -271,6 +305,7 @@ export class MissionControlComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.isLoadingTemplates = false;
           this.isLoadingZoneMappings = false;
+          this.isAutoSyncingZones = false;
           this.snackBar.open('Failed to load saved templates', 'Close', { duration: 3000 });
         }
       });

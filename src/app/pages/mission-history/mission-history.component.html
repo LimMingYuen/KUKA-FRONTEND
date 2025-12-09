@@ -26,9 +26,19 @@
   </mat-card>
 </div>
 
-<!-- Robot Filter Section -->
-<div class="robot-filter-section">
-  <mat-form-field appearance="outline" class="robot-filter-field">
+<!-- Generic Table Component -->
+<app-generic-table class="mission-history-table"
+  [data]="filteredMissionHistory"
+  [config]="tableConfig"
+  [loading]="isLoading"
+  [empty]="filteredMissionHistory.length === 0"
+  (action)="onTableAction($event)"
+  (sortChange)="onSortChange($event)"
+  (pageChange)="onPageChange($event)"
+  (filterChange)="onFilterChange($event)">
+
+  <!-- Robot Filter (projected into filter section) -->
+  <mat-form-field additionalFilters appearance="outline" class="robot-filter-field">
     <mat-label>Filter by Robot</mat-label>
     <input type="text"
            matInput
@@ -58,18 +68,7 @@
     </mat-autocomplete>
     <mat-hint *ngIf="selectedRobot">Filtering by: {{ selectedRobot.robotId }}</mat-hint>
   </mat-form-field>
-</div>
 
-<!-- Generic Table Component -->
-<app-generic-table class="mission-history-table"
-  [data]="filteredMissionHistory"
-  [config]="tableConfig"
-  [loading]="isLoading"
-  [empty]="filteredMissionHistory.length === 0"
-  (action)="onTableAction($event)"
-  (sortChange)="onSortChange($event)"
-  (pageChange)="onPageChange($event)"
-  (filterChange)="onFilterChange($event)">
 </app-generic-table>
 
 <!-- Custom Mission Code Cell Template -->

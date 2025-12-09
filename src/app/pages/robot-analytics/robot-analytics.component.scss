@@ -680,10 +680,24 @@
 ::ng-deep .mat-datepicker-content {
   width: auto;
   max-width: 296px; /* Standard Material datepicker width */
+  z-index: 1001 !important; /* Ensure calendar appears above backdrop */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
 }
 
 ::ng-deep .mat-calendar {
   width: 296px;
   height: auto;
+}
+
+/* Ensure datepicker panel is above backdrop */
+::ng-deep .cdk-overlay-pane.mat-datepicker-popup {
+  z-index: 1001 !important;
+}
+
+/* Datepicker backdrop - transparent to remove darkening effect */
+::ng-deep .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  z-index: 1000 !important;
+  background-color: transparent !important;
 }
 

@@ -8,10 +8,14 @@
 // Import Material Design tokens
 @use '@angular/material' as mat;
 
-// Table container
+// Table container - Fixed viewport with scrollable content
 .generic-table-container {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 100%;
+  height: calc(100vh - 140px); // Fill available viewport space
+  max-height: calc(100vh - 140px);
   margin: 0;
   background-color: var(--mat-sys-surface-container-lowest) !important;
   border-radius: 0 !important;
@@ -19,13 +23,14 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   border: 1px solid var(--mat-sys-outline-variant) !important;
 
-  // Header section
+  // Header section - fixed height, doesn't shrink
   .card-header {
+    flex-shrink: 0;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     padding: 20px 24px !important;
-    background-color: var(--mat-sys-primary) !important;
+    background-color: rgb(74, 93, 184) !important;
     border-bottom: none !important;
 
     .header-left {
@@ -57,10 +62,10 @@
       button {
         min-width: auto;
         background-color: white !important;
-        color: var(--mat-sys-primary) !important;
+        color: rgb(74, 93, 184) !important;
 
         mat-icon {
-          color: var(--mat-sys-primary) !important;
+          color: rgb(74, 93, 184) !important;
         }
 
         mat-progress-spinner {
@@ -74,14 +79,20 @@
     }
   }
 
-  // Filter section
+  // Filter section - fixed height, doesn't shrink
   .filter-section {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0;
     padding: 16px 24px;
     background-color: var(--mat-sys-surface-container);
     border-bottom: 1px solid var(--mat-sys-outline-variant);
 
     .search-field {
-      width: 100%;
+      flex: 1;
+      min-width: 250px;
       max-width: 600px;
 
       mat-form-field {
@@ -137,14 +148,15 @@
     }
   }
 
-  // Loading state
+  // Loading state - fills available space
   .loading-container {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 48px 24px;
-    min-height: 300px;
 
     .loading-text {
       margin-top: 16px;
@@ -153,14 +165,15 @@
     }
   }
 
-  // Empty state
+  // Empty state - fills available space
   .empty-state {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 48px 24px;
-    min-height: 300px;
     text-align: center;
 
     .empty-icon {
@@ -189,9 +202,12 @@
     }
   }
 
-  // Table container
+  // Table container - scrollable, fills remaining space
   .table-container {
+    flex: 1;
+    min-height: 0; // Important: allows flex child to shrink and scroll
     width: 100%;
+    overflow-y: auto;
     overflow-x: auto;
 
     .generic-table-element {
@@ -216,15 +232,25 @@
         }
       }
 
+      // Header row
+      .mat-mdc-header-row {
+        background-color: rgb(74, 93, 184) !important;
+      }
+
       // Header cells
       .mat-mdc-header-cell {
         font-weight: 500 !important;
-        color: var(--mat-sys-on-surface) !important;
-        background-color: var(--mat-sys-surface-container) !important;
+        color: white !important;
+        background-color: rgb(74, 93, 184) !important;
         position: sticky !important;
         top: 0 !important;
         z-index: 1 !important;
-        border-bottom: 2px solid var(--mat-sys-primary) !important;
+        border-bottom: 2px solid rgb(58, 77, 168) !important;
+
+        // Sort arrow color
+        .mat-sort-header-arrow {
+          color: white !important;
+        }
       }
 
       // Data cells
@@ -298,10 +324,72 @@
     }
   }
 
-  // Pagination
+  // Pagination - sticky at bottom of scrollable area
+  ::ng-deep mat-paginator,
   mat-paginator {
-    border-top: 1px solid #e0e0e0;
-    background: #fafafa;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    flex-shrink: 0;
+    border-top: 1px solid rgb(58, 77, 168);
+    background: rgb(74, 93, 184) !important;
+    color: white !important;
+
+    .mat-mdc-paginator-outer-container {
+      background: rgb(74, 93, 184) !important;
+    }
+
+    .mat-mdc-paginator-container {
+      background: rgb(74, 93, 184) !important;
+      color: white !important;
+    }
+
+    .mat-mdc-paginator-page-size-label,
+    .mat-mdc-paginator-range-label {
+      color: white !important;
+    }
+
+    .mat-mdc-paginator-page-size-select {
+      .mat-mdc-select-value {
+        color: white !important;
+      }
+
+      .mat-mdc-select-arrow {
+        color: white !important;
+      }
+    }
+
+    .mat-mdc-select-value {
+      color: white !important;
+    }
+
+    .mat-mdc-select-arrow {
+      color: white !important;
+    }
+
+    .mat-mdc-icon-button {
+      color: white !important;
+
+      &:disabled {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
+
+      .mat-mdc-paginator-icon {
+        fill: white !important;
+      }
+    }
+
+    .mat-mdc-paginator-icon {
+      fill: white !important;
+    }
+
+    .mdc-icon-button {
+      color: white !important;
+    }
+
+    svg {
+      fill: white !important;
+    }
   }
 
   // Hidden paginator class
@@ -390,8 +478,11 @@
     }
 
     .filter-section {
+      flex-direction: column;
+
       .search-field {
         max-width: 100%;
+        width: 100%;
       }
     }
 
