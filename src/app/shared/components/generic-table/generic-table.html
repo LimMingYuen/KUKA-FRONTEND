@@ -126,6 +126,7 @@
 
   <!-- Data Table -->
   <div class="table-container" *ngIf="!loading && !isTableEmpty">
+    <div class="table-scroll-wrapper">
     <table mat-table
            [dataSource]="dataSource"
            matSort
@@ -261,5 +262,6 @@
                    (page)="onPageChange($event)"
                    aria-label="Select page">
     </mat-paginator>
+    </div>
   </div>
 </mat-card>

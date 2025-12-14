@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { Subject, takeUntil, Observable, startWith, map } from 'rxjs';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 import { WorkflowScheduleService } from '../../services/workflow-schedule.service';
 import { SavedCustomMissionsService } from '../../services/saved-custom-missions.service';
@@ -50,7 +51,8 @@ export interface ScheduleDialogData {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTooltipModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatAutocompleteModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Create Schedule' : 'Edit Schedule' }}</h2>
@@ -81,12 +83,21 @@ export interface ScheduleDialogData {
         <!-- Workflow Template -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Workflow Template</mat-label>
-          <mat-select formControlName="savedMissionId">
-            <mat-option *ngFor="let mission of missions" [value]="mission.id" [disabled]="!mission.isActive">
+          <input matInput
+                 [formControl]="workflowSearchControl"
+                 [matAutocomplete]="workflowAuto"
+                 placeholder="Type to search...">
+          <mat-icon matSuffix>search</mat-icon>
+          <mat-autocomplete #workflowAuto="matAutocomplete"
+                            [displayWith]="displayWorkflow.bind(this)"
+                            (optionSelected)="onWorkflowSelected($event)">
+            <mat-option *ngFor="let mission of filteredMissions$ | async"
+                        [value]="mission"
+                        [disabled]="!mission.isActive">
               {{ mission.missionName }}
               <span *ngIf="!mission.isActive" class="inactive-badge">(Inactive)</span>
             </mat-option>
-          </mat-select>
+          </mat-autocomplete>
           <mat-hint *ngIf="hasInactiveMissions">Inactive workflows cannot be scheduled</mat-hint>
           <mat-error *ngIf="form.get('savedMissionId')?.hasError('required')">
             Workflow template is required
@@ -114,18 +125,27 @@ export interface ScheduleDialogData {
         </mat-form-field>
 
         <!-- Interval Selection -->
-        <mat-form-field appearance="outline" class="full-width" *ngIf="form.get('scheduleType')?.value === 'Interval'">
-          <mat-label>Run Every</mat-label>
-          <mat-select formControlName="intervalMinutes">
-            <mat-option *ngFor="let option of intervalOptions" [value]="option.value">
-              {{ option.label }}
-            </mat-option>
-          </mat-select>
-          <mat-hint>Schedule will repeat at this interval</mat-hint>
-          <mat-error *ngIf="form.get('intervalMinutes')?.hasError('required')">
-            Interval is required
-          </mat-error>
-        </mat-form-field>
+        <div class="interval-section" *ngIf="form.get('scheduleType')?.value === 'Interval'">
+          <label class="section-label">Run Every</label>
+          <div class="interval-row">
+            <mat-form-field appearance="outline" class="interval-field">
+              <mat-label>Hours</mat-label>
+              <input matInput type="number" formControlName="intervalHours" min="0" max="720" placeholder="0">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="interval-field">
+              <mat-label>Minutes</mat-label>
+              <input matInput type="number" formControlName="intervalMinutesInput" min="0" max="59" placeholder="0">
+            </mat-form-field>
+          </div>
+          <div class="interval-hint" [class.error]="!isIntervalValid()">
+            <span *ngIf="isIntervalValid()">
+              Schedule will repeat every {{ getIntervalDisplay() }} (max: 30 days)
+            </span>
+            <span *ngIf="!isIntervalValid()" class="error-text">
+              Please enter at least 1 minute. Maximum is 30 days (720 hours).
+            </span>
+          </div>
+        </div>
 
         <!-- Cron Expression -->
         <div *ngIf="form.get('scheduleType')?.value === 'Cron'">
@@ -162,6 +182,16 @@ export interface ScheduleDialogData {
           <mat-hint>Leave empty for unlimited</mat-hint>
         </mat-form-field>
 
+        <!-- Skip If Running Toggle -->
+        <div class="toggle-section">
+          <mat-slide-toggle formControlName="skipIfRunning" color="accent">
+            Skip if already running
+          </mat-slide-toggle>
+          <div class="toggle-hint">
+            When enabled, skips triggering if the same workflow is already running (Queued, Processing, or Assigned)
+          </div>
+        </div>
+
         <!-- Enabled Toggle -->
         <div class="toggle-section">
           <mat-slide-toggle formControlName="isEnabled" color="primary">
@@ -197,6 +227,34 @@ export interface ScheduleDialogData {
       margin-bottom: 16px;
     }
 
+    .interval-section {
+      margin-bottom: 16px;
+    }
+
+    .interval-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .interval-field {
+      flex: 1;
+    }
+
+    .interval-hint {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: -8px;
+      margin-bottom: 8px;
+    }
+
+    .interval-hint.error {
+      color: #f44336;
+    }
+
+    .error-text {
+      color: #f44336;
+    }
+
     .loading-missions {
       display: flex;
       align-items: center;
@@ -224,6 +282,13 @@ export interface ScheduleDialogData {
 
     .toggle-section {
       margin: 24px 0 16px;
+    }
+
+    .toggle-hint {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: 4px;
+      margin-left: 52px;
     }
 
     .cron-help {
@@ -297,6 +362,10 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
   isLoadingMissions = false;
   isSaving = false;
 
+  // Autocomplete for workflow template
+  workflowSearchControl = new FormControl<string | SavedCustomMissionsDisplayData>('');
+  filteredMissions$!: Observable<SavedCustomMissionsDisplayData[]>;
+
   /** Returns true if any mission in the list is inactive */
   get hasInactiveMissions(): boolean {
     return this.missions.some(m => !m.isActive);
@@ -318,9 +387,11 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
       savedMissionId: [null, Validators.required],
       scheduleType: ['OneTime', Validators.required],
       oneTimeUtc: [''],
-      intervalMinutes: [60],
+      intervalHours: [1, [Validators.min(0), Validators.max(720)]],
+      intervalMinutesInput: [0, [Validators.min(0), Validators.max(59)]],
       cronExpression: [''],
       maxExecutions: [null],
+      skipIfRunning: [false],
       isEnabled: [true]
     });
 
@@ -352,6 +423,15 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
         next: (missions) => {
           this.missions = missions;
           this.isLoadingMissions = false;
+          this.setupAutocomplete();
+
+          // If editing, set the initial workflow in autocomplete
+          if (this.data.mode === 'edit' && this.data.schedule) {
+            const selectedMission = this.missions.find(m => m.id === this.data.schedule!.savedMissionId);
+            if (selectedMission) {
+              this.workflowSearchControl.setValue(selectedMission);
+            }
+          }
         },
         error: (err) => {
           console.error('Error loading missions:', err);
@@ -364,16 +444,54 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
       });
   }
 
+  private setupAutocomplete(): void {
+    this.filteredMissions$ = this.workflowSearchControl.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const searchText = typeof value === 'string' ? value : value?.missionName || '';
+        return this.filterMissions(searchText);
+      })
+    );
+  }
+
+  private filterMissions(searchText: string): SavedCustomMissionsDisplayData[] {
+    if (!searchText) {
+      return this.missions;
+    }
+    const lowerSearch = searchText.toLowerCase();
+    return this.missions.filter(mission =>
+      mission.missionName.toLowerCase().includes(lowerSearch)
+    );
+  }
+
+  displayWorkflow(mission: SavedCustomMissionsDisplayData | string): string {
+    if (!mission) return '';
+    if (typeof mission === 'string') return mission;
+    return mission.missionName;
+  }
+
+  onWorkflowSelected(event: any): void {
+    const selectedMission = event.option.value as SavedCustomMissionsDisplayData;
+    if (selectedMission && selectedMission.isActive) {
+      this.form.patchValue({ savedMissionId: selectedMission.id });
+    }
+  }
+
   private populateForm(schedule: WorkflowSchedule): void {
+    // Convert intervalMinutes to hours and minutes
+    const interval = this.minutesToHoursAndMinutes(schedule.intervalMinutes || 60);
+
     this.form.patchValue({
       scheduleName: schedule.scheduleName,
       description: schedule.description,
       savedMissionId: schedule.savedMissionId,
       scheduleType: schedule.scheduleType,
       oneTimeUtc: schedule.oneTimeUtc ? this.formatDateTimeLocal(schedule.oneTimeUtc) : '',
-      intervalMinutes: schedule.intervalMinutes || 60,
+      intervalHours: interval.hours,
+      intervalMinutesInput: interval.minutes,
       cronExpression: schedule.cronExpression || '',
       maxExecutions: schedule.maxExecutions,
+      skipIfRunning: schedule.skipIfRunning || false,
       isEnabled: schedule.isEnabled
     });
   }
@@ -385,12 +503,10 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
 
   private updateValidation(type: ScheduleType): void {
     const oneTimeCtrl = this.form.get('oneTimeUtc');
-    const intervalCtrl = this.form.get('intervalMinutes');
     const cronCtrl = this.form.get('cronExpression');
 
     // Reset validators
     oneTimeCtrl?.clearValidators();
-    intervalCtrl?.clearValidators();
     cronCtrl?.clearValidators();
 
     switch (type) {
@@ -398,7 +514,7 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
         oneTimeCtrl?.setValidators(Validators.required);
         break;
       case 'Interval':
-        intervalCtrl?.setValidators(Validators.required);
+        // Interval validation is handled by isIntervalValid()
         break;
       case 'Cron':
         cronCtrl?.setValidators([Validators.required, Validators.maxLength(100)]);
@@ -406,8 +522,47 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
     }
 
     oneTimeCtrl?.updateValueAndValidity();
-    intervalCtrl?.updateValueAndValidity();
     cronCtrl?.updateValueAndValidity();
+  }
+
+  /** Check if interval is valid (at least 1 minute, max 30 days) */
+  isIntervalValid(): boolean {
+    const totalMinutes = this.calculateIntervalMinutes();
+    return totalMinutes >= 1 && totalMinutes <= 43200;
+  }
+
+  /** Get display text for current interval setting */
+  getIntervalDisplay(): string {
+    const hours = this.form.get('intervalHours')?.value || 0;
+    const minutes = this.form.get('intervalMinutesInput')?.value || 0;
+
+    const parts: string[] = [];
+    if (hours > 0) {
+      parts.push(hours === 1 ? '1 hour' : `${hours} hours`);
+    }
+    if (minutes > 0) {
+      parts.push(minutes === 1 ? '1 minute' : `${minutes} minutes`);
+    }
+
+    if (parts.length === 0) {
+      return '0 minutes';
+    }
+
+    return parts.join(' ');
+  }
+
+  /** Calculate total minutes from hours and minutes fields */
+  private calculateIntervalMinutes(): number {
+    const hours = this.form.get('intervalHours')?.value || 0;
+    const minutes = this.form.get('intervalMinutesInput')?.value || 0;
+    return (hours * 60) + minutes;
+  }
+
+  /** Convert total minutes to hours and minutes for form */
+  private minutesToHoursAndMinutes(totalMinutes: number): { hours: number; minutes: number } {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return { hours, minutes };
   }
 
   applyCronExample(expression: string): void {
@@ -421,8 +576,17 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
   onSave(): void {
     if (!this.form.valid) return;
 
-    this.isSaving = true;
+    // Additional validation for Interval type
     const formValue = this.form.value;
+    if (formValue.scheduleType === 'Interval' && !this.isIntervalValid()) {
+      this.snackBar.open('Please enter a valid interval (1 minute to 30 days)', 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    this.isSaving = true;
 
     if (this.data.mode === 'create') {
       const request: CreateScheduleRequest = {
@@ -431,9 +595,10 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
         savedMissionId: formValue.savedMissionId,
         scheduleType: formValue.scheduleType,
         oneTimeUtc: formValue.scheduleType === 'OneTime' ? new Date(formValue.oneTimeUtc).toISOString() : undefined,
-        intervalMinutes: formValue.scheduleType === 'Interval' ? formValue.intervalMinutes : undefined,
+        intervalMinutes: formValue.scheduleType === 'Interval' ? this.calculateIntervalMinutes() : undefined,
         cronExpression: formValue.scheduleType === 'Cron' ? formValue.cronExpression : undefined,
         maxExecutions: formValue.maxExecutions || undefined,
+        skipIfRunning: formValue.skipIfRunning || false,
         isEnabled: formValue.isEnabled
       };
 
@@ -462,9 +627,10 @@ export class ScheduleDialogComponent implements OnInit, OnDestroy {
         description: formValue.description,
         scheduleType: formValue.scheduleType,
         oneTimeUtc: formValue.scheduleType === 'OneTime' ? new Date(formValue.oneTimeUtc).toISOString() : undefined,
-        intervalMinutes: formValue.scheduleType === 'Interval' ? formValue.intervalMinutes : undefined,
+        intervalMinutes: formValue.scheduleType === 'Interval' ? this.calculateIntervalMinutes() : undefined,
         cronExpression: formValue.scheduleType === 'Cron' ? formValue.cronExpression : undefined,
         maxExecutions: formValue.maxExecutions,
+        skipIfRunning: formValue.skipIfRunning,
         isEnabled: formValue.isEnabled
       };
 

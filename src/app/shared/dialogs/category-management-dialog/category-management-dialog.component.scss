@@ -1,0 +1,136 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: var(--mat-sys-primary, #4a5db8);
+  }
+}
+
+mat-dialog-content {
+  min-width: 450px;
+  max-height: 60vh;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.category-form {
+  padding: 16px 0;
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+}
+
+.category-list {
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 16px 0;
+
+    .category-count {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+    }
+
+    button {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: rgba(0, 0, 0, 0.6);
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 0;
+      text-align: center;
+
+      &.hint {
+        font-size: 12px;
+        margin-top: 8px;
+      }
+    }
+  }
+}
+
+.category-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .category-name {
+    font-weight: 500;
+
+    .template-count {
+      font-weight: normal;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 12px;
+      margin-left: 8px;
+    }
+  }
+
+  .category-description {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+  }
+
+  .category-actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}

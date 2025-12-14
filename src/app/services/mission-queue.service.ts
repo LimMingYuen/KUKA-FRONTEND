@@ -8,6 +8,7 @@ import {
   MissionQueueStatistics,
   AddToQueueRequest,
   ChangePriorityRequest,
+  CancelQueueRequest,
   transformQueueItem,
   transformQueueItems
 } from '../models/mission-queue.models';
@@ -189,10 +190,15 @@ export class MissionQueueService {
 
   /**
    * Cancel a queued mission
+   * @param id Queue item ID
+   * @param cancelMode Cancel mode: FORCE, NORMAL, or REDIRECT_START
+   * @param reason Optional reason for cancellation
    */
-  cancel(id: number): Observable<void> {
-    return this.http.delete<ApiResponse<object>>(
-      `${this.API_URL}${this.ENDPOINT}/${id}`,
+  cancel(id: number, cancelMode: string = 'FORCE', reason?: string): Observable<void> {
+    const request: CancelQueueRequest = { cancelMode, reason };
+    return this.http.post<ApiResponse<object>>(
+      `${this.API_URL}${this.ENDPOINT}/${id}/cancel`,
+      request,
       { headers: this.createHeaders() }
     ).pipe(
       map(() => undefined),

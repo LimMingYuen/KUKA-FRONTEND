@@ -23,6 +23,10 @@ export interface SavedCustomMissionDto {
   isActive: boolean;
   /** Concurrency mode: "Unlimited" (default) or "Wait" */
   concurrencyMode: 'Unlimited' | 'Wait';
+  /** Category ID for manual organization. Null means "Uncategorized" */
+  categoryId: number | null;
+  /** Category name (populated from navigation property) */
+  categoryName: string | null;
   scheduleSummary: SavedMissionScheduleSummaryDto;
 }
 
@@ -55,6 +59,8 @@ export interface SavedCustomMissionCreateRequest {
   isActive?: boolean;  // Defaults to true on backend
   /** Concurrency mode: "Unlimited" (default) or "Wait" */
   concurrencyMode?: 'Unlimited' | 'Wait';
+  /** Category ID for manual organization. Null means "Uncategorized" */
+  categoryId?: number | null;
 }
 
 export interface SavedCustomMissionUpdateRequest {
@@ -78,6 +84,8 @@ export interface SavedCustomMissionUpdateRequest {
   isActive: boolean;
   /** Concurrency mode: "Unlimited" or "Wait" */
   concurrencyMode: 'Unlimited' | 'Wait';
+  /** Category ID for manual organization. Null means "Uncategorized" */
+  categoryId?: number | null;
 }
 
 export interface TriggerMissionResponse {
@@ -166,6 +174,10 @@ export interface SavedCustomMissionsDisplayData {
   isActive: boolean;
   /** Concurrency mode: "Unlimited" or "Wait" */
   concurrencyMode: 'Unlimited' | 'Wait';
+  /** Category ID for manual organization. Null means "Uncategorized" */
+  categoryId: number | null;
+  /** Category name (populated from navigation property) */
+  categoryName: string;
 }
 
 // Enums for mission data
@@ -231,7 +243,9 @@ export class SavedCustomMissionsUtils {
       lastRunUtc: dto.scheduleSummary.lastRunUtc ? formatDateTime(dto.scheduleSummary.lastRunUtc) : '-',
       missionStepsJson: dto.missionStepsJson,
       isActive: dto.isActive,
-      concurrencyMode: dto.concurrencyMode || 'Unlimited'
+      concurrencyMode: dto.concurrencyMode || 'Unlimited',
+      categoryId: dto.categoryId ?? null,
+      categoryName: dto.categoryName || 'Uncategorized'
     };
   }
 

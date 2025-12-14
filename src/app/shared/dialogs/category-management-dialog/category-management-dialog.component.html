@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>
+  <mat-icon>category</mat-icon>
+  Manage Categories
+</h2>
+
+<mat-dialog-content>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Loading categories...</span>
+  </div>
+
+  <!-- Category Form (Add/Edit) -->
+  <div *ngIf="showForm && !isLoading" class="category-form">
+    <h3>{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</h3>
+
+    <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Category Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter category name" maxlength="128">
+        <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
+          Name is required
+        </mat-error>
+        <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">
+          Name cannot exceed 128 characters
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (Optional)</mat-label>
+        <textarea matInput formControlName="description" placeholder="Enter description"
+                  rows="2" maxlength="512"></textarea>
+        <mat-hint align="end">{{ categoryForm.get('description')?.value?.length || 0 }}/512</mat-hint>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="cancelForm()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit"
+                [disabled]="categoryForm.invalid || isSaving">
+          <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
+          <span *ngIf="!isSaving">{{ editingCategory ? 'Update' : 'Create' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Category List -->
+  <div *ngIf="!showForm && !isLoading" class="category-list">
+    <div class="list-header">
+      <span class="category-count">{{ categories.length }} categories</span>
+      <button mat-raised-button color="primary" (click)="showAddForm()">
+        <mat-icon>add</mat-icon>
+        Add Category
+      </button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div *ngIf="categories.length === 0" class="empty-state">
+      <mat-icon>folder_off</mat-icon>
+      <p>No categories yet</p>
+      <p class="hint">Create a category to organize your templates</p>
+    </div>
+
+    <mat-list *ngIf="categories.length > 0">
+      <mat-list-item *ngFor="let category of categories" class="category-item">
+        <mat-icon matListItemIcon>folder</mat-icon>
+        <div matListItemTitle class="category-name">
+          {{ category.name }}
+          <span class="template-count">({{ category.templateCount }} templates)</span>
+        </div>
+        <div matListItemLine *ngIf="category.description" class="category-description">
+          {{ category.description }}
+        </div>
+        <div matListItemMeta class="category-actions">
+          <button mat-icon-button (click)="showEditForm(category)" matTooltip="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteCategory(category)" matTooltip="Delete">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </mat-list-item>
+    </mat-list>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { TableConfig, ActionEvent } from '../../shared/models/table.models';
@@ -257,6 +257,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -352,17 +353,35 @@ export class UserManagementComponent implements OnInit, OnDestroy {
               <h3>Page Access Overrides</h3>
               <p class="permissions-hint">Override role-based permissions for specific pages</p>
 
+              <!-- Search Field -->
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search pages</mat-label>
+                <input matInput
+                       [(ngModel)]="pageSearchTerm"
+                       (ngModelChange)="onPageSearchChange($event)"
+                       placeholder="Type to search...">
+                <mat-icon matSuffix *ngIf="!pageSearchTerm">search</mat-icon>
+                <button mat-icon-button matSuffix *ngIf="pageSearchTerm" (click)="clearPageSearch()">
+                  <mat-icon>clear</mat-icon>
+                </button>
+              </mat-form-field>
+
               <div class="template-permissions-list">
-                <div class="permission-item" *ngFor="let page of allPages">
+                <div class="permission-item" *ngFor="let page of filteredPages">
                   <div class="permission-item-info">
                     <mat-icon>{{ page.pageIcon || 'web' }}</mat-icon>
                     <div class="permission-item-text">
                       <div class="permission-item-title">{{ page.pageName }}</div>
                       <div class="permission-item-subtitle">
                         <span class="path">{{ page.pagePath }}</span>
-                        <span class="role-access" [class.granted]="getRoleAccess(page.id)" [class.denied]="!getRoleAccess(page.id)">
-                          Role Access: {{ getRoleAccess(page.id) ? '✓ Allowed' : '✗ Denied' }}
-                        </span>
+                        <div class="access-indicators">
+                          <span class="role-access" [class.granted]="getRoleAccess(page.id)" [class.denied]="!getRoleAccess(page.id)">
+                            From Roles: {{ getRoleAccess(page.id) ? '✓' : '✗' }}
+                          </span>
+                          <span class="effective-access" [class.granted]="getEffectiveAccess(page.id)" [class.denied]="!getEffectiveAccess(page.id)">
+                            Effective: {{ getEffectiveAccess(page.id) ? '✓ Allowed' : '✗ Denied' }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -374,6 +393,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                     <mat-button-toggle value="allow">Allow</mat-button-toggle>
                     <mat-button-toggle value="deny">Deny</mat-button-toggle>
                   </mat-button-toggle-group>
+                </div>
+                <div *ngIf="filteredPages.length === 0 && pageSearchTerm" class="no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No pages match "{{ pageSearchTerm }}"</span>
                 </div>
               </div>
             </div>
@@ -406,17 +429,35 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                 <p>No templates available. Create templates in the Saved Custom Missions page first.</p>
               </div>
 
+              <!-- Search Field -->
+              <mat-form-field appearance="outline" class="search-field" *ngIf="allTemplates.length > 0">
+                <mat-label>Search templates</mat-label>
+                <input matInput
+                       [(ngModel)]="templateSearchTerm"
+                       (ngModelChange)="onTemplateSearchChange($event)"
+                       placeholder="Type to search...">
+                <mat-icon matSuffix *ngIf="!templateSearchTerm">search</mat-icon>
+                <button mat-icon-button matSuffix *ngIf="templateSearchTerm" (click)="clearTemplateSearch()">
+                  <mat-icon>clear</mat-icon>
+                </button>
+              </mat-form-field>
+
               <div class="template-permissions-list" *ngIf="allTemplates.length > 0">
-                <div class="permission-item" *ngFor="let template of allTemplates">
+                <div class="permission-item" *ngFor="let template of filteredTemplates">
                   <div class="permission-item-info">
                     <mat-icon>assignment</mat-icon>
                     <div class="permission-item-text">
                       <div class="permission-item-title">{{ template.missionName }}</div>
                       <div class="permission-item-subtitle">
                         <span class="path">{{ template.robotType }} - {{ template.missionType }}</span>
-                        <span class="role-access" [class.granted]="getRoleTemplateAccess(template.id)" [class.denied]="!getRoleTemplateAccess(template.id)">
-                          Role Access: {{ getRoleTemplateAccess(template.id) ? '✓ Allowed' : '✗ Denied' }}
-                        </span>
+                        <div class="access-indicators">
+                          <span class="role-access" [class.granted]="getRoleTemplateAccess(template.id)" [class.denied]="!getRoleTemplateAccess(template.id)">
+                            From Roles: {{ getRoleTemplateAccess(template.id) ? '✓' : '✗' }}
+                          </span>
+                          <span class="effective-access" [class.granted]="getEffectiveTemplateAccess(template.id)" [class.denied]="!getEffectiveTemplateAccess(template.id)">
+                            Effective: {{ getEffectiveTemplateAccess(template.id) ? '✓ Allowed' : '✗ Denied' }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -428,6 +469,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                     <mat-button-toggle value="allow">Allow</mat-button-toggle>
                     <mat-button-toggle value="deny">Deny</mat-button-toggle>
                   </mat-button-toggle-group>
+                </div>
+                <div *ngIf="filteredTemplates.length === 0 && templateSearchTerm" class="no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No templates match "{{ templateSearchTerm }}"</span>
                 </div>
               </div>
             </div>
@@ -617,6 +662,25 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         font-weight: 500;
       }
 
+      .search-field {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .no-results {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 2rem;
+        color: rgba(0, 0, 0, 0.6);
+        font-style: italic;
+      }
+
+      .no-results mat-icon {
+        color: rgba(0, 0, 0, 0.3);
+      }
+
       .template-permissions-list {
         max-height: 400px;
         overflow-y: auto;
@@ -672,6 +736,38 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       .permission-item-subtitle .path {
         color: rgba(0, 0, 0, 0.6);
       }
+
+      .access-indicators {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+        flex-wrap: wrap;
+      }
+
+      .role-access,
+      .effective-access {
+        font-weight: 500;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+
+      .role-access.granted,
+      .effective-access.granted {
+        color: #4caf50;
+        background-color: #e8f5e9;
+      }
+
+      .role-access.denied,
+      .effective-access.denied {
+        color: #f44336;
+        background-color: #ffebee;
+      }
+
+      .effective-access {
+        font-weight: 600;
+      }
     `
   ]
 })
@@ -689,6 +785,14 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
   isLoadingTemplates = false;
   isSaving = false;
   private destroy$ = new Subject<void>();
+
+  // Search and filtering for pages
+  pageSearchTerm = '';
+  filteredPages: PageDto[] = [];
+
+  // Search and filtering for templates
+  templateSearchTerm = '';
+  filteredTemplates: SavedCustomMissionsDisplayData[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -762,6 +866,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ pages, userPerms }) => {
           this.allPages = pages;
+          this.filteredPages = pages;
 
           // Store user permission overrides
           this.userPermissions.clear();
@@ -847,6 +952,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ templates, userPerms }) => {
           this.allTemplates = templates;
+          this.filteredTemplates = templates;
 
           // Store user template permission overrides
           this.userTemplatePermissions.clear();
@@ -931,6 +1037,28 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get effective access for a page (considering role access + user override)
+   */
+  getEffectiveAccess(pageId: number): boolean {
+    const override = this.userPermissions.get(pageId) || 'inherit';
+    if (override === 'allow') return true;
+    if (override === 'deny') return false;
+    // inherit - use role access
+    return this.getRoleAccess(pageId);
+  }
+
+  /**
+   * Get effective access for a template (considering role access + user override)
+   */
+  getEffectiveTemplateAccess(templateId: number): boolean {
+    const override = this.userTemplatePermissions.get(templateId) || 'inherit';
+    if (override === 'allow') return true;
+    if (override === 'deny') return false;
+    // inherit - use role access
+    return this.getRoleTemplateAccess(templateId);
+  }
+
+  /**
    * Get user's permission override for a page
    */
   getUserPermissionOverride(pageId: number): 'inherit' | 'allow' | 'deny' {
@@ -956,6 +1084,65 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
    */
   onTemplatePermissionOverrideChange(templateId: number, value: 'inherit' | 'allow' | 'deny'): void {
     this.userTemplatePermissions.set(templateId, value);
+  }
+
+  // ==================== Page Search Methods ====================
+
+  /**
+   * Handle page search input change
+   */
+  onPageSearchChange(searchTerm: string): void {
+    this.pageSearchTerm = searchTerm;
+    const term = searchTerm.toLowerCase().trim();
+
+    if (!term) {
+      this.filteredPages = this.allPages;
+      return;
+    }
+
+    this.filteredPages = this.allPages.filter(
+      (page) =>
+        page.pageName.toLowerCase().includes(term) ||
+        page.pagePath.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Clear page search
+   */
+  clearPageSearch(): void {
+    this.pageSearchTerm = '';
+    this.filteredPages = this.allPages;
+  }
+
+  // ==================== Template Search Methods ====================
+
+  /**
+   * Handle template search input change
+   */
+  onTemplateSearchChange(searchTerm: string): void {
+    this.templateSearchTerm = searchTerm;
+    const term = searchTerm.toLowerCase().trim();
+
+    if (!term) {
+      this.filteredTemplates = this.allTemplates;
+      return;
+    }
+
+    this.filteredTemplates = this.allTemplates.filter(
+      (template) =>
+        template.missionName.toLowerCase().includes(term) ||
+        template.robotType.toLowerCase().includes(term) ||
+        template.missionType.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Clear template search
+   */
+  clearTemplateSearch(): void {
+    this.templateSearchTerm = '';
+    this.filteredTemplates = this.allTemplates;
   }
 
   /**

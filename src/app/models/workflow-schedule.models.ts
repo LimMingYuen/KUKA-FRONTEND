@@ -14,10 +14,11 @@ export interface WorkflowSchedule {
   isEnabled: boolean;
   nextRunUtc?: string;
   lastRunUtc?: string;
-  lastRunStatus?: 'Success' | 'Failed';
+  lastRunStatus?: 'Success' | 'Failed' | 'Skipped';
   lastErrorMessage?: string;
   executionCount: number;
   maxExecutions?: number;
+  skipIfRunning: boolean;
   createdBy: string;
   createdUtc: string;
   updatedUtc?: string;
@@ -41,6 +42,7 @@ export interface CreateScheduleRequest {
   cronExpression?: string;
   isEnabled: boolean;
   maxExecutions?: number;
+  skipIfRunning?: boolean;
 }
 
 /**
@@ -55,6 +57,7 @@ export interface UpdateScheduleRequest {
   cronExpression?: string;
   isEnabled?: boolean;
   maxExecutions?: number;
+  skipIfRunning?: boolean;
 }
 
 /**

@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>
+  <mat-icon>playlist_add</mat-icon>
+  Add Templates to "{{ data.categoryName }}"
+</h2>
+
+<mat-dialog-content>
+  <!-- Search -->
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search templates</mat-label>
+    <input matInput [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" placeholder="Type to search...">
+    <mat-icon matPrefix>search</mat-icon>
+    <button *ngIf="searchText" mat-icon-button matSuffix (click)="searchText = ''; onSearchChange()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <!-- Selection Actions -->
+  <div class="selection-actions">
+    <span class="selection-info">{{ selectedCount }} selected</span>
+    <button mat-button (click)="selectAll()" [disabled]="filteredTemplates.length === 0">
+      Select All
+    </button>
+    <button mat-button (click)="deselectAll()" [disabled]="selectedCount === 0">
+      Clear
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Template List -->
+  <div class="template-list" *ngIf="filteredTemplates.length > 0">
+    <div *ngFor="let template of filteredTemplates"
+         class="template-item"
+         [class.selected]="isSelected(template.id)"
+         (click)="toggleTemplate(template.id)">
+      <mat-checkbox [checked]="isSelected(template.id)" (click)="$event.stopPropagation()">
+      </mat-checkbox>
+      <div class="template-info">
+        <span class="template-name">{{ template.missionName }}</span>
+        <span class="template-category">Currently in: {{ template.categoryName || 'Uncategorized' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredTemplates.length === 0 && availableTemplates.length > 0" class="empty-state">
+    <mat-icon>search_off</mat-icon>
+    <p>No templates match your search</p>
+  </div>
+
+  <div *ngIf="availableTemplates.length === 0" class="empty-state">
+    <mat-icon>check_circle</mat-icon>
+    <p>All templates are already in this category</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="confirm()"
+          [disabled]="selectedCount === 0">
+    Add {{ selectedCount }} Template{{ selectedCount !== 1 ? 's' : '' }}
+  </button>
+</mat-dialog-actions>

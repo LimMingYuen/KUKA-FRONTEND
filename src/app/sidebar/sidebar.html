@@ -13,8 +13,9 @@
       <div class="sidebar-action">
         <span class="sidebar-title" *ngIf="!sidebarCollapsed">QES WMS</span>
         <div class="sidebar-action__buttons">
-          <!-- Notification Bell Button -->
+          <!-- Notification Bell Button (hidden when collapsed) -->
           <button mat-fab
+                  *ngIf="!sidebarCollapsed"
                   #notificationButton
                   class="notification-button"
                   (click)="toggleNotificationPanel()"

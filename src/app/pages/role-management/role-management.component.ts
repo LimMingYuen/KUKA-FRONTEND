@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatListModule } from '@angular/material/list';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { GenericTableComponent } from '../../shared/components/generic-table/generic-table';
 import { TableConfig, ActionEvent } from '../../shared/models/table.models';
@@ -259,6 +259,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -317,8 +318,21 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
               <h3>Page Access Control</h3>
               <p class="permissions-hint">Toggle access for each page</p>
 
+              <!-- Search Field -->
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Search pages</mat-label>
+                <input matInput
+                       [(ngModel)]="pageSearchTerm"
+                       (ngModelChange)="onPageSearchChange($event)"
+                       placeholder="Type to search...">
+                <mat-icon matSuffix *ngIf="!pageSearchTerm">search</mat-icon>
+                <button mat-icon-button matSuffix *ngIf="pageSearchTerm" (click)="clearPageSearch()">
+                  <mat-icon>clear</mat-icon>
+                </button>
+              </mat-form-field>
+
               <div class="permissions-custom-list">
-                <div class="permission-item" *ngFor="let page of allPages">
+                <div class="permission-item" *ngFor="let page of filteredPages">
                   <div class="permission-item-info">
                     <mat-icon>{{ page.pageIcon || 'web' }}</mat-icon>
                     <div class="permission-item-text">
@@ -330,6 +344,10 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
                     [checked]="rolePermissions.get(page.id) || false"
                     (change)="onPermissionToggle(page.id, $event.checked)">
                   </mat-slide-toggle>
+                </div>
+                <div *ngIf="filteredPages.length === 0 && pageSearchTerm" class="no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No pages match "{{ pageSearchTerm }}"</span>
                 </div>
               </div>
             </div>
@@ -357,8 +375,21 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
                 <p>No templates available. Create templates in the Saved Custom Missions page first.</p>
               </div>
 
+              <!-- Search Field -->
+              <mat-form-field appearance="outline" class="search-field" *ngIf="allTemplates.length > 0">
+                <mat-label>Search templates</mat-label>
+                <input matInput
+                       [(ngModel)]="templateSearchTerm"
+                       (ngModelChange)="onTemplateSearchChange($event)"
+                       placeholder="Type to search...">
+                <mat-icon matSuffix *ngIf="!templateSearchTerm">search</mat-icon>
+                <button mat-icon-button matSuffix *ngIf="templateSearchTerm" (click)="clearTemplateSearch()">
+                  <mat-icon>clear</mat-icon>
+                </button>
+              </mat-form-field>
+
               <div class="permissions-custom-list" *ngIf="allTemplates.length > 0">
-                <div class="permission-item" *ngFor="let template of allTemplates">
+                <div class="permission-item" *ngFor="let template of filteredTemplates">
                   <div class="permission-item-info">
                     <mat-icon>assignment</mat-icon>
                     <div class="permission-item-text">
@@ -370,6 +401,10 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
                     [checked]="roleTemplatePermissions.get(template.id) || false"
                     (change)="onTemplatePermissionToggle(template.id, $event.checked)">
                   </mat-slide-toggle>
+                </div>
+                <div *ngIf="filteredTemplates.length === 0 && templateSearchTerm" class="no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No templates match "{{ templateSearchTerm }}"</span>
                 </div>
               </div>
             </div>
@@ -502,8 +537,27 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
         font-weight: 500;
       }
 
+      .search-field {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .no-results {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 2rem;
+        color: rgba(0, 0, 0, 0.6);
+        font-style: italic;
+      }
+
+      .no-results mat-icon {
+        color: rgba(0, 0, 0, 0.3);
+      }
+
       .permissions-custom-list {
-        max-height: 400px;
+        max-height: 350px;
         overflow-y: auto;
       }
 
@@ -565,6 +619,14 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
   isSaving = false;
   private destroy$ = new Subject<void>();
 
+  // Search and filtering for pages
+  pageSearchTerm = '';
+  filteredPages: PageDto[] = [];
+
+  // Search and filtering for templates
+  templateSearchTerm = '';
+  filteredTemplates: SavedCustomMissionsDisplayData[] = [];
+
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<RoleFormDialogComponent>,
@@ -605,6 +667,7 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (pages) => {
           this.allPages = pages;
+          this.filteredPages = pages;
           this.isLoadingPages = false;
         },
         error: (err) => {
@@ -651,6 +714,7 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (templates) => {
           this.allTemplates = templates;
+          this.filteredTemplates = templates;
           this.isLoadingTemplates = false;
         },
         error: (err) => {
@@ -698,6 +762,65 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
    */
   onTemplatePermissionToggle(templateId: number, canAccess: boolean): void {
     this.roleTemplatePermissions.set(templateId, canAccess);
+  }
+
+  // ==================== Page Search Methods ====================
+
+  /**
+   * Handle page search input change
+   */
+  onPageSearchChange(searchTerm: string): void {
+    this.pageSearchTerm = searchTerm;
+    const term = searchTerm.toLowerCase().trim();
+
+    if (!term) {
+      this.filteredPages = this.allPages;
+      return;
+    }
+
+    this.filteredPages = this.allPages.filter(
+      (page) =>
+        page.pageName.toLowerCase().includes(term) ||
+        page.pagePath.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Clear page search
+   */
+  clearPageSearch(): void {
+    this.pageSearchTerm = '';
+    this.filteredPages = this.allPages;
+  }
+
+  // ==================== Template Search Methods ====================
+
+  /**
+   * Handle template search input change
+   */
+  onTemplateSearchChange(searchTerm: string): void {
+    this.templateSearchTerm = searchTerm;
+    const term = searchTerm.toLowerCase().trim();
+
+    if (!term) {
+      this.filteredTemplates = this.allTemplates;
+      return;
+    }
+
+    this.filteredTemplates = this.allTemplates.filter(
+      (template) =>
+        template.missionName.toLowerCase().includes(term) ||
+        template.robotType.toLowerCase().includes(term) ||
+        template.missionType.toLowerCase().includes(term)
+    );
+  }
+
+  /**
+   * Clear template search
+   */
+  clearTemplateSearch(): void {
+    this.templateSearchTerm = '';
+    this.filteredTemplates = this.allTemplates;
   }
 
   onCancel(): void {

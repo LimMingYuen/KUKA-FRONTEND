@@ -1,0 +1,76 @@
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: var(--mat-sys-primary, #4a5db8);
+  }
+}
+
+mat-dialog-content {
+  min-width: 400px;
+  max-height: 50vh;
+}
+
+.template-info {
+  margin: 0 0 16px 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  font-size: 14px;
+
+  strong {
+    color: var(--mat-sys-primary, #4a5db8);
+  }
+}
+
+.category-selection {
+  .selection-label {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.category-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+}
+
+.category-option {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.current {
+    background: rgba(74, 93, 184, 0.08);
+  }
+
+  .option-hint {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .current-indicator {
+    color: var(--mat-sys-primary, #4a5db8);
+  }
+}
+
+.no-categories {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 24px;
+  font-size: 14px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}

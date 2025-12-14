@@ -154,6 +154,26 @@ export class SavedCustomMissionsService {
   }
 
   /**
+   * Assign a template to a category (or Uncategorized if categoryId is null)
+   */
+  assignCategory(templateId: number, categoryId: number | null): Observable<SavedCustomMissionsDisplayData> {
+    return this.http.patch<ApiResponse<SavedCustomMissionDto>>(
+      `${this.API_URL}${this.ENDPOINT}/${templateId}/category`,
+      { categoryId },
+      { headers: this.createHeaders() }
+    ).pipe(
+      map(response => SavedCustomMissionsUtils.transformToDisplay(response.data)),
+      tap(() => {
+        this.showSuccessMessage('Template category updated');
+      }),
+      catchError(error => {
+        this.handleError(error, 'Failed to update template category');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Handle HTTP errors and show user-friendly messages
    */
   private handleError(error: any, defaultMessage: string): void {

@@ -5,9 +5,15 @@
       <mat-icon>settings_remote</mat-icon>
       Mission Control Center
     </h1>
-    <button mat-icon-button (click)="refresh()" matTooltip="Refresh All" class="refresh-btn">
-      <mat-icon>refresh</mat-icon>
-    </button>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="openCategoryManagementDialog()" matTooltip="Manage Categories" class="manage-categories-btn">
+        <mat-icon>category</mat-icon>
+        Manage Categories
+      </button>
+      <button mat-icon-button (click)="refresh()" matTooltip="Refresh All" class="refresh-btn">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
   </div>
 
   <!-- Main Content with Tabs -->
@@ -50,27 +56,33 @@
           </p>
         </div>
 
-        <!-- Templates Grouped by Zone -->
-        <div *ngIf="!isLoadingTemplates && savedTemplates.length > 0" class="zone-sections">
+        <!-- Templates Grouped by Category -->
+        <div *ngIf="!isLoadingTemplates && savedTemplates.length > 0" class="category-sections">
           <mat-accordion multi>
             <mat-expansion-panel
-              *ngFor="let zone of filteredTemplatesByZone | keyvalue"
-              [expanded]="isZoneExpanded(zone.key)"
-              (opened)="expandedZones.add(zone.key)"
-              (closed)="expandedZones.delete(zone.key)"
-              class="zone-panel">
+              *ngFor="let category of filteredTemplatesByCategory | keyvalue"
+              [expanded]="isCategoryExpanded(category.key)"
+              (opened)="expandedCategories.add(category.key)"
+              (closed)="expandedCategories.delete(category.key)"
+              class="category-panel">
               <mat-expansion-panel-header>
                 <mat-panel-title>
-                  <mat-icon>location_on</mat-icon>
-                  {{ zone.key }}
+                  <mat-icon>{{ category.key === 'Uncategorized' ? 'folder_off' : 'folder' }}</mat-icon>
+                  {{ category.key }}
                 </mat-panel-title>
                 <mat-panel-description>
-                  {{ zone.value.length }} template{{ zone.value.length !== 1 ? 's' : '' }}
+                  <span class="template-count">{{ category.value.length }} template{{ category.value.length !== 1 ? 's' : '' }}</span>
+                  <button mat-stroked-button class="add-to-category-btn"
+                          (click)="openAddToCategoryDialog(category.key); $event.stopPropagation()"
+                          matTooltip="Add templates to this category">
+                    <mat-icon>add</mat-icon>
+                    Add
+                  </button>
                 </mat-panel-description>
               </mat-expansion-panel-header>
 
               <div class="missions-grid">
-                <mat-card *ngFor="let template of zone.value" class="mission-card"
+                <mat-card *ngFor="let template of category.value" class="mission-card"
                           [class.inactive-template]="!template.isActive"
                           [class.blocked-template]="isTemplateBlocked(template.id)">
                   <!-- Status chip in top-right corner (SuperAdmin only) -->

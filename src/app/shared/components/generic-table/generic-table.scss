@@ -210,8 +210,17 @@
     overflow-y: auto;
     overflow-x: auto;
 
+    // Inner wrapper ensures paginator matches table width when scrolling horizontally
+    .table-scroll-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-width: max-content; // Expands to fit table content
+      width: 100%;
+    }
+
     .generic-table-element {
       width: 100%;
+      min-width: max-content; // Ensures table expands to fit content
       background-color: var(--mat-sys-surface-container-lowest);
       border-collapse: collapse;
 
@@ -331,6 +340,7 @@
     bottom: 0;
     z-index: 2;
     flex-shrink: 0;
+    width: 100%; // Fills the wrapper width (which has min-width: max-content)
     border-top: 1px solid rgb(58, 77, 168);
     background: rgb(74, 93, 184) !important;
     color: white !important;

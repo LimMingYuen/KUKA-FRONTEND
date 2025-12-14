@@ -43,12 +43,18 @@
     }
 
     .header-actions {
-      button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .manage-categories-btn {
         background-color: white !important;
         color: var(--mat-sys-primary) !important;
+        border-color: white !important;
 
         mat-icon {
           color: var(--mat-sys-primary) !important;
+          margin-right: 4px;
         }
 
         &:hover {
@@ -112,8 +118,8 @@
     }
   }
 
-  // Zone sections container
-  .zone-sections {
+  // Category sections container (formerly zone sections)
+  .category-sections {
     padding: 16px 0;
 
     mat-accordion {
@@ -122,7 +128,7 @@
       gap: 12px;
     }
 
-    .zone-panel {
+    .category-panel {
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -155,8 +161,37 @@
 
         mat-panel-description {
           justify-content: flex-end;
+          align-items: center;
+          gap: 12px;
           font-size: 13px;
           color: rgba(0, 0, 0, 0.6);
+
+          .template-count {
+            margin-right: 8px;
+          }
+
+          .add-to-category-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            padding: 0 12px;
+            height: 32px;
+            line-height: 32px;
+            border-color: var(--mat-sys-primary, #4a5db8);
+            color: var(--mat-sys-primary, #4a5db8);
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+              color: var(--mat-sys-primary, #4a5db8);
+            }
+
+            &:hover {
+              background-color: rgba(74, 93, 184, 0.08);
+            }
+          }
         }
       }
 

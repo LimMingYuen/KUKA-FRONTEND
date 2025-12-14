@@ -67,6 +67,14 @@ export interface ChangePriorityRequest {
 }
 
 /**
+ * Cancel Queue Mission Request DTO
+ */
+export interface CancelQueueRequest {
+  cancelMode: string;
+  reason?: string;
+}
+
+/**
  * Mission Queue Statistics DTO
  */
 export interface MissionQueueStatistics {

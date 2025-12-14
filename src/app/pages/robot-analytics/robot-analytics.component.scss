@@ -701,3 +701,42 @@
   background-color: transparent !important;
 }
 
+/* Mat-Select Panel Fixes for older browsers (Edge 86) */
+::ng-deep .mat-mdc-select-panel {
+  z-index: 1050 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 4px !important;
+}
+
+/* Removed :has() selector - not supported in Edge 86 */
+/* Mat-select panel z-index is now handled globally in styles.scss */
+
+/* Ensure overlay container is clickable */
+::ng-deep .cdk-overlay-container {
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+
+::ng-deep .cdk-overlay-connected-position-bounding-box {
+  pointer-events: auto;
+}
+
+::ng-deep .cdk-overlay-pane {
+  pointer-events: auto;
+}
+
+/* Mat-option styling */
+::ng-deep .mat-mdc-option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+::ng-deep .mat-mdc-option:hover {
+  background-color: #f5f5f5 !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected {
+  background-color: #e3f2fd !important;
+}
+

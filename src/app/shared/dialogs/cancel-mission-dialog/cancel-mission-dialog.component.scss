@@ -109,11 +109,8 @@
             }
           }
 
-          // Highlight selected option
-          &:has(mat-radio-button.mat-mdc-radio-checked) {
-            border-color: #ff6f00;
-            background-color: rgba(255, 111, 0, 0.05);
-          }
+          // Note: Removed :has() selector for Edge 86 compatibility
+          // The highlight on selected option won't work in older browsers
         }
       }
     }

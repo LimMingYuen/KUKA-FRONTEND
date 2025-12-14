@@ -9,10 +9,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDividerModule } from '@angular/material/divider';
-import { SavedCustomMissionDto } from '../../../models/saved-custom-missions.models';
+import { SavedCustomMissionsDisplayData } from '../../../models/saved-custom-missions.models';
 
 export interface SelectTemplatesDialogData {
-  templatesByZone: Map<string, SavedCustomMissionDto[]>;
+  templatesByZone: Map<string, SavedCustomMissionsDisplayData[]>;
   selectedIds: Set<number>;
 }
 
@@ -41,8 +41,8 @@ export interface SelectTemplatesDialogResult {
 export class SelectTemplatesDialogComponent {
   public searchText = '';
   public selectedIds: Set<number>;
-  public templatesByZone: Map<string, SavedCustomMissionDto[]>;
-  public filteredTemplatesByZone: Map<string, SavedCustomMissionDto[]>;
+  public templatesByZone: Map<string, SavedCustomMissionsDisplayData[]>;
+  public filteredTemplatesByZone: Map<string, SavedCustomMissionsDisplayData[]>;
   public totalTemplates = 0;
 
   constructor(
@@ -69,7 +69,7 @@ export class SelectTemplatesDialogComponent {
     }
 
     const searchLower = this.searchText.toLowerCase().trim();
-    const filtered = new Map<string, SavedCustomMissionDto[]>();
+    const filtered = new Map<string, SavedCustomMissionsDisplayData[]>();
 
     this.templatesByZone.forEach((templates, zoneName) => {
       const matchingTemplates = templates.filter(t =>
