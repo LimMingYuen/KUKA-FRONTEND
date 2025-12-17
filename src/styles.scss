@@ -567,6 +567,19 @@ app-generic-table {
   z-index: 1001 !important;
 }
 
+/* Fix tooltip flickering - tooltip element should not intercept mouse events */
+.mat-mdc-tooltip {
+  pointer-events: none !important;
+}
+
+.mdc-tooltip {
+  pointer-events: none !important;
+}
+
+.mdc-tooltip__surface {
+  pointer-events: none !important;
+}
+
 .cdk-overlay-connected-position-bounding-box {
   z-index: 1001 !important;
 }

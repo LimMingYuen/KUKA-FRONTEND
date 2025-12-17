@@ -712,19 +712,7 @@
 /* Removed :has() selector - not supported in Edge 86 */
 /* Mat-select panel z-index is now handled globally in styles.scss */
 
-/* Ensure overlay container is clickable */
-::ng-deep .cdk-overlay-container {
-  z-index: 1000 !important;
-  pointer-events: none;
-}
-
-::ng-deep .cdk-overlay-connected-position-bounding-box {
-  pointer-events: auto;
-}
-
-::ng-deep .cdk-overlay-pane {
-  pointer-events: auto;
-}
+/* Overlay styles removed - handled globally in styles.scss */
 
 /* Mat-option styling */
 ::ng-deep .mat-mdc-option {

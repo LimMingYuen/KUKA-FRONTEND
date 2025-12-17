@@ -55,6 +55,8 @@
                [matTooltip]="item.label"
                [matTooltipDisabled]="!sidebarCollapsed"
                matTooltipPosition="right"
+               [matTooltipShowDelay]="200"
+               matTooltipClass="sidebar-tooltip"
                [attr.aria-label]="item.label"
                [attr.aria-disabled]="item.disabled || false">
               <mat-icon class="nav-item__icon">{{ item.icon }}</mat-icon>

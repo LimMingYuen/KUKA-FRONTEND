@@ -508,6 +508,8 @@ $nav-item-size: 48px;
 // ==========================================
 ::ng-deep {
   .mat-mdc-tooltip {
+    pointer-events: none !important; // Prevent tooltip from intercepting mouse events (fixes flickering)
+
     .mdc-tooltip__surface {
       background-color: white !important;
       color: #333 !important;
@@ -515,6 +517,7 @@ $nav-item-size: 48px;
       padding: 8px 14px;
       border-radius: 6px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      pointer-events: none !important; // Ensure tooltip content also ignores pointer events
     }
   }
 }
