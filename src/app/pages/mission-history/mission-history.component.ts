@@ -56,8 +56,8 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
   // Table configuration
   public tableConfig = MISSION_HISTORY_TABLE_CONFIG;
 
-  // UI state
-  public isLoading = false;
+  // UI state - start as true to show loading until data arrives
+  public isLoading = true;
   public isClearing = false;
   public missionCount = 0;
   public maxRecords = 5000;

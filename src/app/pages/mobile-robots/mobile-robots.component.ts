@@ -46,8 +46,8 @@ export class MobileRobotsComponent implements OnInit, OnDestroy {
   // Search
   public searchTerm: string = '';
 
-  // UI state
-  public isLoading = false;
+  // UI state - start as true to show loading until data arrives
+  public isLoading = true;
   public isSyncing = false;
   public lastSyncResult: MobileRobotSyncResultDto | null = null;
 

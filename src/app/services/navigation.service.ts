@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { SidebarItem, SidebarSection, NavigationState } from '../models/sidebar.models';
 import { AuthService } from './auth.service';
 
@@ -24,8 +25,11 @@ export class NavigationService {
    * Initialize navigation state and listen to route changes
    */
   private initializeNavigation(): void {
-    // Listen to route changes
-    this.router.events.pipe(takeUntil(this.destroy$)).subscribe(() => {
+    // Listen to NavigationEnd events only (not all router events)
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
       this.updateActiveRoute();
     });
 

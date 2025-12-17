@@ -1,15 +1,19 @@
 <!-- Show loading spinner while checking license -->
-@if (isCheckingLicense()) {
+<ng-container *ngIf="isCheckingLicense(); else notChecking">
   <div class="license-check-overlay">
     <mat-spinner diameter="40"></mat-spinner>
     <p>Checking license...</p>
   </div>
-} @else {
+</ng-container>
+
+<ng-template #notChecking>
   <!-- Show sidebar with navigation when authenticated -->
-  @if (authService.isAuthenticated()) {
+  <ng-container *ngIf="authService.isAuthenticated(); else notAuthenticated">
     <app-sidebar></app-sidebar>
-  } @else {
+  </ng-container>
+
+  <ng-template #notAuthenticated>
     <!-- Show standalone router outlet for login/license-activation pages -->
     <router-outlet></router-outlet>
-  }
-}
+  </ng-template>
+</ng-template>

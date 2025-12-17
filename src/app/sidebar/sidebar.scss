@@ -122,18 +122,14 @@ $nav-item-size: 48px;
     background-color: $action-button-bg;
     color: var(--mat-sys-on-primary);
     box-shadow: 0 4px 12px rgba(47, 64, 154, 0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
     border-radius: 50% !important;
 
     &:hover {
       background-color: $action-button-hover;
       color: var(--mat-sys-on-primary-container);
       box-shadow: 0 6px 16px rgba(47, 64, 154, 0.4);
-      transform: translateY(-2px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      /* Removed transform to prevent hover loop */
     }
 
     mat-icon {
@@ -165,18 +161,14 @@ $nav-item-size: 48px;
     background-color: var(--mat-sys-surface-container-high);
     color: var(--mat-sys-on-surface-variant);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
     border-radius: 50% !important;
 
     &:hover {
       background-color: var(--mat-sys-primary);
       color: white;
       box-shadow: 0 4px 12px rgba(47, 64, 154, 0.3);
-      transform: translateY(-2px);
-    }
-
-    &:active {
-      transform: translateY(0);
+      /* Removed transform to prevent hover loop */
     }
 
     mat-icon {
@@ -253,12 +245,8 @@ $nav-item-size: 48px;
 
     .nav-item__icon {
       color: white;
-      transform: scale(1.1);
+      /* Removed transform to prevent hover loop */
     }
-  }
-
-  &:active {
-    transform: scale(0.95);
   }
 
   &.nav-item--active {
@@ -295,7 +283,7 @@ $nav-item-size: 48px;
   height: $icon-size;
   flex-shrink: 0;
   color: inherit;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item__label {
@@ -330,17 +318,13 @@ $nav-item-size: 48px;
   height: $action-button-size !important;
   min-width: $action-button-size !important;
   border-radius: 50% !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 4px 12px rgba(47, 64, 154, 0.3);
   overflow: hidden;
 
   &:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(47, 64, 154, 0.4);
-  }
-
-  &:active {
-    transform: translateY(0);
+    /* Removed transform to prevent hover loop */
   }
 }
 

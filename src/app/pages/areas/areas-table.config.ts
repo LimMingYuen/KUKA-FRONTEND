@@ -14,7 +14,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -23,7 +22,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Actual Value',
       sortable: true,
       filterable: true,
-      width: '150px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -32,7 +30,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '250px',
       transform: (value: string) => value || 'No description'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -41,7 +38,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '100px',
       allowHtml: true,
       transform: (value: boolean) => {
         const statusClass = value ? 'status-active' : 'status-inactive';
@@ -55,7 +51,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>,
 
@@ -64,7 +59,6 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<AreaDisplayData>
   ],

@@ -18,54 +18,37 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
       key: 'nodeLabel',
       header: 'Node Label',
       sortable: true,
-      filterable: true,
-      headerClass: 'node-label-header',
-      cellClass: 'node-label-cell'
+      filterable: true
     },
     {
       key: 'mapCode',
       header: 'Map Code',
       sortable: true,
-      filterable: true,
-      width: '140px',
-      headerClass: 'map-code-header',
-      cellClass: 'map-code-cell'
+      filterable: true
     },
     {
       key: 'floorNumber',
       header: 'Floor',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'floor-header',
-      cellClass: 'floor-cell'
+      filterable: true
     },
     {
       key: 'nodeNumber',
       header: 'Node',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'node-header',
-      cellClass: 'node-cell'
+      filterable: true
     },
     {
       key: 'reliability',
       header: 'Reliability',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'reliability-header',
-      cellClass: 'reliability-cell'
+      filterable: true
     },
     {
       key: 'reportTimes',
       header: 'Report Times',
       sortable: true,
       filterable: true,
-      width: '130px',
-      headerClass: 'report-times-header',
-      cellClass: 'report-times-cell',
       transform: (value: number) => {
         return value?.toLocaleString() || '0';
       }
@@ -74,10 +57,7 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
       key: 'lastUpdateTime',
       header: 'Last Updated',
       sortable: true,
-      filterable: true,
-      width: '180px',
-      headerClass: 'last-updated-header',
-      cellClass: 'last-updated-cell'
+      filterable: true
     }
   ],
 

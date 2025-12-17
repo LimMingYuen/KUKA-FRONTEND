@@ -18,52 +18,37 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
       key: 'name',
       header: 'Zone Name',
       sortable: true,
-      filterable: true,
-      headerClass: 'name-header',
-      cellClass: 'name-cell'
+      filterable: true
     },
     {
       key: 'code',
       header: 'Zone Code',
       sortable: true,
-      filterable: true,
-      width: '140px',
-      headerClass: 'code-header',
-      cellClass: 'code-cell'
+      filterable: true
     },
     {
       key: 'layout',
       header: 'Layout',
       sortable: true,
-      filterable: true,
-      width: '180px',
-      headerClass: 'layout-header',
-      cellClass: 'layout-cell'
+      filterable: true
     },
     {
       key: 'areaPurpose',
       header: 'Area Purpose',
       sortable: true,
-      filterable: true,
-      width: '160px',
-      headerClass: 'area-purpose-header',
-      cellClass: 'area-purpose-cell'
+      filterable: true
     },
     {
       key: 'statusText',
       header: 'Status',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'status-header',
-      cellClass: 'status-cell'
+      filterable: true
     },
     {
       key: 'createdDate',
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     },
     {
@@ -71,7 +56,6 @@ export const MAP_ZONE_TABLE_CONFIG: TableConfig<MapZoneDisplayData> = {
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     }
   ],

@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, effect, signal, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, signal, ElementRef, Injector, runInInjectionContext } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -38,10 +40,16 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   public sidebarSections: SidebarSection[] = [];
 
   // Reactive state
-  public activeRoute = '';
-  public sidebarCollapsed = true; // Start collapsed
-  public expandedItems = new Set<string>();
   public showNotificationPanel = signal<boolean>(false);
+
+  // Regular properties updated via subscription (not getters - avoids tooltip issues)
+  public sidebarCollapsed: boolean = true;
+  public activeRoute: string = '';
+  public expandedItems: Set<string> = new Set();
+
+  // Notification properties (avoid calling service signals directly in template)
+  public unreadCount: number = 0;
+  public hasUnread: boolean = false;
 
   // ViewChild for notification button to calculate dropdown position
   @ViewChild('notificationButton', { read: ElementRef })
@@ -52,35 +60,20 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   public notificationPanelLeft = 0;
 
   private destroy$ = new Subject<void>();
+  private lastExpandedRoute = '';
 
   constructor(
     public navigationService: NavigationService,
     private authService: AuthService,
     private router: Router,
-    public notificationService: NotificationService
-  ) {
-    // Set up reactive effects for navigation state changes
-    effect(() => {
-      this.activeRoute = this.navigationService.activeRoute();
-    });
-
-    effect(() => {
-      this.sidebarCollapsed = this.navigationService.sidebarCollapsed();
-    });
-
-    effect(() => {
-      this.expandedItems = this.navigationService.expandedItems();
-    });
-
-    effect(() => {
-      // Expand active items when route changes
-      this.expandActiveItems();
-    });
-  }
+    public notificationService: NotificationService,
+    private injector: Injector
+  ) {}
 
   ngOnInit(): void {
     this.loadSidebarItems();
     this.subscribeToNavigationState();
+    this.subscribeToSignals();
   }
 
   ngAfterViewInit(): void {
@@ -104,17 +97,69 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
    * Subscribe to navigation state changes
    */
   private subscribeToNavigationState(): void {
-    // Navigation state changes are handled by effects
+    // Subscribe to router events to expand active items on navigation
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      // Expand items that have active children after navigation
+      this.expandActiveItems();
+    });
   }
 
   /**
-   * Expand items that have active children
+   * Subscribe to service signals and update local properties
+   * Using toObservable to convert signals to observables for stable subscriptions
+   */
+  private subscribeToSignals(): void {
+    runInInjectionContext(this.injector, () => {
+      // Subscribe to sidebarCollapsed signal
+      toObservable(this.navigationService.sidebarCollapsed)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(value => {
+          this.sidebarCollapsed = value;
+        });
+
+      // Subscribe to activeRoute signal
+      toObservable(this.navigationService.activeRoute)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(value => {
+          this.activeRoute = value;
+        });
+
+      // Subscribe to expandedItems signal
+      toObservable(this.navigationService.expandedItems)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(value => {
+          this.expandedItems = value;
+        });
+
+      // Subscribe to notification signals
+      toObservable(this.notificationService.unreadCount)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(value => {
+          this.unreadCount = value;
+        });
+
+      toObservable(this.notificationService.hasUnread)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(value => {
+          this.hasUnread = value;
+        });
+    });
+  }
+
+  /**
+   * Expand items that have active children (idempotent - only adds, never removes)
    */
   private expandActiveItems(): void {
     this.sidebarSections.forEach(section => {
       section.items.forEach(item => {
         if (this.navigationService.hasActiveChildren(item)) {
-          this.navigationService.toggleExpandedItem(item.id);
+          // Only expand if not already expanded (idempotent operation)
+          if (!this.navigationService.isItemExpanded(item.id)) {
+            this.navigationService.toggleExpandedItem(item.id);
+          }
         }
       });
     });
@@ -136,7 +181,7 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
    * Toggle sidebar collapsed state
    */
   public toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
+    this.navigationService.toggleSidebar();
   }
 
   /**

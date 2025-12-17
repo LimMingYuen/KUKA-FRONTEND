@@ -19,7 +19,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -29,7 +28,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Actual Value',
       sortable: true,
       filterable: true,
-      width: '150px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -39,7 +37,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '250px',
       transform: (value: string) => {
         return value || 'No description';
       }
@@ -49,7 +46,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '100px',
       allowHtml: true,
       transform: (value: boolean, row: ShelfDecisionRuleDisplayData) => {
         const statusClass = value ? 'status-active' : 'status-inactive';
@@ -62,7 +58,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -72,7 +67,6 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => {
         return value || 'N/A';
       }

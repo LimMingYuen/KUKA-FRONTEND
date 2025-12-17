@@ -14,7 +14,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<OrganizationIdDisplayData>,
 
@@ -23,7 +22,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Actual Value',
       sortable: true,
       filterable: true,
-      width: '150px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<OrganizationIdDisplayData>,
 
@@ -32,7 +30,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '250px',
       transform: (value: string) => value || 'No description'
     } as ColumnConfig<OrganizationIdDisplayData>,
 
@@ -41,7 +38,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '100px',
       allowHtml: true,
       transform: (value: boolean) => {
         const statusClass = value ? 'status-active' : 'status-inactive';
@@ -55,7 +51,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<OrganizationIdDisplayData>,
 
@@ -64,7 +59,6 @@ export const ORGANIZATION_IDS_TABLE_CONFIG: TableConfig<OrganizationIdDisplayDat
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<OrganizationIdDisplayData>
   ],

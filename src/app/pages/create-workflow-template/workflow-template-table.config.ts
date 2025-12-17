@@ -63,7 +63,6 @@ const STATUS_COLUMN: ColumnConfig<SavedCustomMissionsDisplayData> = {
   header: 'Status',
   sortable: true,
   filterable: true,
-  width: '100px',
   allowHtml: true,
   transform: (value: boolean) => {
     const statusClass = value ? 'status-active' : 'status-inactive';

@@ -42,8 +42,8 @@ export class QrCodesComponent implements OnInit, OnDestroy {
   // Table configuration
   public tableConfig = QR_CODE_TABLE_CONFIG;
 
-  // UI state
-  public isLoading = false;
+  // UI state - start as true to show loading until data arrives
+  public isLoading = true;
   public isSyncing = false;
   public lastSyncResult: QrCodeSyncResultDto | null = null;
 

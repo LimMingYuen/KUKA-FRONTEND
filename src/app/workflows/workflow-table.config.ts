@@ -18,55 +18,38 @@ export const WORKFLOW_TABLE_CONFIG: TableConfig<WorkflowDisplayData> = {
       key: 'name',
       header: 'Name',
       sortable: true,
-      filterable: true,
-      headerClass: 'name-header',
-      cellClass: 'name-cell'
+      filterable: true
     },
     {
       key: 'code',
       header: 'Code',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'code-header',
-      cellClass: 'code-cell'
+      filterable: true
     },
     {
       key: 'externalCode',
       header: 'External Code',
       sortable: true,
-      filterable: true,
-      width: '150px',
-      headerClass: 'external-code-header',
-      cellClass: 'external-code-cell'
+      filterable: true
     },
     {
       key: 'status',
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'status-header',
-      cellClass: 'status-cell',
       transform: (value: number, row: WorkflowDisplayData) => row.statusText
     },
     {
       key: 'statusText',
       header: 'Status Text',
       sortable: true,
-      filterable: true,
-      width: '140px',
-      headerClass: 'status-text-header',
-      cellClass: 'status-text-cell'
+      filterable: true
     },
     {
       key: 'layoutCode',
       header: 'Layout Code',
       sortable: true,
-      filterable: true,
-      width: '130px',
-      headerClass: 'layout-code-header',
-      cellClass: 'layout-code-cell'
+      filterable: true
     }
   ],
 

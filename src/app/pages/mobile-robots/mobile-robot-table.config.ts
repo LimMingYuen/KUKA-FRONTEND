@@ -18,28 +18,19 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       key: 'robotId',
       header: 'Robot ID',
       sortable: true,
-      filterable: true,
-      width: '140px',
-      headerClass: 'robot-id-header',
-      cellClass: 'robot-id-cell'
+      filterable: true
     },
     {
       key: 'robotTypeCode',
       header: 'Type',
       sortable: true,
-      filterable: true,
-      width: '120px',
-      headerClass: 'robot-type-header',
-      cellClass: 'robot-type-cell'
+      filterable: true
     },
     {
       key: 'statusText',
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'status-header',
-      cellClass: 'status-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || 'Unknown';
       }
@@ -49,9 +40,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Battery',
       sortable: true,
       filterable: true,
-      width: '100px',
-      headerClass: 'battery-header',
-      cellClass: 'battery-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || '0%';
       }
@@ -61,9 +49,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Map Code',
       sortable: true,
       filterable: true,
-      width: '140px',
-      headerClass: 'map-code-header',
-      cellClass: 'map-code-cell',
       transform: (value: string) => {
         return value || 'N/A';
       }
@@ -73,9 +58,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Floor',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'floor-header',
-      cellClass: 'floor-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || 'N/A';
       }
@@ -85,9 +67,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Coordinates',
       sortable: true,
       filterable: true,
-      width: '140px',
-      headerClass: 'coordinates-header',
-      cellClass: 'coordinates-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || '(0.00, 0.00)';
       }
@@ -97,9 +76,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Orientation',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'orientation-header',
-      cellClass: 'orientation-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || '0°';
       }
@@ -109,9 +85,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Current Node',
       sortable: true,
       filterable: true,
-      width: '140px',
-      headerClass: 'node-header',
-      cellClass: 'node-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return value || 'N/A';
       }
@@ -121,9 +94,6 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
       header: 'Reliability',
       sortable: true,
       filterable: true,
-      width: '120px',
-      headerClass: 'reliability-header',
-      cellClass: 'reliability-cell',
       transform: (value: string, row: MobileRobotDisplayData) => {
         return `${row.reliability.toFixed(1)}% (${value})`;
       }

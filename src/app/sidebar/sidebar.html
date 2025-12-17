@@ -19,10 +19,8 @@
                   #notificationButton
                   class="notification-button"
                   (click)="toggleNotificationPanel()"
-                  matTooltip="Notifications"
-                  matTooltipPosition="right"
-                  [matBadge]="notificationService.unreadCount()"
-                  [matBadgeHidden]="!notificationService.hasUnread()"
+                  [matBadge]="unreadCount"
+                  [matBadgeHidden]="!hasUnread"
                   matBadgeColor="warn"
                   matBadgeSize="small">
             <mat-icon>notifications</mat-icon>
@@ -30,9 +28,7 @@
           <!-- Menu Toggle Button -->
           <button mat-fab
                   class="action-button"
-                  (click)="toggleSidebar()"
-                  [matTooltip]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                  matTooltipPosition="right">
+                  (click)="toggleSidebar()">
             <mat-icon>menu</mat-icon>
           </button>
         </div>
@@ -56,7 +52,8 @@
                [routerLink]="item.route"
                routerLinkActive="nav-item--active"
                [routerLinkActiveOptions]="{ exact: true }"
-               [matTooltip]="sidebarCollapsed ? item.label : ''"
+               [matTooltip]="item.label"
+               [matTooltipDisabled]="!sidebarCollapsed"
                matTooltipPosition="right"
                [attr.aria-label]="item.label"
                [attr.aria-disabled]="item.disabled || false">

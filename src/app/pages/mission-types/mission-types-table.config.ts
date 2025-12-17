@@ -14,7 +14,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Display Name',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -23,7 +22,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Actual Value',
       sortable: true,
       filterable: true,
-      width: '150px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -32,7 +30,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Description',
       sortable: true,
       filterable: true,
-      width: '250px',
       transform: (value: string) => value || 'No description'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -41,7 +38,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Status',
       sortable: true,
       filterable: true,
-      width: '100px',
       allowHtml: true,
       transform: (value: boolean) => {
         const statusClass = value ? 'status-active' : 'status-inactive';
@@ -55,7 +51,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Created Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>,
 
@@ -64,7 +59,6 @@ export const MISSION_TYPES_TABLE_CONFIG: TableConfig<MissionTypeDisplayData> = {
       header: 'Updated Date',
       sortable: true,
       filterable: true,
-      width: '180px',
       transform: (value: string) => value || 'N/A'
     } as ColumnConfig<MissionTypeDisplayData>
   ],
