@@ -35,16 +35,31 @@ export const USER_MANAGEMENT_TABLE_CONFIG: TableConfig<UserDto> = {
       header: 'Created',
       sortable: true,
       filterable: false,
-      transform: (value: Date) => new Date(value).toLocaleDateString()
+      transform: (value: Date) => new Date(value).toLocaleString()
     },
     {
       key: 'createBy',
       header: 'Created By',
       sortable: true,
       filterable: true
+    },
+    {
+      key: 'lastUpdateTime',
+      header: 'Last Updated',
+      sortable: true,
+      filterable: false,
+      transform: (value: Date | undefined) =>
+        value ? new Date(value).toLocaleString() : 'Never'
     }
   ],
   actions: [
+    {
+      action: 'view',
+      label: 'View',
+      icon: 'visibility',
+      type: 'icon',
+      tooltip: 'View'
+    },
     {
       action: 'edit',
       label: 'Edit',

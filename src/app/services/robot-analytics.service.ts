@@ -25,6 +25,30 @@ export class RobotAnalyticsService {
     return this.config.apiUrl + '/api/v1/robots';
   }
 
+  /**
+   * Format date as local ISO string WITH timezone offset.
+   * This ensures the backend receives the exact date/time the user selected
+   * in their local timezone (e.g., Malaysia UTC+8) and can correctly convert to UTC.
+   * Example output: "2025-12-10T00:00:00+08:00" for Malaysia
+   */
+  private formatLocalDateTime(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    // Get timezone offset in minutes and convert to +HH:MM format
+    const offsetMinutes = -date.getTimezoneOffset(); // Negative because getTimezoneOffset returns opposite sign
+    const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+    const offsetMins = Math.abs(offsetMinutes) % 60;
+    const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+    const offsetStr = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMins).padStart(2, '0')}`;
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetStr}`;
+  }
+
   // Reactive state using signals
   public utilizationData = signal<UtilizationMetrics | null>(null);
   public isLoading = signal<boolean>(false);
@@ -109,11 +133,13 @@ export class RobotAnalyticsService {
     }
 
     if (request.start) {
-      params = params.set('start', request.start.toISOString());
+      // Use local time format instead of UTC to match user's selected date/time
+      params = params.set('start', this.formatLocalDateTime(request.start));
     }
 
     if (request.end) {
-      params = params.set('end', request.end.toISOString());
+      // Use local time format instead of UTC to match user's selected date/time
+      params = params.set('end', this.formatLocalDateTime(request.end));
     }
 
     if (request.groupBy) {
@@ -154,11 +180,11 @@ export class RobotAnalyticsService {
     }
 
     if (request.start) {
-      params = params.set('start', request.start.toISOString());
+      params = params.set('start', this.formatLocalDateTime(request.start));
     }
 
     if (request.end) {
-      params = params.set('end', request.end.toISOString());
+      params = params.set('end', this.formatLocalDateTime(request.end));
     }
 
     return this.http.get<ApiResponse<any>>(`${this.API_URL}/utilization/debug`, {

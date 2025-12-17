@@ -258,6 +258,7 @@ export function getTimeDistributionChartConfig(): any {
         y: {
           ...BASE_CHART_OPTIONS.scales?.['y'],
           stacked: true,
+          max: 1440, // Maximum 24 hours (1440 minutes) per day
           ticks: {
             ...BASE_CHART_OPTIONS.scales?.['y']?.ticks,
             callback: function(value: any) {

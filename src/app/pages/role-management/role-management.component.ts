@@ -98,6 +98,9 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
       case 'add':
         this.openAddDialog();
         break;
+      case 'view':
+        this.openViewDialog(event.row as RoleDto);
+        break;
       case 'edit':
         this.openEditDialog(event.row as RoleDto);
         break;
@@ -122,6 +125,16 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
       if (result) {
         this.createRole(result);
       }
+    });
+  }
+
+  /**
+   * Open dialog to view role details (read-only)
+   */
+  private openViewDialog(role: RoleDto): void {
+    this.dialog.open(RoleFormDialogComponent, {
+      width: '800px',
+      data: { mode: 'view', role }
     });
   }
 
@@ -271,7 +284,7 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
     MatListModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add Role' : 'Edit Role' }}</h2>
+    <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add Role' : (data.mode === 'view' ? 'View Role' : 'Edit Role') }}</h2>
     <mat-dialog-content>
       <mat-tab-group>
         <!-- Basic Info Tab -->
@@ -314,9 +327,10 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
               <p>Save the role first to assign page permissions</p>
             </div>
 
-            <div *ngIf="data.mode === 'edit' && !isLoadingPages">
+            <div *ngIf="(data.mode === 'edit' || data.mode === 'view') && !isLoadingPages">
               <h3>Page Access Control</h3>
-              <p class="permissions-hint">Toggle access for each page</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'edit'">Toggle access for each page</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'view'">View page access permissions</p>
 
               <!-- Search Field -->
               <mat-form-field appearance="outline" class="search-field">
@@ -342,7 +356,8 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
                   </div>
                   <mat-slide-toggle
                     [checked]="rolePermissions.get(page.id) || false"
-                    (change)="onPermissionToggle(page.id, $event.checked)">
+                    (change)="onPermissionToggle(page.id, $event.checked)"
+                    [disabled]="isViewMode">
                   </mat-slide-toggle>
                 </div>
                 <div *ngIf="filteredPages.length === 0 && pageSearchTerm" class="no-results">
@@ -366,9 +381,10 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
               <p>Save the role first to assign template permissions</p>
             </div>
 
-            <div *ngIf="data.mode === 'edit' && !isLoadingTemplates">
+            <div *ngIf="(data.mode === 'edit' || data.mode === 'view') && !isLoadingTemplates">
               <h3>Mission Template Access Control</h3>
-              <p class="permissions-hint">Toggle access for each mission template. Users with this role will only see enabled templates in Mission Control.</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'edit'">Toggle access for each mission template. Users with this role will only see enabled templates in Mission Control.</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'view'">View mission template access permissions</p>
 
               <div *ngIf="allTemplates.length === 0" class="empty-message">
                 <mat-icon>assignment</mat-icon>
@@ -399,7 +415,8 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
                   </div>
                   <mat-slide-toggle
                     [checked]="roleTemplatePermissions.get(template.id) || false"
-                    (change)="onTemplatePermissionToggle(template.id, $event.checked)">
+                    (change)="onTemplatePermissionToggle(template.id, $event.checked)"
+                    [disabled]="isViewMode">
                   </mat-slide-toggle>
                 </div>
                 <div *ngIf="filteredTemplates.length === 0 && templateSearchTerm" class="no-results">
@@ -417,8 +434,8 @@ export class RoleManagementComponent implements OnInit, OnDestroy {
       </mat-tab-group>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!roleForm.valid || isSaving">
+      <button mat-button (click)="onCancel()">{{ data.mode === 'view' ? 'Close' : 'Cancel' }}</button>
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!roleForm.valid || isSaving" *ngIf="data.mode !== 'view'">
         {{ data.mode === 'create' ? 'Create' : 'Save' }}
       </button>
     </mat-dialog-actions>
@@ -633,17 +650,26 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private savedCustomMissionsService: SavedCustomMissionsService,
     private snackBar: MatSnackBar,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; role?: RoleDto }
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit' | 'view'; role?: RoleDto }
   ) {
     this.roleForm = this.fb.group({
       name: [data.role?.name || '', Validators.required],
       roleCode: [data.role?.roleCode || '', Validators.required],
       isProtected: [data.role?.isProtected || false]
     });
+
+    // Disable form in view mode
+    if (data.mode === 'view') {
+      this.roleForm.disable();
+    }
+  }
+
+  get isViewMode(): boolean {
+    return this.data.mode === 'view';
   }
 
   ngOnInit(): void {
-    if (this.data.mode === 'edit' && this.data.role) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.role) {
       this.loadPages();
       this.loadRolePermissions();
       this.loadTemplates();

@@ -110,13 +110,12 @@ export class NavigationService {
             icon: 'smart_toy',
             route: '/mobile-robots'
           },
-          // Robot Monitoring hidden - uncomment to restore
-          // {
-          //   id: 'robot-monitoring',
-          //   label: 'Robot Monitoring',
-          //   icon: 'radar',
-          //   route: '/robot-monitoring'
-          // },
+          {
+            id: 'robot-monitoring',
+            label: 'Robot Monitoring',
+            icon: 'radar',
+            route: '/robot-monitoring'
+          },
           {
             id: 'mission-history',
             label: 'Mission History',

@@ -28,7 +28,7 @@ export const ROLE_MANAGEMENT_TABLE_CONFIG: TableConfig<RoleDto> = {
       header: 'Created',
       sortable: true,
       filterable: false,
-      transform: (value: Date) => new Date(value).toLocaleDateString()
+      transform: (value: Date) => new Date(value).toLocaleString()
     },
     {
       key: 'updatedUtc',
@@ -36,10 +36,17 @@ export const ROLE_MANAGEMENT_TABLE_CONFIG: TableConfig<RoleDto> = {
       sortable: true,
       filterable: false,
       transform: (value: Date | undefined) =>
-        value ? new Date(value).toLocaleDateString() : 'Never'
+        value ? new Date(value).toLocaleString() : 'Never'
     }
   ],
   actions: [
+    {
+      action: 'view',
+      label: 'View',
+      icon: 'visibility',
+      type: 'icon',
+      tooltip: 'View'
+    },
     {
       action: 'edit',
       label: 'Edit',

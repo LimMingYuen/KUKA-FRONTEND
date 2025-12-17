@@ -69,8 +69,8 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
   public endDate: Date;
   public startHour: string = '00';
   public startMinute: string = '00';
-  public endHour: string = '23';
-  public endMinute: string = '59';
+  public endHour: string;
+  public endMinute: string;
   public groupBy: 'hour' | 'day' = 'day';
 
   // Time selector options
@@ -95,6 +95,11 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
     const defaultRange = getDefaultDateRange();
     this.startDate = defaultRange.start;
     this.endDate = defaultRange.end;
+
+    // Set end time to current time (not 23:59) so we don't show future hours
+    const now = new Date();
+    this.endHour = now.getHours().toString().padStart(2, '0');
+    this.endMinute = now.getMinutes().toString().padStart(2, '0');
 
     // Initialize chart configurations
     const utilizationConfig = getUtilizationLineChartConfig();
@@ -227,8 +232,12 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
     this.endDate = defaultRange.end;
     this.startHour = '00';
     this.startMinute = '00';
-    this.endHour = '23';
-    this.endMinute = '59';
+
+    // Set end time to current time (not 23:59)
+    const now = new Date();
+    this.endHour = now.getHours().toString().padStart(2, '0');
+    this.endMinute = now.getMinutes().toString().padStart(2, '0');
+
     this.groupBy = 'day';
 
     // Clear the current data and reset search state
@@ -266,6 +275,13 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
 
     const dataPoints = this.utilizationData.dataPoints;
     const labels = dataPoints.map(p => formatTimestamp(p.timestamp, this.utilizationData!.grouping));
+
+    // Dynamically set Y-axis max and step size based on grouping
+    // Hourly: max 60 minutes, step 15 minutes → 0, 15m, 30m, 45m, 1h
+    // Daily: max 1440 minutes, step 240 minutes (4h) → 0, 4h, 8h, 12h, 16h, 20h, 24h
+    const isHourly = this.utilizationData.grouping === 'hour';
+    const yAxisMax = isHourly ? 60 : 1440;
+    const yAxisStepSize = isHourly ? 15 : 240;
 
     // Update Utilization Line Chart
     this.utilizationChartData = {
@@ -326,6 +342,22 @@ export class RobotAnalyticsComponent implements OnInit, OnDestroy {
           pointHoverRadius: 5
         }
       ]
+    };
+
+    // Update Y-axis max and step size for time distribution chart based on grouping
+    this.timeDistributionChartOptions = {
+      ...this.timeDistributionChartOptions,
+      scales: {
+        ...this.timeDistributionChartOptions.scales,
+        y: {
+          ...this.timeDistributionChartOptions.scales.y,
+          max: yAxisMax,
+          ticks: {
+            ...this.timeDistributionChartOptions.scales.y.ticks,
+            stepSize: yAxisStepSize
+          }
+        }
+      }
     };
   }
 

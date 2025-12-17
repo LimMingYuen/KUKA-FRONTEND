@@ -103,6 +103,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       case 'add':
         this.openAddDialog();
         break;
+      case 'view':
+        this.openViewDialog(event.row as UserDto);
+        break;
       case 'edit':
         this.openEditDialog(event.row as UserDto);
         break;
@@ -127,6 +130,17 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       if (result) {
         this.createUser(result);
       }
+    });
+  }
+
+  /**
+   * Open dialog to view user details (read-only)
+   */
+  private openViewDialog(user: UserDto): void {
+    this.dialog.open(UserFormDialogComponent, {
+      width: '1000px',
+      maxWidth: '95vw',
+      data: { mode: 'view', user }
     });
   }
 
@@ -270,7 +284,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     MatButtonToggleModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add User' : 'Edit User' }}</h2>
+    <h2 mat-dialog-title>{{ data.mode === 'create' ? 'Add User' : (data.mode === 'view' ? 'View User' : 'Edit User') }}</h2>
     <mat-dialog-content>
       <mat-tab-group>
         <!-- Basic Info Tab -->
@@ -349,9 +363,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
               <p>Super Admin users have access to all pages. Permission overrides are disabled.</p>
             </div>
 
-            <div *ngIf="data.mode === 'edit' && !userForm.get('isSuperAdmin')?.value && !isLoadingPages">
+            <div *ngIf="(data.mode === 'edit' || data.mode === 'view') && !userForm.get('isSuperAdmin')?.value && !isLoadingPages">
               <h3>Page Access Overrides</h3>
-              <p class="permissions-hint">Override role-based permissions for specific pages</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'edit'">Override role-based permissions for specific pages</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'view'">View page access permissions</p>
 
               <!-- Search Field -->
               <mat-form-field appearance="outline" class="search-field">
@@ -388,7 +403,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                   <mat-button-toggle-group
                     [value]="getUserPermissionOverride(page.id)"
                     (change)="onPermissionOverrideChange(page.id, $event.value)"
-                    class="permission-toggle">
+                    class="permission-toggle"
+                    [disabled]="isViewMode">
                     <mat-button-toggle value="inherit">Inherit</mat-button-toggle>
                     <mat-button-toggle value="allow">Allow</mat-button-toggle>
                     <mat-button-toggle value="deny">Deny</mat-button-toggle>
@@ -420,9 +436,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
               <p>Super Admin users have access to all templates. Permission overrides are disabled.</p>
             </div>
 
-            <div *ngIf="data.mode === 'edit' && !userForm.get('isSuperAdmin')?.value && !isLoadingTemplates">
+            <div *ngIf="(data.mode === 'edit' || data.mode === 'view') && !userForm.get('isSuperAdmin')?.value && !isLoadingTemplates">
               <h3>Template Access Overrides</h3>
-              <p class="permissions-hint">Override role-based permissions for specific mission templates</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'edit'">Override role-based permissions for specific mission templates</p>
+              <p class="permissions-hint" *ngIf="data.mode === 'view'">View mission template access permissions</p>
 
               <div *ngIf="allTemplates.length === 0" class="empty-message">
                 <mat-icon>assignment</mat-icon>
@@ -464,7 +481,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                   <mat-button-toggle-group
                     [value]="getUserTemplatePermissionOverride(template.id)"
                     (change)="onTemplatePermissionOverrideChange(template.id, $event.value)"
-                    class="permission-toggle">
+                    class="permission-toggle"
+                    [disabled]="isViewMode">
                     <mat-button-toggle value="inherit">Inherit</mat-button-toggle>
                     <mat-button-toggle value="allow">Allow</mat-button-toggle>
                     <mat-button-toggle value="deny">Deny</mat-button-toggle>
@@ -485,12 +503,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       </mat-tab-group>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-button (click)="onCancel()">{{ data.mode === 'view' ? 'Close' : 'Cancel' }}</button>
       <button
         mat-raised-button
         color="primary"
         (click)="onSave()"
         [disabled]="!userForm.valid || isSaving"
+        *ngIf="data.mode !== 'view'"
       >
         {{ data.mode === 'create' ? 'Create' : 'Save' }}
       </button>
@@ -801,7 +820,7 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
     private permissionService: PermissionService,
     private savedCustomMissionsService: SavedCustomMissionsService,
     private snackBar: MatSnackBar,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; user?: UserDto }
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit' | 'view'; user?: UserDto }
   ) {
     const passwordValidators = data.mode === 'create'
       ? [Validators.required]
@@ -814,11 +833,20 @@ export class UserFormDialogComponent implements OnInit, OnDestroy {
       roles: [data.user?.roles || []],
       isSuperAdmin: [data.user?.isSuperAdmin || false]
     });
+
+    // Disable form in view mode
+    if (data.mode === 'view') {
+      this.userForm.disable();
+    }
+  }
+
+  get isViewMode(): boolean {
+    return this.data.mode === 'view';
   }
 
   ngOnInit(): void {
     this.loadRoles();
-    if (this.data.mode === 'edit' && this.data.user) {
+    if ((this.data.mode === 'edit' || this.data.mode === 'view') && this.data.user) {
       this.loadPermissionsData();
       this.loadTemplatePermissionsData();
     }
