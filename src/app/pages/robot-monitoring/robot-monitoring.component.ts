@@ -16,6 +16,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 import { RobotMonitoringService } from '../../services/robot-monitoring.service';
+import { RobotRealtimeSignalRService } from '../../services/robot-realtime-signalr.service';
+import { MobileRobotsService } from '../../services/mobile-robots.service';
+import { MobileRobotDisplayData } from '../../models/mobile-robot.models';
 import { RobotMapCanvasComponent } from '../../shared/components/robot-map-canvas/robot-map-canvas.component';
 import { DrawingToolbarComponent } from '../../shared/components/drawing-toolbar/drawing-toolbar.component';
 import { MapConfigDialogComponent, MapConfigDialogData } from '../../shared/dialogs/map-config-dialog/map-config-dialog.component';
@@ -88,10 +91,59 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   // Line drawing state
   public lineStartNodeId = signal<string | null>(null);
 
+  // Robot placement - track which robots user has added to this map
+  // Key: robotId, Value: initial node position (for reference)
+  public placedRobots = signal<Map<string, { nodeId: string; nodeLabel: string }>>(new Map());
+
+  // Robot realtime SignalR service
+  public robotRealtimeService = inject(RobotRealtimeSignalRService);
+
+  // Mobile robots service - for fetching robot list from API
+  public mobileRobotsService = inject(MobileRobotsService);
+
+  // All mobile robots from API (for dropdown)
+  public allMobileRobots = signal<MobileRobotDisplayData[]>([]);
+  public isLoadingRobots = signal<boolean>(false);
+
+  // Robot placement state
+  public isPlacingRobot = signal<boolean>(false);
+  public selectedRobotToPlace = signal<string | null>(null);
+
   // Computed
   public backgroundImageUrl = signal<string | null>(null);
   public isDrawingZone = computed(() => {
     return this.drawingMode() === 'drawZone' && this.mapCanvas?.getIsDrawingZone();
+  });
+
+  // Available robots from API that haven't been placed yet
+  public availableRobotsToPlace = computed(() => {
+    const allRobots = this.allMobileRobots();
+    const placed = this.placedRobots();
+
+    return allRobots
+      .filter(robot => !placed.has(robot.robotId))
+      .map(robot => ({
+        robotId: robot.robotId,
+        robotTypeCode: robot.robotTypeCode,
+        mapCode: robot.mapCode,
+        floorNumber: robot.floorNumber
+      }));
+  });
+
+  // Robots that are placed and should be shown on map
+  public robotsToShow = computed(() => {
+    const allRobots = this.robotRealtimeService.robotPositions();
+    const placed = this.placedRobots();
+    const toShow = new Map<string, any>();
+
+    placed.forEach((nodeInfo, robotId) => {
+      const robot = allRobots.get(robotId);
+      if (robot) {
+        toShow.set(robotId, robot);
+      }
+    });
+
+    return toShow;
   });
 
   private destroy$ = new Subject<void>();
@@ -133,11 +185,45 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadInitialData();
+    this.loadMobileRobots();
+  }
+
+  /**
+   * Load all mobile robots from API for the dropdown
+   */
+  private loadMobileRobots(): void {
+    this.isLoadingRobots.set(true);
+    this.mobileRobotsService.getMobileRobots().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (robots) => {
+        this.allMobileRobots.set(robots);
+        this.isLoadingRobots.set(false);
+      },
+      error: () => {
+        this.isLoadingRobots.set(false);
+      }
+    });
+  }
+
+  /**
+   * Sync robots from external API and reload list
+   */
+  syncAndReloadRobots(): void {
+    this.mobileRobotsService.syncMobileRobots().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.loadMobileRobots();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    // Disconnect from robot realtime SignalR
+    this.robotRealtimeService.stopConnection();
   }
 
   private loadInitialData(): void {
@@ -181,6 +267,9 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
       next: (map) => {
         this.selectedMap.set(map);
 
+        // Connect to robot realtime SignalR for this map
+        this.connectToRobotRealtime(map.mapCode, map.floorNumber);
+
         // Fetch available nodes from QrCode table if mapCode and floorNumber are set
         if (map.mapCode && map.floorNumber) {
           this.loadAvailableNodes(map.mapCode, map.floorNumber);
@@ -192,6 +281,96 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
         this.isLoadingMapData.set(false);
       }
     });
+  }
+
+  /**
+   * Connect to robot realtime SignalR for a specific map/floor
+   * Always connects so we have robot data available for placement
+   */
+  private connectToRobotRealtime(mapCode?: string, floorNumber?: string): void {
+    this.robotRealtimeService.connect(mapCode, floorNumber);
+  }
+
+  /**
+   * Fit map to show all placed robots
+   */
+  fitToRobots(): void {
+    if (this.mapCanvas) {
+      this.mapCanvas.fitToRobots();
+    }
+  }
+
+  // ==================== Robot Placement Methods ====================
+
+  /**
+   * Start robot placement mode - select a robot to place
+   */
+  startRobotPlacement(robotId: string): void {
+    this.selectedRobotToPlace.set(robotId);
+    this.isPlacingRobot.set(true);
+    this.snackBar.open(`Click a node to place robot ${robotId}`, 'Cancel', {
+      duration: 10000
+    }).onAction().subscribe(() => {
+      this.cancelRobotPlacement();
+    });
+  }
+
+  /**
+   * Place selected robot at a node
+   */
+  placeRobotAtNode(node: CustomNode): void {
+    const robotId = this.selectedRobotToPlace();
+    if (!robotId) return;
+
+    const nodeId = node.id;
+    const nodeLabel = node.label;
+
+    // Add robot to placed robots
+    this.placedRobots.update(map => {
+      const newMap = new Map(map);
+      newMap.set(robotId, { nodeId, nodeLabel });
+      return newMap;
+    });
+
+    this.snackBar.open(`Robot ${robotId} placed at ${nodeLabel}`, 'Dismiss', { duration: 3000 });
+    this.cancelRobotPlacement();
+  }
+
+  /**
+   * Cancel robot placement mode
+   */
+  cancelRobotPlacement(): void {
+    this.selectedRobotToPlace.set(null);
+    this.isPlacingRobot.set(false);
+  }
+
+  /**
+   * Remove a robot from the map
+   */
+  removeRobotFromMap(robotId: string): void {
+    this.placedRobots.update(map => {
+      const newMap = new Map(map);
+      newMap.delete(robotId);
+      return newMap;
+    });
+    this.snackBar.open(`Robot ${robotId} removed from map`, 'Dismiss', { duration: 2000 });
+  }
+
+  /**
+   * Clear all robots from the map
+   */
+  clearAllRobots(): void {
+    this.placedRobots.set(new Map());
+    this.snackBar.open('All robots removed from map', 'Dismiss', { duration: 2000 });
+  }
+
+  /**
+   * Handle node click when placing a robot
+   */
+  onCustomNodeClickForRobot(node: CustomNode): void {
+    if (this.isPlacingRobot()) {
+      this.placeRobotAtNode(node);
+    }
   }
 
   private loadAvailableNodes(mapCode: string, floorNumber: string): void {

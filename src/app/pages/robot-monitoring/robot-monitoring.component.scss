@@ -121,11 +121,98 @@
 
     button {
       color: white;
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .robot-count {
+        font-weight: 600;
+      }
+
+      &.connected {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #a5d6a7;
+
+        mat-icon {
+          color: #4caf50;
+        }
+      }
+
+      &.connecting {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: #ffcc80;
+
+        mat-icon {
+          color: #ff9800;
+          animation: pulse 1s ease-in-out infinite;
+        }
+      }
+
+      &.disconnected {
+        background-color: rgba(158, 158, 158, 0.2);
+        color: #bdbdbd;
+
+        mat-icon {
+          color: #9e9e9e;
+        }
+      }
+    }
+
+    mat-divider[vertical] {
+      height: 24px;
+      margin: 0 4px;
+      border-right-color: rgba(255, 255, 255, 0.3);
     }
 
     .delete-option {
       color: #f44336;
     }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Placed robots badge
+.placed-robots-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background-color: rgba(76, 175, 80, 0.2);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a5d6a7;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #4caf50;
   }
 }
 
@@ -347,6 +434,96 @@
           display: none;
         }
       }
+    }
+  }
+}
+
+// Robot placement indicator
+.placement-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background-color: #4a5db8;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+
+  span {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  button {
+    margin-left: 8px;
+  }
+}
+
+// Robot menu styles (global - use ::ng-deep)
+::ng-deep .robot-menu {
+  min-width: 280px;
+
+  .robot-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    button {
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .robot-menu-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    color: #999;
+    font-size: 13px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .mat-mdc-menu-item {
+    .robot-name {
+      font-weight: 500;
+    }
+
+    .robot-info {
+      margin-left: auto;
+      font-size: 11px;
+      color: #999;
+      padding-left: 12px;
     }
   }
 }

@@ -139,7 +139,7 @@ export interface CustomLine {
 }
 
 // Drawing mode types
-export type DrawingMode = 'none' | 'addNode' | 'drawZone' | 'drawLine' | 'select' | 'delete';
+export type DrawingMode = 'none' | 'addNode' | 'drawZone' | 'drawLine' | 'select' | 'delete' | 'placeRobot';
 
 // Default colors for custom elements
 export const CUSTOM_NODE_COLORS = [

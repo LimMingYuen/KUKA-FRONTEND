@@ -110,10 +110,14 @@ export class QrCodesService {
       tap(result => {
         this.isSyncing.set(false);
         this.lastSyncResult.set(result);
-        this.showSuccessMessage(
-          `QR codes sync completed successfully. ` +
-          `${result.inserted} new, ${result.updated} updated out of ${result.total} total.`
-        );
+        let message = `QR codes sync completed: ${result.qrCodeInserted} new, ${result.qrCodeUpdated} updated out of ${result.qrCodeTotal} total.`;
+        if (result.coordinateTotal > 0) {
+          message += ` Coordinates: ${result.coordinateUpdated} updated.`;
+        }
+        if (result.coordinateSyncError) {
+          message += ` Coordinate sync warning: ${result.coordinateSyncError}`;
+        }
+        this.showSuccessMessage(message);
       }),
       catchError(error => {
         this.isSyncing.set(false);

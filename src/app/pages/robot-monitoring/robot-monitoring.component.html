@@ -24,7 +24,76 @@
     </div>
 
     <div class="toolbar-right">
-      <!-- Action Buttons -->
+      <!-- Add Robot Button with Dropdown -->
+      <button mat-icon-button [matMenuTriggerFor]="robotMenu"
+              matTooltip="Add robot to map"
+              [disabled]="!selectedMap()">
+        <mat-icon>add_circle</mat-icon>
+      </button>
+      <mat-menu #robotMenu="matMenu" class="robot-menu">
+        <div class="robot-menu-header" (click)="$event.stopPropagation()">
+          <span>Available Robots ({{ allMobileRobots().length }})</span>
+          @if (isLoadingRobots() || mobileRobotsService.isSyncing()) {
+            <mat-spinner diameter="16"></mat-spinner>
+          } @else {
+            <button mat-icon-button matTooltip="Sync robots from AMR" (click)="syncAndReloadRobots(); $event.stopPropagation()">
+              <mat-icon>sync</mat-icon>
+            </button>
+          }
+        </div>
+        @if (availableRobotsToPlace().length === 0) {
+          <div class="robot-menu-empty" (click)="$event.stopPropagation()">
+            <mat-icon>info</mat-icon>
+            @if (allMobileRobots().length === 0) {
+              <span>No robots synced. Click sync to load.</span>
+            } @else {
+              <span>All robots already placed</span>
+            }
+          </div>
+        } @else {
+          @for (robot of availableRobotsToPlace(); track robot.robotId) {
+            <button mat-menu-item (click)="startRobotPlacement(robot.robotId)">
+              <mat-icon>smart_toy</mat-icon>
+              <span class="robot-name">{{ robot.robotId }}</span>
+              <span class="robot-info">{{ robot.robotTypeCode || 'Unknown' }}</span>
+            </button>
+          }
+        }
+      </mat-menu>
+
+      <!-- Placed Robots Count -->
+      @if (placedRobots().size > 0) {
+        <span class="placed-robots-badge" matTooltip="Robots on map">
+          <mat-icon>smart_toy</mat-icon>
+          <span>{{ placedRobots().size }}</span>
+        </span>
+
+        <button mat-icon-button matTooltip="Fit to robots" (click)="fitToRobots()">
+          <mat-icon>gps_fixed</mat-icon>
+        </button>
+
+        <button mat-icon-button matTooltip="Remove all robots" (click)="clearAllRobots()">
+          <mat-icon>delete_sweep</mat-icon>
+        </button>
+      }
+
+      <!-- Connection Status -->
+      @if (robotRealtimeService.connectionState() === 'connected') {
+        <span class="connection-status connected" matTooltip="Connected to robot updates">
+          <mat-icon>wifi</mat-icon>
+        </span>
+      } @else if (robotRealtimeService.connectionState() === 'connecting') {
+        <span class="connection-status connecting" matTooltip="Connecting...">
+          <mat-icon>wifi_find</mat-icon>
+        </span>
+      } @else if (selectedMap()) {
+        <span class="connection-status disconnected" matTooltip="Not connected">
+          <mat-icon>wifi_off</mat-icon>
+        </span>
+      }
+
+      <mat-divider vertical></mat-divider>
+
       <button mat-icon-button matTooltip="Fit to content" (click)="fitMapToContent()">
         <mat-icon>fit_screen</mat-icon>
       </button>
@@ -88,7 +157,9 @@
           [backgroundImageUrl]="backgroundImageUrl()"
           [imageWidth]="imageWidth"
           [imageHeight]="imageHeight"
-          [drawingMode]="drawingMode()"
+          [showRobots]="placedRobots().size > 0"
+          [placedRobotIds]="placedRobots()"
+          [drawingMode]="isPlacingRobot() ? 'placeRobot' : drawingMode()"
           [customNodes]="customNodes()"
           [customZones]="customZones()"
           [customLines]="customLines()"
@@ -100,8 +171,18 @@
           (nodeMoved)="onNodeMoved($event)"
           (zoneMoved)="onZoneMoved($event)"
           (nodeClickForLine)="onNodeClickForLine($event)"
-          (lineDeleted)="onLineDeleted($event)">
+          (lineDeleted)="onLineDeleted($event)"
+          (customNodeClick)="onCustomNodeClickForRobot($event)">
         </app-robot-map-canvas>
+
+        <!-- Robot Placement Indicator -->
+        @if (isPlacingRobot()) {
+          <div class="placement-indicator">
+            <mat-icon>smart_toy</mat-icon>
+            <span>Click a node to place robot {{ selectedRobotToPlace() }}</span>
+            <button mat-button color="warn" (click)="cancelRobotPlacement()">Cancel</button>
+          </div>
+        }
       } @else if (!isLoadingMaps()) {
         <div class="empty-state">
           <mat-icon>map</mat-icon>

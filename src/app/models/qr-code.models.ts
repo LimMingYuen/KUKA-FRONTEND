@@ -20,12 +20,16 @@ export interface QrCodeSummaryDto {
 }
 
 /**
- * QR Code Sync Result DTO from sync API
+ * QR Code Sync Result DTO from sync API (includes coordinate sync)
  */
 export interface QrCodeSyncResultDto {
-  total: number;
-  inserted: number;
-  updated: number;
+  qrCodeTotal: number;
+  qrCodeInserted: number;
+  qrCodeUpdated: number;
+  coordinateTotal: number;
+  coordinateUpdated: number;
+  coordinateSkipped: number;
+  coordinateSyncError?: string | null;
 }
 
 /**
