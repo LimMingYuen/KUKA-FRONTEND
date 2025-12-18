@@ -79,8 +79,8 @@ export const WORKFLOW_SCHEDULES_TABLE_CONFIG: TableConfig<WorkflowScheduleDispla
     }
   ],
   pagination: {
-    pageSize: 10,
-    pageSizeOptions: [10, 25, 50],
+    pageSize: 50,
+    pageSizeOptions: [50, 100, 150, 200],
     enabled: true,
     showFirstLastButtons: true
   },

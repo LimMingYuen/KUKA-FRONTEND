@@ -136,6 +136,8 @@ export interface FilterConfig {
   enabled?: boolean;
   /** Fields to include in filter (if not specified, all filterable columns are used) */
   fields?: string[];
+  /** Storage key for persisting filter value in sessionStorage (enables filter persistence across navigation) */
+  storageKey?: string;
 }
 
 /**
@@ -201,8 +203,8 @@ export interface TableConfig<T> {
  * Default configurations
  */
 export const DEFAULT_PAGINATION_CONFIG: PaginationConfig = {
-  pageSizeOptions: [5, 10, 25, 100],
-  pageSize: 10,
+  pageSizeOptions: [50, 100, 150, 200],
+  pageSize: 50,
   showFirstLastButtons: true,
   enabled: true
 };

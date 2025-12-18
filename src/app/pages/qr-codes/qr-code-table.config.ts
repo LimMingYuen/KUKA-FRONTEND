@@ -88,8 +88,8 @@ export const QR_CODE_TABLE_CONFIG: TableConfig<QrCodeDisplayData> = {
   },
 
   pagination: {
-    pageSizeOptions: [5, 10, 25, 100],
-    pageSize: 10,
+    pageSizeOptions: [50, 100, 150, 200],
+    pageSize: 50,
     showFirstLastButtons: true,
     enabled: true
   },

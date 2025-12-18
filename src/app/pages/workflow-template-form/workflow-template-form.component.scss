@@ -5,18 +5,18 @@
   background: #f5f5f5;
 }
 
-// Page Header
+// Page Header - Renesas Blue
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
+  background: rgb(74, 93, 184);
+  border-bottom: 1px solid rgb(58, 77, 168);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 
   .header-left {
     display: flex;
@@ -30,10 +30,19 @@
       margin: 0;
       font-size: 20px;
       font-weight: 500;
-      color: #333;
+      color: white;
 
       mat-icon {
-        color: #1976d2;
+        color: white;
+      }
+    }
+
+    // Back button styling
+    button {
+      color: white !important;
+
+      mat-icon {
+        color: white;
       }
     }
   }
@@ -41,6 +50,19 @@
   .header-actions {
     display: flex;
     gap: 12px;
+
+    button {
+      background-color: white !important;
+      color: rgb(74, 93, 184) !important;
+
+      mat-icon {
+        color: rgb(74, 93, 184);
+      }
+
+      &:hover {
+        background-color: #f0f0f0 !important;
+      }
+    }
   }
 }
 
@@ -155,6 +177,45 @@
     color: #666;
     margin-bottom: 16px;
     line-height: 1.5;
+  }
+
+  // Remove any unwanted lines/borders between form rows
+  .form-row {
+    border: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+
+    &::after,
+    &::before {
+      display: none !important;
+      border: none !important;
+    }
+  }
+
+  // Ensure mat-form-field doesn't add extra lines
+  ::ng-deep mat-form-field {
+    .mdc-line-ripple {
+      display: none !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      border: none !important;
+      border-top: none !important;
+      border-bottom: none !important;
+
+      &::before,
+      &::after {
+        display: none !important;
+      }
+    }
+
+    .mat-mdc-form-field-bottom-align {
+      border: none !important;
+
+      &::before {
+        display: none !important;
+      }
+    }
   }
 }
 
@@ -282,9 +343,15 @@
   display: flex;
   gap: 16px;
   margin-bottom: 16px;
+  border: none;
+  border-bottom: none;
 
   mat-form-field {
     flex: 1;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 

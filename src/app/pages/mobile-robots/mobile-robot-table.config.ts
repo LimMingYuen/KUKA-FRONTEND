@@ -157,8 +157,8 @@ export const MOBILE_ROBOT_TABLE_CONFIG: TableConfig<MobileRobotDisplayData> = {
   },
 
   pagination: {
-    pageSizeOptions: [5, 10, 25, 100],
-    pageSize: 10,
+    pageSizeOptions: [50, 100, 150, 200],
+    pageSize: 50,
     showFirstLastButtons: true,
     enabled: true
   },

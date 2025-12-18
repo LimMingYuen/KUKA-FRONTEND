@@ -128,8 +128,8 @@ export const AREAS_TABLE_CONFIG: TableConfig<AreaDisplayData> = {
 
   // Pagination configuration
   pagination: {
-    pageSize: 10,
-    pageSizeOptions: [5, 10, 25, 50],
+    pageSize: 50,
+    pageSizeOptions: [50, 100, 150, 200],
     showFirstLastButtons: true,
     enabled: true
   },

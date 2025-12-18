@@ -92,8 +92,8 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   public lineStartNodeId = signal<string | null>(null);
 
   // Robot placement - track which robots user has added to this map
-  // Key: robotId, Value: initial node position (for reference)
-  public placedRobots = signal<Map<string, { nodeId: string; nodeLabel: string }>>(new Map());
+  // Key: robotId, Value: node position for manual placement display
+  public placedRobots = signal<Map<string, { nodeId: string; nodeLabel: string; x: number; y: number }>>(new Map());
 
   // Robot realtime SignalR service
   public robotRealtimeService = inject(RobotRealtimeSignalRService);
@@ -325,10 +325,10 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
     const nodeId = node.id;
     const nodeLabel = node.label;
 
-    // Add robot to placed robots
+    // Add robot to placed robots with node coordinates for manual placement display
     this.placedRobots.update(map => {
       const newMap = new Map(map);
-      newMap.set(robotId, { nodeId, nodeLabel });
+      newMap.set(robotId, { nodeId, nodeLabel, x: node.x, y: node.y });
       return newMap;
     });
 
@@ -628,6 +628,7 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
     const customNode: CustomNode = {
       id: `qr-${mapNode.id}`,
       label: mapNode.nodeLabel,
+      nodeNumber: mapNode.nodeNumber,
       x: centerX,
       y: centerY,
       color: '#4a5db8'

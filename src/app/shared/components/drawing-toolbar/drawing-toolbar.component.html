@@ -72,21 +72,29 @@
     <mat-divider vertical></mat-divider>
   }
 
-  <!-- Node Dropdown (visible when nodes available) -->
+  <!-- Node Autocomplete (visible when nodes available) -->
   @if (availableNodes.length > 0) {
-    <div class="tool-group node-dropdown">
+    <div class="tool-group node-autocomplete">
       <mat-form-field appearance="outline" class="node-select">
         <mat-label>Add Node</mat-label>
-        <mat-select
-          [(ngModel)]="selectedNodeId"
-          (selectionChange)="onNodeSelected()"
+        <input
+          type="text"
+          matInput
+          [formControl]="nodeSearchControl"
+          [matAutocomplete]="nodeAuto"
+          placeholder="Search by number..."
           [disabled]="disabled">
-          @for (node of availableNodes; track node.id) {
-            <mat-option [value]="node.id">
-              {{ node.nodeLabel }} ({{ node.nodeNumber }})
+        <mat-autocomplete
+          #nodeAuto="matAutocomplete"
+          [displayWith]="displayFn"
+          (optionSelected)="onAutocompleteNodeSelected($event.option.value)">
+          @for (node of filteredNodes$ | async; track node.id) {
+            <mat-option [value]="node">
+              {{ node.nodeNumber }}
             </mat-option>
           }
-        </mat-select>
+        </mat-autocomplete>
+        <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
 

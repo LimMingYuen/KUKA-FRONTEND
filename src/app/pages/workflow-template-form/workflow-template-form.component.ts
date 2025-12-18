@@ -278,9 +278,10 @@ export class WorkflowTemplateFormComponent implements OnInit, OnDestroy {
           const activeWorkflows = workflows.filter(w => w.status === 1);
           this.availableWorkflows.set(activeWorkflows);
 
-          // Extract unique robot models and IDs
-          const uniqueRobotModels = [...new Set(mobileRobots.map(r => r.robotTypeCode))].filter(Boolean).sort();
-          const uniqueRobotIds = [...new Set(mobileRobots.map(r => r.robotId))].filter(Boolean).sort();
+          // Extract unique robot models and IDs (only from licensed robots)
+          const licensedRobots = mobileRobots.filter(r => r.isLicensed);
+          const uniqueRobotModels = [...new Set(licensedRobots.map(r => r.robotTypeCode))].filter(Boolean).sort();
+          const uniqueRobotIds = [...new Set(licensedRobots.map(r => r.robotId))].filter(Boolean).sort();
 
           this.availableRobotModels.set(uniqueRobotModels);
           this.availableRobotIds.set(uniqueRobotIds);

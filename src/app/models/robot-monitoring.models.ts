@@ -117,6 +117,7 @@ export interface Point {
 export interface CustomNode {
   id: string;           // UUID
   label: string;
+  nodeNumber?: number;  // For display on map
   x: number;
   y: number;
   color?: string;

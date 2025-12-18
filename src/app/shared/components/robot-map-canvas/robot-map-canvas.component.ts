@@ -55,8 +55,8 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
   @Input() showRobots: boolean = false; // Enable/disable robot display
 
   // Placed robot IDs - only these robots will be shown
-  // Map: robotId -> { nodeId, nodeLabel }
-  @Input() placedRobotIds: Map<string, { nodeId: string; nodeLabel: string }> = new Map();
+  // Map: robotId -> { nodeId, nodeLabel, x, y } - uses node coordinates for manual placement
+  @Input() placedRobotIds: Map<string, { nodeId: string; nodeLabel: string; x: number; y: number }> = new Map();
 
   // Coordinate system mapping (AMR coordinates to map pixels)
   // If not set, robot coordinates are used directly
@@ -157,6 +157,12 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
     // Clear robot markers when showRobots is turned off
     if (changes['showRobots'] && !this.showRobots) {
       this.clearRobotMarkers();
+    }
+
+    // Update robot markers when placedRobotIds changes (manual placement)
+    if (changes['placedRobotIds'] && this.showRobots) {
+      const positions = this.robotRealtimeService.robotPositions();
+      this.updateRobotMarkers(positions);
     }
   }
 
@@ -413,6 +419,10 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
     const color = node.color || '#4a5db8';
     const isLineStart = this.lineStartNodeId === node.id;
 
+    // Display nodeNumber if available, otherwise fall back to first 2 chars of label
+    const displayText = node.nodeNumber != null ? String(node.nodeNumber) : node.label.substring(0, 2).toUpperCase();
+    const fontSize = node.nodeNumber != null ? Math.max(size * 0.35, 10) : size * 0.5;
+
     // Create a custom div icon for draggable marker
     const icon = L.divIcon({
       html: `
@@ -428,8 +438,8 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
           justify-content: center;
           cursor: ${this.drawingMode === 'select' ? 'move' : 'pointer'};
         ">
-          <span style="color: white; font-size: ${size * 0.5}px; font-weight: bold;">
-            ${node.label.substring(0, 2).toUpperCase()}
+          <span style="color: white; font-size: ${fontSize}px; font-weight: bold;">
+            ${displayText}
           </span>
         </div>
       `,
@@ -713,49 +723,46 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
   // ==================== Robot Rendering Methods ====================
 
   /**
-   * Update robot markers based on current positions from SignalR
-   * Only shows robots that are in the placedRobotIds list
+   * Update robot markers based on manual placement positions
+   * Uses node coordinates from placedRobotIds for display position
    */
   private updateRobotMarkers(positions: Map<string, AnimatedRobotState>): void {
     if (!this.map) return;
 
-    // Only render robots that have been placed by the user
-    positions.forEach((robot, robotId) => {
-      // Skip robots that haven't been placed
-      if (!this.placedRobotIds.has(robotId)) {
-        // Remove marker if it exists but robot is no longer placed
-        const existingMarker = this.robotMarkers.get(robotId);
-        if (existingMarker) {
-          existingMarker.remove();
-          this.robotMarkers.delete(robotId);
-        }
-        return;
-      }
+    // Render robots at their manually placed node positions
+    this.placedRobotIds.forEach((placement, robotId) => {
+      const robot = positions.get(robotId);
 
-      const interpolatedPos = this.robotRealtimeService.getInterpolatedPosition(robotId);
-      if (!interpolatedPos) return;
-
-      // Apply coordinate scaling
-      const scaledX = interpolatedPos.x * this.coordinateScale;
-      const scaledY = interpolatedPos.y * this.coordinateScale;
+      // Use node coordinates for position (manual placement)
+      const posX = placement.x;
+      const posY = placement.y;
 
       let marker = this.robotMarkers.get(robotId);
 
       if (marker) {
-        // Update existing marker position
-        marker.setLatLng([scaledY, scaledX]);
-        // Update icon if status changed
-        marker.setIcon(this.createRobotIcon(robot, interpolatedPos.orientation));
-        // Update tooltip content
-        marker.setTooltipContent(this.createRobotTooltip(robot));
+        // Update existing marker position to node location
+        marker.setLatLng([posY, posX]);
+        // Update icon if robot data available
+        if (robot) {
+          marker.setIcon(this.createRobotIcon(robot, 0));
+          marker.setTooltipContent(this.createRobotTooltip(robot));
+        }
       } else {
-        // Create new marker
-        marker = L.marker([scaledY, scaledX], {
-          icon: this.createRobotIcon(robot, interpolatedPos.orientation),
+        // Create new marker at node position
+        const icon = robot
+          ? this.createRobotIcon(robot, 0)
+          : this.createPlaceholderRobotIcon(robotId);
+
+        marker = L.marker([posY, posX], {
+          icon: icon,
           zIndexOffset: 1000 // Above other markers
         });
 
-        marker.bindTooltip(this.createRobotTooltip(robot), {
+        const tooltipContent = robot
+          ? this.createRobotTooltip(robot)
+          : `<div><strong>${robotId}</strong><br/>At: ${placement.nodeLabel}</div>`;
+
+        marker.bindTooltip(tooltipContent, {
           permanent: false,
           direction: 'top',
           offset: [0, -25],
@@ -773,6 +780,44 @@ export class RobotMapCanvasComponent implements OnInit, AfterViewInit, OnDestroy
         marker.remove();
         this.robotMarkers.delete(robotId);
       }
+    });
+  }
+
+  /**
+   * Create a placeholder icon for robots without real-time data
+   */
+  private createPlaceholderRobotIcon(robotId: string): L.DivIcon {
+    const size = 44;
+    return L.divIcon({
+      html: `
+        <div class="robot-marker" style="
+          width: ${size}px;
+          height: ${size}px;
+          position: relative;
+        ">
+          <div style="
+            width: 100%;
+            height: 100%;
+            background-color: #9e9e9e;
+            border-radius: 50%;
+            border: 3px solid #666;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <span style="
+              color: white;
+              font-size: 9px;
+              font-weight: bold;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            ">${robotId.slice(-4)}</span>
+          </div>
+        </div>
+      `,
+      className: 'robot-marker-icon',
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2]
     });
   }
 

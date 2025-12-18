@@ -141,6 +141,24 @@ export class MissionHistoryService {
   }
 
   /**
+   * Delete a single mission history record by ID
+   */
+  deleteMissionHistoryById(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.API_URL}${this.MISSION_HISTORY_ENDPOINT}/${id}`,
+      { headers: this.createHeaders() }
+    ).pipe(
+      tap(() => {
+        this.showSuccessMessage('Mission history record deleted successfully');
+      }),
+      catchError(error => {
+        this.handleError(error, 'Failed to delete mission history record');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Get mission history count and max records
    */
   getMissionHistoryCount(): Observable<MissionHistoryCountResponse> {

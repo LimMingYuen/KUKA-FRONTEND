@@ -131,8 +131,8 @@ export const SHELF_DECISION_RULES_TABLE_CONFIG: TableConfig<ShelfDecisionRuleDis
   },
 
   pagination: {
-    pageSizeOptions: [5, 10, 25, 50],
-    pageSize: 10,
+    pageSizeOptions: [50, 100, 150, 200],
+    pageSize: 50,
     showFirstLastButtons: true,
     enabled: true
   },

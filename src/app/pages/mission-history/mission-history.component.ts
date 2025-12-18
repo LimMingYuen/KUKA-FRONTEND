@@ -340,7 +340,17 @@ export class MissionHistoryComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result === true) {
-        // This would require a DELETE endpoint for individual records
+        this.missionHistoryService.deleteMissionHistoryById(mission.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Reload data after successful delete
+              this.refreshMissionHistory();
+            },
+            error: (error) => {
+              console.error('Error deleting mission history:', error);
+            }
+          });
       }
     });
   }

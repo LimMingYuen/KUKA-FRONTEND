@@ -35,9 +35,10 @@
     }
   }
 
-  &.node-dropdown {
+  &.node-dropdown,
+  &.node-autocomplete {
     .node-select {
-      width: 180px;
+      width: 200px;
       margin: 0;
 
       ::ng-deep {
@@ -58,6 +59,18 @@
         .mat-mdc-select-value,
         .mat-mdc-select-arrow {
           color: white !important;
+        }
+
+        input.mat-mdc-input-element {
+          color: white !important;
+
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+          }
+        }
+
+        .mat-mdc-form-field-icon-suffix {
+          color: rgba(255, 255, 255, 0.7);
         }
 
         .mdc-notched-outline__leading,

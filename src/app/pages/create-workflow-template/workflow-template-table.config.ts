@@ -148,12 +148,13 @@ export function getWorkflowTemplateTableConfig(isSuperAdmin: boolean): TableConf
       }
     ],
     pagination: {
-      pageSize: 10,
-      pageSizeOptions: [5, 10, 25, 50, 100]
+      pageSize: 50,
+      pageSizeOptions: [50, 100, 150, 200]
     },
     filter: {
       placeholder: 'Search workflow templates...',
-      enabled: true
+      enabled: true,
+      storageKey: 'workflow-template-filter'
     },
     defaultSort: {
       column: 'createdUtc',

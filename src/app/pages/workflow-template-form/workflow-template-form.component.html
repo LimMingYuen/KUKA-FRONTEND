@@ -148,6 +148,7 @@
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Organization ID</mat-label>
                     <mat-select formControlName="orgId">
+                      <mat-option *ngIf="activeOrganizationIds().length === 0" disabled>No option available</mat-option>
                       <mat-option *ngFor="let org of activeOrganizationIds()" [value]="org.actualValue">
                         {{ org.displayName }}
                       </mat-option>
@@ -159,6 +160,7 @@
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Mission Type</mat-label>
                     <mat-select formControlName="missionType">
+                      <mat-option *ngIf="activeMissionTypes().length === 0" disabled>No option available</mat-option>
                       <mat-option *ngFor="let type of activeMissionTypes()" [value]="type.actualValue">
                         {{ type.displayName }}
                       </mat-option>
@@ -172,6 +174,7 @@
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Robot Type</mat-label>
                     <mat-select formControlName="robotType">
+                      <mat-option *ngIf="activeRobotTypes().length === 0" disabled>No option available</mat-option>
                       <mat-option *ngFor="let type of activeRobotTypes()" [value]="type.actualValue">
                         {{ type.displayName }}
                       </mat-option>
@@ -192,6 +195,7 @@
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Robot Models</mat-label>
                     <mat-select formControlName="robotModels" multiple>
+                      <mat-option *ngIf="availableRobotModels().length === 0" disabled>No option available</mat-option>
                       <mat-option *ngFor="let model of availableRobotModels()" [value]="model">
                         {{ model }}
                       </mat-option>
@@ -202,6 +206,7 @@
                   <mat-form-field appearance="outline" class="flex-1">
                     <mat-label>Robot IDs</mat-label>
                     <mat-select formControlName="robotIds" multiple>
+                      <mat-option *ngIf="availableRobotIds().length === 0" disabled>No option available</mat-option>
                       <mat-option *ngFor="let robotId of availableRobotIds()" [value]="robotId">
                         {{ robotId }}
                       </mat-option>
@@ -284,6 +289,7 @@
                                (input)="onTypeChange(i)"
                                placeholder="Search type...">
                         <mat-autocomplete #typeAuto="matAutocomplete" (optionSelected)="onTypeChange(i)">
+                          <mat-option *ngIf="filterTypes(step.get('type')?.value).length === 0" disabled>No option available</mat-option>
                           <mat-option *ngFor="let area of filterTypes(step.get('type')?.value)" [value]="area">
                             {{ area }}
                           </mat-option>
@@ -298,6 +304,7 @@
                                [matAutocomplete]="positionAuto"
                                placeholder="Search position...">
                         <mat-autocomplete #positionAuto="matAutocomplete">
+                          <mat-option *ngIf="filterPositions(i, step.get('position')?.value).length === 0" disabled>No option available</mat-option>
                           <mat-option *ngFor="let position of filterPositions(i, step.get('position')?.value)" [value]="position">
                             {{ position }}
                           </mat-option>
@@ -315,6 +322,7 @@
                                [value]="displayStrategy(step.get('passStrategy')?.value)"
                                placeholder="Search strategy...">
                         <mat-autocomplete #strategyAuto="matAutocomplete">
+                          <mat-option *ngIf="filterStrategies(step.get('passStrategy')?.value).length === 0" disabled>No option available</mat-option>
                           <mat-option *ngFor="let strategy of filterStrategies(step.get('passStrategy')?.value)" [value]="strategy.actualValue">
                             {{ strategy.displayName }}
                           </mat-option>
@@ -329,6 +337,7 @@
                                [matAutocomplete]="ruleAuto"
                                placeholder="Search rule...">
                         <mat-autocomplete #ruleAuto="matAutocomplete">
+                          <mat-option *ngIf="filterShelfRules(step.get('putDown')?.value).length === 0" disabled>No option available</mat-option>
                           <mat-option *ngFor="let rule of filterShelfRules(step.get('putDown')?.value)" [value]="rule">
                             {{ rule }}
                           </mat-option>

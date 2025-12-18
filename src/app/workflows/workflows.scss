@@ -1,5 +1,14 @@
 @use '@angular/material' as mat;
 
+// Host element fills parent container
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
 // High specificity overrides for workflow table - restore original design
 app-generic-table.workflow-table {
   .mat-mdc-card {

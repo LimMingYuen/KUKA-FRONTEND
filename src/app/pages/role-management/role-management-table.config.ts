@@ -71,8 +71,8 @@ export const ROLE_MANAGEMENT_TABLE_CONFIG: TableConfig<RoleDto> = {
     }
   ],
   pagination: {
-    pageSize: 10,
-    pageSizeOptions: [5, 10, 25, 50, 100]
+    pageSize: 50,
+    pageSizeOptions: [50, 100, 150, 200]
   },
   filter: {
     placeholder: 'Search roles...',
