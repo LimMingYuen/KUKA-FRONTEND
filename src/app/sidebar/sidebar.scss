@@ -480,8 +480,14 @@ $nav-item-size: 48px;
   background-color: var(--mat-sys-surface-container-lowest);
   border-radius: 0 !important;
 
+  // router-outlet should not participate in flex layout
+  router-outlet {
+    display: none;
+  }
+
   // Ensure router-outlet siblings (the actual page components) fill the space
-  > * {
+  // The component rendered by router-outlet appears as a sibling, not a child
+  > *:not(router-outlet) {
     flex: 1;
     display: flex;
     flex-direction: column;

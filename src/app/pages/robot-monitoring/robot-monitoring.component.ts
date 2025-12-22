@@ -19,7 +19,7 @@ import { RobotMonitoringService } from '../../services/robot-monitoring.service'
 import { RobotRealtimeSignalRService } from '../../services/robot-realtime-signalr.service';
 import { MobileRobotsService } from '../../services/mobile-robots.service';
 import { MobileRobotDisplayData } from '../../models/mobile-robot.models';
-import { RobotMapCanvasComponent } from '../../shared/components/robot-map-canvas/robot-map-canvas.component';
+import { RobotMapCanvasV2Component } from '../../shared/components/robot-map-canvas/robot-map-canvas-v2.component';
 import { DrawingToolbarComponent } from '../../shared/components/drawing-toolbar/drawing-toolbar.component';
 import { MapConfigDialogComponent, MapConfigDialogData } from '../../shared/dialogs/map-config-dialog/map-config-dialog.component';
 import {
@@ -36,6 +36,7 @@ import {
   DrawingMode,
   Point
 } from '../../models/robot-monitoring.models';
+import { Selection } from '../../shared/components/robot-map-canvas/core/canvas-types';
 import { ConfigService } from '../../services/config.service';
 
 @Component({
@@ -56,14 +57,14 @@ import { ConfigService } from '../../services/config.service';
     MatDialogModule,
     MatSnackBarModule,
     MatTooltipModule,
-    RobotMapCanvasComponent,
+    RobotMapCanvasV2Component,
     DrawingToolbarComponent
   ],
   templateUrl: './robot-monitoring.component.html',
   styleUrl: './robot-monitoring.component.scss'
 })
 export class RobotMonitoringComponent implements OnInit, OnDestroy {
-  @ViewChild(RobotMapCanvasComponent) mapCanvas!: RobotMapCanvasComponent;
+  @ViewChild(RobotMapCanvasV2Component) mapCanvas!: RobotMapCanvasV2Component;
 
   // State
   public maps = signal<RobotMonitoringMapSummary[]>([]);
@@ -112,7 +113,7 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   // Computed
   public backgroundImageUrl = signal<string | null>(null);
   public isDrawingZone = computed(() => {
-    return this.drawingMode() === 'drawZone' && this.mapCanvas?.getIsDrawingZone();
+    return this.drawingMode() === 'drawZone';
   });
 
   // Available robots from API that haven't been placed yet
@@ -292,11 +293,11 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Fit map to show all placed robots
+   * Fit map to show all content (V2 canvas handles robots automatically)
    */
   fitToRobots(): void {
     if (this.mapCanvas) {
-      this.mapCanvas.fitToRobots();
+      this.mapCanvas.fitToContent();
     }
   }
 
@@ -505,15 +506,13 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   }
 
   onFinishZone(): void {
-    if (this.mapCanvas) {
-      this.mapCanvas.finishZoneDrawing();
-    }
+    // V2 canvas handles zone completion via double-click/double-tap
+    // Switching drawing mode will trigger the zone to be finished
+    this.drawingMode.set('select');
   }
 
   onCancelDrawing(): void {
-    if (this.mapCanvas) {
-      this.mapCanvas.cancelZoneDrawing();
-    }
+    // V2 canvas will cancel zone drawing when isDrawingZone becomes false
     this.drawingMode.set('select');
   }
 
@@ -580,13 +579,11 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
   }
 
   onClearAllDrawing(): void {
+    // V2 canvas automatically syncs with the signal updates
     this.customNodes.set([]);
     this.customZones.set([]);
     this.customLines.set([]);
     this.hasUnsavedChanges.set(true);
-    if (this.mapCanvas) {
-      this.mapCanvas.clearCustomElements();
-    }
   }
 
   onZoneAdded(zone: CustomZone): void {
@@ -639,6 +636,57 @@ export class RobotMonitoringComponent implements OnInit, OnDestroy {
     this.drawingMode.set('select'); // Switch to select mode so user can drag
     this.snackBar.open(`Node "${mapNode.nodeLabel}" placed - drag to position`, 'Dismiss', { duration: 3000 });
   }
+
+  // ==================== V2 Canvas Event Handlers ====================
+
+  /**
+   * Handle nodes array change from canvas
+   * The V2 canvas emits the complete array whenever nodes change
+   */
+  onNodesChange(nodes: CustomNode[]): void {
+    const current = this.customNodes();
+    // Only mark as changed if there's an actual difference
+    if (JSON.stringify(nodes) !== JSON.stringify(current)) {
+      this.customNodes.set(nodes);
+      this.hasUnsavedChanges.set(true);
+    }
+  }
+
+  /**
+   * Handle zones array change from canvas
+   */
+  onZonesChange(zones: CustomZone[]): void {
+    const current = this.customZones();
+    if (JSON.stringify(zones) !== JSON.stringify(current)) {
+      this.customZones.set(zones);
+      this.hasUnsavedChanges.set(true);
+      // Reset drawing mode after zone is finished
+      if (this.drawingMode() === 'drawZone') {
+        this.drawingMode.set('select');
+      }
+    }
+  }
+
+  /**
+   * Handle lines array change from canvas
+   */
+  onLinesChange(lines: CustomLine[]): void {
+    const current = this.customLines();
+    if (JSON.stringify(lines) !== JSON.stringify(current)) {
+      this.customLines.set(lines);
+      this.hasUnsavedChanges.set(true);
+    }
+  }
+
+  /**
+   * Handle selection change from canvas
+   */
+  onSelectionChange(selection: Selection): void {
+    // Selection is handled internally by the canvas
+    // We can use this for UI feedback if needed
+  }
+
+  // ==================== Legacy Event Handlers (kept for compatibility) ====================
 
   // Handle node added from canvas click (manual node placement)
   onNodeAdded(node: CustomNode): void {

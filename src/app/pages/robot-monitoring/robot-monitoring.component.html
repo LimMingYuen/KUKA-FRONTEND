@@ -152,28 +152,25 @@
       }
 
       @if (selectedMap()) {
-        <app-robot-map-canvas
+        <app-robot-map-canvas-v2
           [mapConfig]="selectedMap()"
           [backgroundImageUrl]="backgroundImageUrl()"
           [imageWidth]="imageWidth"
           [imageHeight]="imageHeight"
           [showRobots]="placedRobots().size > 0"
           [placedRobotIds]="placedRobots()"
-          [drawingMode]="isPlacingRobot() ? 'placeRobot' : drawingMode()"
+          [coordinateScale]="1"
+          [isDrawingZone]="drawingMode() === 'drawZone'"
+          [isDrawingRect]="drawingMode() === 'drawRect'"
+          [isConnectingNodes]="drawingMode() === 'drawLine'"
           [customNodes]="customNodes()"
           [customZones]="customZones()"
           [customLines]="customLines()"
-          [lineStartNodeId]="lineStartNodeId()"
-          (nodeAdded)="onNodeAdded($event)"
-          (zoneAdded)="onZoneAdded($event)"
-          (nodeDeleted)="onNodeDeleted($event)"
-          (zoneDeleted)="onZoneDeleted($event)"
-          (nodeMoved)="onNodeMoved($event)"
-          (zoneMoved)="onZoneMoved($event)"
-          (nodeClickForLine)="onNodeClickForLine($event)"
-          (lineDeleted)="onLineDeleted($event)"
-          (customNodeClick)="onCustomNodeClickForRobot($event)">
-        </app-robot-map-canvas>
+          (nodesChange)="onNodesChange($event)"
+          (zonesChange)="onZonesChange($event)"
+          (linesChange)="onLinesChange($event)"
+          (selectionChange)="onSelectionChange($event)">
+        </app-robot-map-canvas-v2>
 
         <!-- Robot Placement Indicator -->
         @if (isPlacingRobot()) {

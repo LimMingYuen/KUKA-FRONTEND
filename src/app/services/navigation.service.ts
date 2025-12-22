@@ -85,6 +85,12 @@ export class NavigationService {
             label: 'Workflow Template Configuration',
             icon: 'settings',
             route: '/workflow-template-configuration'
+          },
+          {
+            id: 'io-controllers',
+            label: 'IO Controllers',
+            icon: 'settings_input_component',
+            route: '/io-controllers'
           }
         ]
       },

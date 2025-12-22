@@ -128,6 +128,11 @@ export class PageInitializationService {
         pagePath: '/workflow-schedules',
         pageName: 'Workflow Schedules',
         pageIcon: 'schedule'
+      },
+      {
+        pagePath: '/io-controllers',
+        pageName: 'IO Controllers',
+        pageIcon: 'settings_input_component'
       }
     ];
   }

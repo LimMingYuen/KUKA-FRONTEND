@@ -18,11 +18,15 @@ export class SignalRService implements OnDestroy {
     return this.config.apiUrl + '/hubs/queue';
   }
 
-  // Signals to notify components of updates
-  public queueUpdated = signal<boolean>(false);
+  // Signals to notify components of updates (use counters to ensure each update triggers effects)
+  public queueUpdated = signal<number>(0);
   public missionStatusChanged = signal<MissionStatusChange | null>(null);
-  public statisticsUpdated = signal<boolean>(false);
+  public statisticsUpdated = signal<number>(0);
   public connectionState = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
+
+  // Counters to ensure each event triggers a signal change
+  private queueUpdateCounter = 0;
+  private statisticsUpdateCounter = 0;
 
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -90,11 +94,10 @@ export class SignalRService implements OnDestroy {
   private registerEventHandlers(): void {
     if (!this.hubConnection) return;
 
-    // Queue updated event
+    // Queue updated event - use counter instead of boolean to ensure each update triggers effect
     this.hubConnection.on('QueueUpdated', () => {
-      this.queueUpdated.set(true);
-      // Reset after a short delay to allow re-triggering
-      setTimeout(() => this.queueUpdated.set(false), 100);
+      this.queueUpdateCounter++;
+      this.queueUpdated.set(this.queueUpdateCounter);
     });
 
     // Mission status changed event
@@ -102,10 +105,10 @@ export class SignalRService implements OnDestroy {
       this.missionStatusChanged.set(data);
     });
 
-    // Statistics updated event
+    // Statistics updated event - use counter instead of boolean
     this.hubConnection.on('StatisticsUpdated', () => {
-      this.statisticsUpdated.set(true);
-      setTimeout(() => this.statisticsUpdated.set(false), 100);
+      this.statisticsUpdateCounter++;
+      this.statisticsUpdated.set(this.statisticsUpdateCounter);
     });
 
     // Connection lifecycle events

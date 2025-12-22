@@ -110,6 +110,12 @@ export const routes: Routes = [
     title: 'Log Cleanup - KUKA GUI'
   },
   {
+    path: 'io-controllers',
+    loadComponent: () => import('./pages/io-controllers/io-controllers.component').then(m => m.IoControllersComponent),
+    canActivate: [authGuard],
+    title: 'IO Controllers - KUKA GUI'
+  },
+  {
     path: 'workflow-templates',
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],

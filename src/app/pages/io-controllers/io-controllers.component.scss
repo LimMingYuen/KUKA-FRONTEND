@@ -1,0 +1,306 @@
+.io-controllers-page {
+  padding: 24px;
+  height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  .header-left {
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .subtitle {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.main-content {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.device-list-panel {
+  width: 350px;
+  flex-shrink: 0;
+
+  mat-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  mat-card-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 !important;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: rgba(0, 0, 0, 0.5);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin-bottom: 16px;
+  }
+}
+
+.device-list {
+  .device-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    &.selected {
+      background-color: rgba(255, 87, 34, 0.08);
+      border-left: 3px solid #ff5722;
+    }
+
+    .device-info {
+      flex: 1;
+
+      .device-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .device-address {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .device-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 8px;
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+
+        &.status-connected {
+          background-color: #4caf50;
+        }
+
+        &.status-disconnected {
+          background-color: #f44336;
+        }
+
+        &.status-unknown {
+          background-color: #9e9e9e;
+        }
+      }
+
+      .status-text {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .device-actions {
+      display: flex;
+      gap: 4px;
+
+      button {
+        opacity: 0.6;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+.device-detail-panel {
+  flex: 1;
+  overflow: hidden;
+
+  mat-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &.no-selection mat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0, 0, 0, 0.5);
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+  }
+
+  mat-card-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 !important;
+  }
+}
+
+mat-card-header {
+  mat-chip {
+    margin-left: 12px;
+  }
+}
+
+.tab-icon {
+  margin-right: 8px;
+}
+
+.channel-setting-view {
+  padding: 16px;
+
+  .channel-section {
+    margin-bottom: 24px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+}
+
+.channel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.channel-card {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+
+  &.di {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  }
+
+  &.do {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  }
+
+  .channel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .channel-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+
+  .channel-indicator {
+    font-size: 24px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 4px;
+
+    &.state-on {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    &.state-off {
+      background-color: #9e9e9e;
+      color: white;
+    }
+  }
+
+  .channel-fsv {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+}
+
+mat-divider {
+  margin: 24px 0;
+}
+
+.modbus-view {
+  padding: 16px;
+  overflow-y: auto;
+  height: calc(100% - 48px);
+}
+
+.modbus-table {
+  width: 100%;
+
+  .state-on {
+    color: #4caf50;
+    font-weight: 600;
+  }
+
+  .state-off {
+    color: #9e9e9e;
+  }
+}
+
+::ng-deep .success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}

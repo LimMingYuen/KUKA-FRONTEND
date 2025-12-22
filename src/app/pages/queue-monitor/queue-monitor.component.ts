@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, effect, ChangeDetectorRef, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -59,6 +59,15 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
   public queueItems = signal<MissionQueueDisplayData[]>([]);
   public statistics = signal<MissionQueueStatistics | null>(null);
 
+  // MatTableDataSource for proper table change detection
+  // MatTableDataSource has built-in change detection that works better than raw arrays
+  public activeItemsDataSource = new MatTableDataSource<MissionQueueDisplayData>([]);
+
+  // Keep track of counts for UI display
+  public activeItemsCount = signal<number>(0);
+  public queuedItemsCount = signal<number>(0);
+  public historyItemsCount = signal<number>(0);
+
   // Loading states
   public isLoading = signal<boolean>(false);
   public processingActions = signal<Set<number>>(new Set());
@@ -98,6 +107,10 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
   public readonly formatSuccessRate = formatSuccessRate;
   public readonly formatAverageWaitTime = formatAverageWaitTime;
 
+  // Inject ChangeDetectorRef and NgZone to ensure proper change detection
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
+
   constructor(
     private queueService: MissionQueueService,
     private signalRService: SignalRService,
@@ -111,8 +124,10 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     });
 
     // Effect: Reload data when queue is updated via SignalR
+    // Using counter-based signal - any change (> 0) indicates an update
     effect(() => {
-      if (this.signalRService.queueUpdated()) {
+      const updateCount = this.signalRService.queueUpdated();
+      if (updateCount > 0) {
         this.loadDataSilently();
       }
     });
@@ -126,8 +141,10 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
     });
 
     // Effect: Reload statistics when updated via SignalR
+    // Using counter-based signal - any change (> 0) indicates an update
     effect(() => {
-      if (this.signalRService.statisticsUpdated()) {
+      const updateCount = this.signalRService.statisticsUpdated();
+      if (updateCount > 0) {
         this.loadStatisticsSilently();
       }
     });
@@ -168,7 +185,7 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (items) => {
-          this.queueItems.set(items);
+          this.updateQueueData(items);
           this.isLoading.set(false);
         },
         error: () => {
@@ -193,7 +210,10 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (items) => {
-          this.queueItems.set(items);
+          this.updateQueueData(items);
+        },
+        error: () => {
+          // Silently handle error
         }
       });
 
@@ -201,9 +221,55 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (stats) => {
-          this.statistics.set(stats);
+          this.ngZone.run(() => {
+            this.statistics.set(stats);
+            this.cdr.detectChanges();
+          });
+        },
+        error: () => {
+          // Silently handle error
         }
       });
+  }
+
+  /**
+   * Update queue data and all filtered views
+   * This ensures MatTable gets proper change notifications
+   * Runs inside NgZone to ensure Angular detects the changes
+   */
+  private updateQueueData(items: MissionQueueDisplayData[]): void {
+    // Run inside NgZone to ensure Angular detects changes from SignalR callbacks
+    this.ngZone.run(() => {
+      // Update main signal
+      this.queueItems.set(items);
+
+      // Filter items by status
+      const active = items.filter(item =>
+        item.statusCode === MissionQueueStatus.Queued ||
+        item.statusCode === MissionQueueStatus.Processing ||
+        item.statusCode === MissionQueueStatus.Assigned
+      );
+      const queued = items.filter(item =>
+        item.statusCode === MissionQueueStatus.Queued ||
+        item.statusCode === MissionQueueStatus.Processing
+      );
+      const history = items.filter(item =>
+        item.statusCode === MissionQueueStatus.Completed ||
+        item.statusCode === MissionQueueStatus.Failed ||
+        item.statusCode === MissionQueueStatus.Cancelled
+      );
+
+      // Update MatTableDataSource - this properly triggers table re-render
+      this.activeItemsDataSource.data = active;
+
+      // Update count signals for UI
+      this.activeItemsCount.set(active.length);
+      this.queuedItemsCount.set(queued.length);
+      this.historyItemsCount.set(history.length);
+
+      // Force change detection
+      this.cdr.detectChanges();
+    });
   }
 
   /**
@@ -381,34 +447,12 @@ export class QueueMonitorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get queued items only
+   * TrackBy function for MatTable - helps Angular identify which rows changed
    */
-  getQueuedItems(): MissionQueueDisplayData[] {
-    return this.queueItems().filter(item =>
-      item.statusCode === MissionQueueStatus.Queued ||
-      item.statusCode === MissionQueueStatus.Processing
-    );
+  trackByQueueItem(index: number, item: MissionQueueDisplayData): number {
+    return item.id;
   }
 
-  /**
-   * Get active items (queued + processing + assigned)
-   */
-  getActiveItems(): MissionQueueDisplayData[] {
-    return this.queueItems().filter(item =>
-      item.statusCode === MissionQueueStatus.Queued ||
-      item.statusCode === MissionQueueStatus.Processing ||
-      item.statusCode === MissionQueueStatus.Assigned
-    );
-  }
-
-  /**
-   * Get completed items (completed + failed + cancelled)
-   */
-  getHistoryItems(): MissionQueueDisplayData[] {
-    return this.queueItems().filter(item =>
-      item.statusCode === MissionQueueStatus.Completed ||
-      item.statusCode === MissionQueueStatus.Failed ||
-      item.statusCode === MissionQueueStatus.Cancelled
-    );
-  }
+  // Note: getQueuedItems, getActiveItems, getHistoryItems replaced by computed signals
+  // at the top of the class (queuedItems, activeItems, historyItems)
 }

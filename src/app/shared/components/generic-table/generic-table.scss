@@ -209,6 +209,8 @@
     width: 100%;
     overflow-y: auto;
     overflow-x: auto;
+    display: flex;
+    flex-direction: column;
 
     // Inner wrapper ensures paginator matches table width when scrolling horizontally
     .table-scroll-wrapper {
@@ -216,6 +218,8 @@
       flex-direction: column;
       min-width: max-content; // Expands to fit table content
       width: 100%;
+      flex: 1;
+      min-height: 0;
     }
 
     .generic-table-element {
@@ -240,9 +244,12 @@
         }
       }
 
-      // Header row
+      // Header row - sticky at top of scroll container
       .mat-mdc-header-row {
         background-color: rgb(74, 93, 184) !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
       }
 
       // Header cells
@@ -250,9 +257,6 @@
         font-weight: 500 !important;
         color: white !important;
         background-color: rgb(74, 93, 184) !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 1 !important;
         border-bottom: 2px solid rgb(58, 77, 168) !important;
 
         // Sort arrow color
@@ -313,20 +317,48 @@
         font-size: 0.8rem !important;
       }
 
-      // No results row
+      // No data row (shown when filter returns no results)
+      .no-data-row {
+        .no-data-cell {
+          padding: 0 !important;
+          border-bottom: none !important;
+        }
+      }
+
       .no-results {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 24px;
+        gap: 16px;
+        padding: 64px 24px;
         color: #757575;
-        font-style: italic;
+        text-align: center;
 
         mat-icon {
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          color: #9e9e9e;
+        }
+
+        .no-results-text {
+          h3 {
+            margin: 0 0 8px 0;
+            color: #424242;
+            font-size: 1.125rem;
+            font-weight: 500;
+          }
+
+          p {
+            margin: 0;
+            color: #757575;
+            font-size: 0.875rem;
+          }
+        }
+
+        button {
+          margin-top: 8px;
         }
       }
     }
