@@ -63,6 +63,11 @@
                       <mat-icon>wifi_find</mat-icon>
                     </button>
                     <button mat-icon-button
+                            matTooltip="View Details"
+                            (click)="openViewDeviceDialog(device, $event)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-icon-button
                             matTooltip="Edit"
                             (click)="openEditDeviceDialog(device, $event)">
                       <mat-icon>edit</mat-icon>

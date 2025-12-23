@@ -75,6 +75,7 @@ export interface MissionHistoryDisplayData extends MissionHistorySummaryDto {
   statusText: string;
   createdDateDisplay: string;
   createdDateRelative: string;
+  completedDateDisplay: string;  // Formatted completion date/time
   workflowDisplay: string;
   durationDisplay: string;  // Formatted duration (e.g., "2m 30s", "1h 15m")
   robotDisplay: string;  // Formatted robot ID
@@ -115,7 +116,7 @@ export function getStatusText(status: string): string {
 /**
  * Parse date string from backend/AMR system.
  * Handles both ISO format with 'Z' and "yyyy-MM-dd HH:mm:ss" format without timezone.
- * Server returns UTC time, so we append 'Z' if not present.
+ * The AMR system returns dates in LOCAL time (Malaysia UTC+8), not UTC.
  */
 function parseUtcDate(dateString: string): Date {
   // If already has timezone info, use directly
@@ -123,9 +124,9 @@ function parseUtcDate(dateString: string): Date {
     return new Date(dateString);
   }
 
-  // For "yyyy-MM-dd HH:mm:ss" format, the server sends UTC time without 'Z'
-  // Replace space with 'T' and append 'Z' to indicate UTC
-  const isoString = dateString.includes('T') ? dateString + 'Z' : dateString.replace(' ', 'T') + 'Z';
+  // For "yyyy-MM-dd HH:mm:ss" format, the AMR system sends LOCAL time
+  // Replace space with 'T' but DON'T append 'Z' - let JavaScript interpret as local time
+  const isoString = dateString.includes('T') ? dateString : dateString.replace(' ', 'T');
   return new Date(isoString);
 }
 
@@ -242,6 +243,7 @@ export function transformMissionHistoryData(mission: MissionHistorySummaryDto): 
     statusText: getStatusText(mission.status),
     createdDateDisplay: formatDate(mission.createdDate),
     createdDateRelative: formatRelativeTime(mission.createdDate),
+    completedDateDisplay: mission.completedDate ? formatDate(mission.completedDate) : '-',
     workflowDisplay: formatWorkflowName(mission.workflowName),
     durationDisplay: formatDuration(mission.durationMinutes),
     robotDisplay: formatRobotId(mission.assignedRobotId),

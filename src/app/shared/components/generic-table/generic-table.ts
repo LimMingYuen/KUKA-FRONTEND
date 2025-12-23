@@ -421,9 +421,18 @@ export class GenericTableComponent<T = any> implements OnInit, AfterViewInit, On
    * Handle empty state action click
    */
   public onEmptyActionClick(): void {
+    // If a custom action callback is defined, call it
     if (this.config.empty?.action) {
       this.config.empty.action();
     }
+
+    // Also emit an 'add' action event so parent components can handle it
+    this.action.emit({
+      type: 'header-action',
+      action: 'add',
+      row: null,
+      rowIndex: -1
+    });
   }
 
   /**

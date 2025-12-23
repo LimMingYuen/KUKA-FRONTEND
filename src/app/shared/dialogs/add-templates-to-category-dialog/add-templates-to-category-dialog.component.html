@@ -33,7 +33,9 @@
          class="template-item"
          [class.selected]="isSelected(template.id)"
          (click)="toggleTemplate(template.id)">
-      <mat-checkbox [checked]="isSelected(template.id)" (click)="$event.stopPropagation()">
+      <mat-checkbox [checked]="isSelected(template.id)"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleTemplate(template.id)">
       </mat-checkbox>
       <div class="template-info">
         <span class="template-name">{{ template.missionName }}</span>

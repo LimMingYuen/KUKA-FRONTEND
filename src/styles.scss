@@ -638,3 +638,377 @@ app-generic-table {
     border: 1px solid #ef9a9a;
   }
 }
+
+/* ==========================================
+   GLOBAL RESPONSIVE STYLES
+   ========================================== */
+
+/* Ensure page containers are scrollable and responsive */
+[class*="-container"] {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Responsive page headers */
+.page-header {
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start !important;
+
+    h1 {
+      margin-bottom: 12px;
+    }
+
+    .header-actions {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+/* Responsive grids */
+.missions-grid,
+.cards-grid {
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+  app-generic-table {
+    .mat-mdc-card {
+      border-radius: 0 !important;
+    }
+
+    .mat-mdc-table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+
+/* Responsive dialogs */
+@media (max-width: 600px) {
+  .mat-mdc-dialog-container {
+    max-width: 95vw !important;
+    margin: 8px !important;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 16px !important;
+    min-width: auto !important;
+  }
+
+  mat-dialog-content {
+    min-width: auto !important;
+    width: 100% !important;
+  }
+}
+
+/* Responsive form fields */
+@media (max-width: 600px) {
+  .mat-mdc-form-field {
+    width: 100% !important;
+  }
+}
+
+/* Fix for older browsers without flex gap support */
+.sidebar-action__buttons {
+  display: flex;
+  align-items: center;
+
+  > * {
+    margin-left: 8px;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+/* Global flex gap fallback for older browsers (EdgeHTML) */
+/* These provide margin-based spacing for common flex patterns */
+
+// Page headers with flex and gap
+.page-header h1 {
+  mat-icon {
+    margin-right: 12px;
+  }
+}
+
+.header-actions {
+  > * + * {
+    margin-left: 8px;
+  }
+}
+
+// Filter and action buttons
+.filter-actions,
+.filter-btn {
+  > * + * {
+    margin-left: 8px;
+  }
+}
+
+// Grid layouts - ensure proper sizing
+.missions-grid {
+  > * {
+    margin-bottom: 16px;
+  }
+}
+
+// Card actions
+mat-card-actions.card-actions {
+  > * + * {
+    margin-left: 8px;
+  }
+}
+
+// Generic list items with gap
+mat-list-item {
+  mat-icon[matListItemIcon] {
+    margin-right: 12px;
+  }
+}
+
+// Chip sets
+mat-chip-set {
+  > * + * {
+    margin-left: 4px;
+  }
+}
+
+// Panel titles and descriptions
+mat-panel-title,
+mat-panel-description {
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+// Info rows and items
+.info-item,
+.job-info-row {
+  > * + * {
+    margin-left: 8px;
+  }
+}
+
+// Error messages
+.error-message,
+.job-error {
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+/* ==========================================
+   COMPREHENSIVE GAP FALLBACKS FOR OLDER EDGE
+   These provide margin-based spacing for flex/grid containers
+   ========================================== */
+
+// All page containers should be scrollable
+[class$="-container"] {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+// Common flex containers with children spacing
+.kpi-container,
+.stats-container,
+.cards-container {
+  > * {
+    margin-bottom: 16px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Header content areas
+.header-content,
+.page-header-content {
+  > * {
+    margin-right: 16px;
+    margin-bottom: 8px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// Filter rows and action rows
+.filters-row,
+.filter-row,
+.action-row,
+.button-row {
+  > * {
+    margin-right: 12px;
+    margin-bottom: 8px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// Section titles with icons
+.section-title,
+.card-title,
+.panel-title {
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+// Button groups
+.button-group,
+.actions-group,
+.btn-group {
+  > * {
+    margin-right: 8px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// List items in flex containers
+.list-item,
+.item-row,
+.data-row {
+  > * {
+    margin-right: 12px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// Form rows
+.form-row,
+.input-row {
+  > * {
+    margin-right: 16px;
+    margin-bottom: 16px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// Compact elements
+.compact,
+[class*="-compact"] {
+  > * {
+    margin-right: 4px;
+  }
+
+  > *:last-child {
+    margin-right: 0;
+  }
+}
+
+// Grid containers - use grid-gap instead of gap
+.grid-container,
+[class*="-grid"] {
+  grid-gap: 16px;
+}
+
+// Chart containers
+.chart-container,
+.charts-container,
+.chart-row {
+  > * {
+    margin-bottom: 24px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Status and info sections
+.info-section,
+.status-section,
+.detail-section {
+  > * {
+    margin-bottom: 16px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Material Accordion panels
+mat-accordion {
+  > * {
+    margin-bottom: 12px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Expansion panel content
+.mat-expansion-panel-body {
+  > * {
+    margin-bottom: 16px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Common flex icon + text patterns
+.icon-text,
+.label-with-icon {
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+// Job and mission cards
+.job-card,
+.mission-card,
+.robot-card {
+  .card-content,
+  .card-body {
+    > * {
+      margin-bottom: 12px;
+    }
+
+    > *:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Queue and list views
+.queue-list,
+.job-list,
+.mission-list {
+  > * {
+    margin-bottom: 8px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+}

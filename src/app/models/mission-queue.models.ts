@@ -165,15 +165,16 @@ export function getPriorityClass(priority: number): string {
 }
 
 /**
- * Format date string for display (converts UTC to local time)
+ * Format date string for display.
+ * The AMR system returns dates in LOCAL time (Malaysia UTC+8), not UTC.
  */
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return 'N/A';
 
   try {
-    // Ensure the string is treated as UTC by appending 'Z' if not present
-    const utcDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-    const date = new Date(utcDate);
+    // Parse date - if it has 'Z', use as-is; otherwise treat as local time
+    const normalizedDate = dateString.includes('T') ? dateString : dateString.replace(' ', 'T');
+    const date = new Date(normalizedDate);
     return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -188,15 +189,16 @@ export function formatDate(dateString: string | null | undefined): string {
 }
 
 /**
- * Format relative time for display (converts UTC to local time)
+ * Format relative time for display.
+ * The AMR system returns dates in LOCAL time (Malaysia UTC+8), not UTC.
  */
 export function formatRelativeTime(dateString: string | null | undefined): string {
   if (!dateString) return 'N/A';
 
   try {
-    // Ensure the string is treated as UTC by appending 'Z' if not present
-    const utcDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-    const date = new Date(utcDate);
+    // Parse date - if it has 'Z', use as-is; otherwise treat as local time
+    const normalizedDate = dateString.includes('T') ? dateString : dateString.replace(' ', 'T');
+    const date = new Date(normalizedDate);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);

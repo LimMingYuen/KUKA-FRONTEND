@@ -42,6 +42,7 @@ export interface AddTemplatesToCategoryDialogResult {
 export class AddTemplatesToCategoryDialogComponent {
   searchText = '';
   selectedIds: Set<number> = new Set();
+  selectedCount = 0;  // Explicit counter for older browser compatibility
   availableTemplates: SavedCustomMissionsDisplayData[] = [];
   filteredTemplates: SavedCustomMissionsDisplayData[] = [];
 
@@ -81,6 +82,11 @@ export class AddTemplatesToCategoryDialogComponent {
     } else {
       this.selectedIds.add(templateId);
     }
+    this.updateSelectedCount();
+  }
+
+  private updateSelectedCount(): void {
+    this.selectedCount = this.selectedIds.size;
   }
 
   isSelected(templateId: number): boolean {
@@ -89,14 +95,12 @@ export class AddTemplatesToCategoryDialogComponent {
 
   selectAll(): void {
     this.filteredTemplates.forEach(t => this.selectedIds.add(t.id));
+    this.updateSelectedCount();
   }
 
   deselectAll(): void {
     this.selectedIds.clear();
-  }
-
-  get selectedCount(): number {
-    return this.selectedIds.size;
+    this.updateSelectedCount();
   }
 
   cancel(): void {

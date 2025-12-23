@@ -150,8 +150,12 @@ $nav-item-size: 48px;
 
   &__buttons {
     display: flex;
-    gap: 8px;
     align-items: center;
+
+    // Replaces gap for older Edge
+    > * + * {
+      margin-left: 8px;
+    }
   }
 
   .notification-button {
@@ -216,8 +220,16 @@ $nav-item-size: 48px;
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   padding: 0 12px;
+
+  // Nav item spacing (replaces gap for older Edge)
+  .nav-item-wrapper {
+    margin-bottom: 4px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }
 
 .nav-item-wrapper {
@@ -237,7 +249,11 @@ $nav-item-size: 48px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   cursor: pointer;
-  gap: 12px;
+
+  // Icon margin (replaces gap for older Edge)
+  .nav-item__icon {
+    margin-right: 12px;
+  }
 
   &:hover {
     background-color: var(--mat-sys-primary);
@@ -396,9 +412,9 @@ $nav-item-size: 48px;
   .profile-info {
     display: flex;
     align-items: center;
-    gap: 12px;
 
     .profile-avatar {
+      margin-right: 12px;  // Replaces gap for older Edge
       width: 48px;
       height: 48px;
       border-radius: 50%;
@@ -430,7 +446,6 @@ $nav-item-size: 48px;
         color: #10b981;
         display: flex;
         align-items: center;
-        gap: 4px;
 
         &::before {
           content: '';
@@ -438,6 +453,7 @@ $nav-item-size: 48px;
           height: 6px;
           border-radius: 50%;
           background-color: #10b981;
+          margin-right: 4px;  // Replaces gap for older Edge
         }
       }
     }
@@ -458,7 +474,7 @@ $nav-item-size: 48px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden; // Keep hidden here, page-content handles scrolling
   border-radius: 0 !important;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -469,6 +485,13 @@ $nav-item-size: 48px;
   &.main-content--sidebar-expanded {
     margin-left: $sidebar-width-expanded !important;
   }
+
+  // Responsive: Remove fixed margins on smaller screens
+  @media (max-width: 1024px) {
+    &.main-content--sidebar-expanded {
+      margin-left: $sidebar-width-collapsed !important;
+    }
+  }
 }
 
 .page-content {
@@ -476,7 +499,8 @@ $nav-item-size: 48px;
   display: flex;
   flex-direction: column;
   min-height: 0; // Required for flex child to allow shrinking
-  overflow: hidden; // Let page components handle their own scrolling
+  overflow-y: auto; // Enable vertical scrolling for all pages
+  overflow-x: hidden; // Prevent horizontal scroll
   background-color: var(--mat-sys-surface-container-lowest);
   border-radius: 0 !important;
 
@@ -488,7 +512,7 @@ $nav-item-size: 48px;
   // Ensure router-outlet siblings (the actual page components) fill the space
   // The component rendered by router-outlet appears as a sibling, not a child
   > *:not(router-outlet) {
-    flex: 1;
+    flex: 1 0 auto; // Changed to allow content to grow beyond viewport
     display: flex;
     flex-direction: column;
     min-height: 0;

@@ -133,6 +133,11 @@ export class PageInitializationService {
         pagePath: '/io-controllers',
         pageName: 'IO Controllers',
         pageIcon: 'settings_input_component'
+      },
+      {
+        pagePath: '/email-recipients',
+        pageName: 'Email Recipients',
+        pageIcon: 'email'
       }
     ];
   }

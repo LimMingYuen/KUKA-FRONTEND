@@ -87,6 +87,15 @@ export const MISSION_HISTORY_TABLE_CONFIG: TableConfig<MissionHistoryDisplayData
       }
     },
     {
+      key: 'completedDateDisplay',
+      header: 'Completed Date',
+      sortable: true,
+      filterable: true,
+      transform: (value: string, row: MissionHistoryDisplayData) => {
+        return value || '-';
+      }
+    },
+    {
       key: 'createdDateDisplay',
       header: 'Created Date',
       sortable: true,

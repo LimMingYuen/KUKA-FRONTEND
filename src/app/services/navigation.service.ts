@@ -193,6 +193,12 @@ export class NavigationService {
             label: 'Log Cleanup',
             icon: 'cleaning_services',
             route: '/log-cleanup'
+          },
+          {
+            id: 'email-recipients',
+            label: 'Email Recipients',
+            icon: 'email',
+            route: '/email-recipients'
           }
         ]
       }

@@ -194,18 +194,19 @@ export function getStatusConfig(status: number | string): StatusConfig {
 
 /**
  * Parse date string from AMR system.
- * The AMR system returns dates in format "yyyy-MM-dd HH:mm:ss" in UTC time
- * but without the 'Z' suffix. We need to append 'Z' to correctly interpret as UTC.
+ * The AMR system returns dates in format "yyyy-MM-dd HH:mm:ss" in LOCAL time (Malaysia UTC+8).
+ * We should NOT append 'Z' as that would incorrectly treat local time as UTC.
  */
 function parseAmrDate(dateString: string): Date {
   // If the date string already has timezone info (ISO format with Z or +/-), use it directly
-  if (dateString.includes('Z') || dateString.includes('+') || dateString.includes('-', 10)) {
+  if (dateString.includes('Z') || dateString.includes('+') || /T.*[+-]\d{2}/.test(dateString)) {
     return new Date(dateString);
   }
 
-  // For "yyyy-MM-dd HH:mm:ss" format without timezone, the server sends UTC time
-  // Replace space with 'T' and append 'Z' to indicate UTC
-  const isoString = dateString.replace(' ', 'T') + 'Z';
+  // For "yyyy-MM-dd HH:mm:ss" format without timezone, the AMR system sends LOCAL time
+  // Replace space with 'T' to make it valid ISO format, but DON'T append 'Z'
+  // This allows JavaScript to interpret it as local time
+  const isoString = dateString.replace(' ', 'T');
   return new Date(isoString);
 }
 
@@ -247,6 +248,9 @@ export function formatRelativeTime(dateString: string | undefined): string {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
+
+    // Handle future dates (clock skew) - show the actual time
+    if (diffMins < 0) return formatJobDate(dateString);
 
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;

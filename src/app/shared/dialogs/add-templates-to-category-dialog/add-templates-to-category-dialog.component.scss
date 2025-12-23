@@ -1,10 +1,10 @@
 h2[mat-dialog-title] {
   display: flex;
   align-items: center;
-  gap: 8px;
 
   mat-icon {
     color: var(--mat-sys-primary, #4a5db8);
+    margin-right: 8px;  // Replaces gap for older Edge
   }
 }
 
@@ -21,13 +21,17 @@ mat-dialog-content {
 .selection-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
   padding: 8px 0;
 
   .selection-info {
     flex: 1;
     font-size: 14px;
     color: rgba(0, 0, 0, 0.6);
+    margin-right: 8px;  // Replaces gap for older Edge
+  }
+
+  button {
+    margin-left: 8px;  // Replaces gap for older Edge
   }
 }
 
@@ -40,7 +44,6 @@ mat-dialog-content {
 .template-item {
   display: flex;
   align-items: center;
-  gap: 12px;
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -59,11 +62,14 @@ mat-dialog-content {
     background-color: rgba(74, 93, 184, 0.08);
   }
 
+  mat-checkbox {
+    margin-right: 12px;  // Replaces gap for older Edge
+  }
+
   .template-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
     overflow: hidden;
 
     .template-name {
@@ -71,6 +77,7 @@ mat-dialog-content {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 2px;  // Replaces gap for older Edge
     }
 
     .template-category {

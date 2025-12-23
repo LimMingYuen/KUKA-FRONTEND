@@ -2,6 +2,8 @@
   padding: 24px;
   padding-left: 16px;
   max-width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Header Styles */
@@ -18,13 +20,27 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+}
+
+.header-content > * {
+  margin-bottom: 16px;
+}
+
+.header-content > *:last-child {
+  margin-bottom: 0;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 16px;
+}
+
+.header-title > * {
+  margin-right: 16px;
+}
+
+.header-title > *:last-child {
+  margin-right: 0;
 }
 
 .header-icon {
@@ -43,19 +59,26 @@
 
 .header-actions {
   display: flex;
-  gap: 12px;
   align-items: center;
 }
 
+.header-actions > * {
+  margin-right: 12px;
+}
+
+.header-actions > *:last-child {
+  margin-right: 0;
+}
+
 .header-actions button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
   background-color: white !important;
   color: var(--mat-sys-primary) !important;
 
   mat-icon {
     color: var(--mat-sys-primary) !important;
+    margin-right: 8px;
   }
 
   &:hover {
@@ -89,8 +112,15 @@
 .filters-title {
   display: flex;
   align-items: center;
-  gap: 10px;
   color: white;
+}
+
+.filters-title > * {
+  margin-right: 10px;
+}
+
+.filters-title > *:last-child {
+  margin-right: 0;
 }
 
 .filters-title .title-icon {
@@ -115,14 +145,29 @@
 .filters-row {
   display: flex;
   align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
+}
+
+.filters-row > * {
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+
+.filters-row > *:last-child {
+  margin-right: 0;
 }
 
 .filter-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+}
+
+.filter-item > * {
+  margin-right: 4px;
+}
+
+.filter-item > *:last-child {
+  margin-right: 0;
 }
 
 /* Compact Form Fields */
@@ -166,7 +211,14 @@
 .datetime-compact {
   display: flex;
   align-items: center;
-  gap: 4px;
+}
+
+.datetime-compact > * {
+  margin-right: 4px;
+}
+
+.datetime-compact > *:last-child {
+  margin-right: 0;
 }
 
 .date-compact {
@@ -238,7 +290,14 @@
 .actions-compact {
   margin-left: auto;
   display: flex;
-  gap: 8px;
+}
+
+.actions-compact > * {
+  margin-right: 8px;
+}
+
+.actions-compact > *:last-child {
+  margin-right: 0;
 }
 
 .search-btn {
@@ -284,7 +343,7 @@
 .kpi-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-gap: 16px; /* grid-gap for older browser support */
   margin-bottom: 24px;
 }
 
@@ -371,7 +430,14 @@
 .charts-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+}
+
+.charts-container > * {
+  margin-bottom: 24px;
+}
+
+.charts-container > *:last-child {
+  margin-bottom: 0;
 }
 
 .chart-card {
@@ -422,7 +488,7 @@
 .chart-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 24px;
+  grid-gap: 24px; /* grid-gap for older browser support */
 }
 
 .chart-row .chart-wrapper {

@@ -154,6 +154,7 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
   styles: [`
     .log-cleanup-container {
       max-width: 100%;
+      overflow-y: auto;
     }
 
     .main-card {
@@ -183,7 +184,6 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
     .section-title {
       display: flex;
       align-items: center;
-      gap: 8px;
       margin: 0 0 8px 0;
       font-size: 16px;
       font-weight: 500;
@@ -191,6 +191,7 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
 
     .section-title mat-icon {
       color: var(--mat-sys-primary, #2f409a);
+      margin-right: 8px;
     }
 
     .section-subtitle {
@@ -223,7 +224,14 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
     .settings-form {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+    }
+
+    .settings-form > * {
+      margin-bottom: 16px;
+    }
+
+    .settings-form > *:last-child {
+      margin-bottom: 0;
     }
 
     .setting-row {
@@ -232,12 +240,12 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
 
     .retention-select {
       width: 250px;
+      max-width: 100%;
     }
 
     .cleanup-info {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
       padding: 16px;
       background-color: #e3f2fd;
       border-radius: 8px;
@@ -247,6 +255,7 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
     .cleanup-info .info-icon {
       color: var(--mat-sys-primary, #2f409a);
       flex-shrink: 0;
+      margin-right: 12px;
     }
 
     .cleanup-info p {
@@ -274,15 +283,21 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
     .folders-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
       max-height: 300px;
       overflow-y: auto;
+    }
+
+    .folders-list .folder-item {
+      margin-bottom: 8px;
+    }
+
+    .folders-list .folder-item:last-child {
+      margin-bottom: 0;
     }
 
     .folder-item {
       display: flex;
       align-items: center;
-      gap: 12px;
       padding: 12px 16px;
       background-color: #f5f5f5;
       border-radius: 8px;
@@ -295,6 +310,7 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
 
     .folder-item mat-icon {
       color: rgba(0, 0, 0, 0.54);
+      margin-right: 12px;
     }
 
     .folder-name {
@@ -322,17 +338,40 @@ import { LogCleanupService } from '../../services/log-cleanup.service';
 
     mat-card-actions {
       padding: 16px !important;
-      gap: 8px;
     }
 
     mat-card-actions button {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
+      margin-right: 8px;
+    }
+
+    mat-card-actions button:last-child {
+      margin-right: 0;
+    }
+
+    mat-card-actions button mat-icon {
+      margin-right: 4px;
     }
 
     mat-divider {
       margin: 0 -16px;
+    }
+
+    /* Responsive for smaller screens */
+    @media (max-width: 600px) {
+      .main-card {
+        padding: 16px;
+      }
+
+      .page-header {
+        margin: -16px -16px 16px -16px;
+        padding: 12px 16px;
+      }
+
+      .retention-select {
+        width: 100%;
+      }
     }
   `]
 })

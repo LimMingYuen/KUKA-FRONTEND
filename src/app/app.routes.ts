@@ -116,6 +116,12 @@ export const routes: Routes = [
     title: 'IO Controllers - KUKA GUI'
   },
   {
+    path: 'email-recipients',
+    loadComponent: () => import('./pages/email-recipients/email-recipients.component').then(m => m.EmailRecipientsComponent),
+    canActivate: [authGuard],
+    title: 'Email Recipients - KUKA GUI'
+  },
+  {
     path: 'workflow-templates',
     loadComponent: () => import('./pages/create-workflow-template/create-workflow-template.component').then(m => m.CreateWorkflowTemplateComponent),
     canActivate: [authGuard],

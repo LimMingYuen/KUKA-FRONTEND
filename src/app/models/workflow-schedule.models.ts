@@ -155,13 +155,15 @@ function getScheduleTypeDisplay(schedule: WorkflowSchedule, intervalOptions: typ
 }
 
 /**
- * Format UTC datetime string to local time display
+ * Format datetime string to local time display.
+ * The AMR system returns dates in LOCAL time (Malaysia UTC+8), not UTC.
  */
 function formatUtcToLocal(utcString?: string): string {
   if (!utcString) return '-';
 
-  const utcDate = utcString.endsWith('Z') ? utcString : utcString + 'Z';
-  const date = new Date(utcDate);
+  // Parse date - if it has 'Z', use as-is; otherwise treat as local time
+  const normalizedDate = utcString.includes('T') ? utcString : utcString.replace(' ', 'T');
+  const date = new Date(normalizedDate);
 
   return date.toLocaleString(undefined, {
     year: 'numeric',

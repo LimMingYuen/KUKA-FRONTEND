@@ -102,6 +102,9 @@ export interface CreateIoDeviceRequest {
 
 export interface UpdateIoDeviceRequest {
   deviceName: string;
+  ipAddress?: string;
+  port?: number;
+  unitId?: number;
   description?: string;
   isActive?: boolean;
   pollingIntervalMs?: number;

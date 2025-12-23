@@ -116,30 +116,16 @@ export class LiveJobsComponent implements OnInit, OnDestroy {
         transform: (value) => value || 'Not Assigned'
       },
       {
-        key: 'progressPercent',
-        header: 'Progress',
-        sortable: true,
-        filterable: false,
-        transform: (value) => `${value || 0}%`
-      },
-      {
         key: 'locationDisplay',
         header: 'Location',
         sortable: false,
         filterable: true
       },
       {
-        key: 'createdDateRelative',
+        key: 'createdDateDisplay',
         header: 'Created',
-        sortable: false,
+        sortable: true,
         filterable: false
-      },
-      {
-        key: 'durationDisplay',
-        header: 'Duration',
-        sortable: false,
-        filterable: false,
-        transform: (value) => value || '-'
       },
       {
         key: 'robotErrorMessage',

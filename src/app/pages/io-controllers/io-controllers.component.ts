@@ -134,6 +134,24 @@ export class IoControllersComponent implements OnInit, OnDestroy {
         next: (status) => {
           this.selectedDeviceStatus.set(status);
           this.selectedChannels.set(transformChannelsForDisplay(status.channels));
+
+          // Sync device list with fresh connection status
+          const devices = this.devices();
+          const idx = devices.findIndex(d => d.id === deviceId);
+          if (idx >= 0) {
+            const updated = [...devices];
+            updated[idx] = {
+              ...updated[idx],
+              lastConnectionSuccess: status.isConnected,
+              connectionStatusClass: status.isConnected ? 'status-connected' : 'status-disconnected',
+              connectionStatusText: status.isConnected ? 'Connected' : 'Disconnected',
+              lastPollUtc: status.lastPollUtc,
+              lastPollDisplay: status.lastPollUtc
+                ? new Date(status.lastPollUtc).toLocaleString()
+                : 'Never'
+            };
+            this.devices.set(updated);
+          }
         },
         error: (err) => {
           console.error('Error loading device status:', err);
@@ -248,6 +266,14 @@ export class IoControllersComponent implements OnInit, OnDestroy {
         this.loadDevices();
         this.showSuccess('Device created successfully');
       }
+    });
+  }
+
+  openViewDeviceDialog(device: IoControllerDeviceDisplayData, event: Event): void {
+    event.stopPropagation();
+    this.dialog.open(IoDeviceDialogComponent, {
+      width: '600px',
+      data: { mode: 'view', device }
     });
   }
 
